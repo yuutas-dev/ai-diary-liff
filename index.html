@@ -43,11 +43,9 @@
     #nav-data:checked ~ .app-container .tab-data { color: var(--active-color); }
     #nav-settings:checked ~ .app-container .tab-settings { color: var(--active-color); }
 
-    /* Header toggle & Submit button visibility */
     #nav-create:not(:checked) ~ .app-container .header-toggle { display: none; }
     #nav-create:not(:checked) ~ .app-container .submit-area { display: none; }
 
-    /* Mode & Style Logic */
     .mode-photo-ui, .mode-text-ui { display: none; }
     #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
     #mode-text:checked ~ .app-container .mode-text-ui { display: block; }
@@ -67,45 +65,20 @@
        ========================================== */
     .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
     
-    /* Header */
-    .header-area { 
-      padding: env(safe-area-inset-top, 20px) 16px 10px; 
-      background: rgba(244, 242, 247, 0.85); backdrop-filter: blur(12px); 
-      z-index: 100; flex-shrink: 0;
-    }
-    .app-title { text-align: center; font-size: 22px; font-weight: 900; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; letter-spacing: 0.5px; }
+    .header-area { padding: env(safe-area-inset-top, 20px) 16px 10px; background: rgba(244, 242, 247, 0.85); backdrop-filter: blur(12px); z-index: 100; flex-shrink: 0; }
+    .app-title { text-align: center; font-size: 22px; font-weight: 900; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
     .toggle-container { display: flex; background: #EAE5ED; border-radius: 40px; padding: 4px; }
     .toggle-label { flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: 900; color: var(--text-sub); border-radius: 34px; transition: 0.3s; cursor: pointer; }
 
-    /* Scroll Area */
-    .scroll-area { 
-      flex: 1; overflow-y: auto; overflow-x: hidden;
-      padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 160px); 
-    }
+    .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 160px); }
 
-    /* Fixed Footer (Submit + Nav) */
-    .fixed-footer { 
-      position: absolute; bottom: 0; left: 0; width: 100%; 
-      z-index: 200; display: flex; flex-direction: column; pointer-events: none;
-    }
-    .submit-area { 
-      background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); 
-      padding: 30px 16px 16px; pointer-events: auto;
-    }
-    .submit-btn { 
-      width: 100%; background: var(--primary-gradient); color: #FFF; border: none; 
-      padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; 
-      box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); letter-spacing: 1px; transition: 0.2s; cursor: pointer;
-    }
+    .fixed-footer { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; pointer-events: none; }
+    .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
+    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; }
     .submit-btn:disabled { background: #E5E7EB; box-shadow: none; color: #9CA3AF; cursor: not-allowed; }
     
-    .bottom-nav { 
-      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); 
-      display: flex; justify-content: space-around; 
-      padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); 
-      border-top: 1px solid var(--border-color); pointer-events: auto; box-shadow: 0 -4px 20px rgba(0,0,0,0.02);
-    }
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; transition: 0.2s; }
+    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
     .nav-icon { font-size: 26px; }
 
     /* ==========================================
@@ -114,17 +87,31 @@
     .card { background: var(--card-bg); border-radius: 20px; padding: 22px 20px; margin-bottom: 20px; box-shadow: var(--shadow-md); }
     .label { font-weight: 900; font-size: 16px; margin-bottom: 12px; display: block; color: var(--text-main); }
     
-    .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 18px; font-size: 16px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
+    .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 18px; font-size: 16px; color: var(--text-main); font-family: inherit; }
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
-    .input-field::placeholder { color: #C8B9BD; font-weight: bold; }
 
-    /* Quick Access */
-    .quick-access-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 8px; scrollbar-width: none; }
-    .quick-access-row::-webkit-scrollbar { display: none; }
-    .quick-card { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
-    .quick-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3); }
-    .quick-name { font-size: 11px; font-weight: bold; color: var(--text-sub); }
-    .quick-badge { position: absolute; margin-top: -5px; margin-left: 35px; background: #FFF; border: 1px solid #FBCFE8; color: #DB2777; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
+    /* 👑 ストーリーズ風 クイックアクセス */
+    .stories-wrapper { position: relative; margin: 0 -20px 16px; /* カードのパディングを無視して端まで伸ばす */ }
+    /* 両端のフェードアウト効果 */
+    .stories-wrapper::before, .stories-wrapper::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30px; z-index: 10; pointer-events: none; }
+    .stories-wrapper::before { left: 0; background: linear-gradient(to right, var(--card-bg), transparent); }
+    .stories-wrapper::after { right: 0; background: linear-gradient(to left, var(--card-bg), transparent); }
+    
+    .stories-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 10px 20px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .stories-scroll::-webkit-scrollbar { display: none; }
+    
+    .story-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; position: relative; width: 66px; }
+    
+    /* タグはアバターの左上にめり込ませて固定 */
+    .story-tag { position: absolute; top: -6px; left: -4px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 900; padding: 3px 6px; border-radius: 8px; border: 2px solid #FFF; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    
+    /* インスタ風リング */
+    .story-ring { width: 66px; height: 66px; border-radius: 50%; background: var(--primary-gradient); padding: 3px; }
+    .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--active-color); border: 2px solid #FFF; }
+    .story-name { font-size: 11px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
+
+    /* インフォメーションテキスト */
+    .info-text { background: #FDF4F8; color: #DB2777; font-size: 12px; font-weight: bold; padding: 12px; border-radius: 12px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; margin-top: 10px; border: 1px dashed #FBCFE8; }
 
     /* Textarea & Mic */
     .textarea-wrapper { position: relative; }
@@ -132,17 +119,13 @@
     .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; transition: 0.2s; }
     .mic-btn:active { background: #FDF2F8; transform: scale(0.95); }
 
-    /* Chips */
     .chip-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-    .chip { background: #FFF; border: 1px solid #F0E6EA; color: #9333EA; padding: 10px 18px; border-radius: 25px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: var(--shadow-sm); transition: 0.1s; }
-    .chip:active { background: var(--primary-gradient); color: #FFF; border-color: transparent; transform: scale(0.95); }
-
-    /* Upload Area */
+    .chip { background: #FFF; border: 1px solid #F0E6EA; color: #9333EA; padding: 10px 18px; border-radius: 25px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: var(--shadow-sm); }
+    
     .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; margin-bottom: 20px; font-size: 16px; cursor: pointer; position: relative; overflow: hidden; }
     .upload-area.has-image { border: none; }
     .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
 
-    /* Output */
     .output-card { background: #FFF; border: 2px solid #F472B6; border-radius: 20px; padding: 24px; margin-top: 20px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15); display: none; }
     .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color); }
     .output-text-wrapper { position: relative; max-height: 140px; overflow: hidden; cursor: pointer; transition: 0.4s; }
@@ -151,16 +134,15 @@
     .fade-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); pointer-events: none; transition: 0.3s; }
     .output-text-wrapper.expanded .fade-overlay { opacity: 0; }
 
-    /* Style Selector */
     .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
-    .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; }
+    .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
     .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #7A666B; font-weight: bold; }
     .slider-group { margin-top: 24px; }
     .slider-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px; }
     input[type=range] { width: 100%; accent-color: #D946EF; margin-bottom: 24px; }
 
     /* ==========================================
-       Customer Tab (Data)
+       Customer & Settings Tab
        ========================================== */
     .search-box { position: relative; margin-bottom: 24px; }
     .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; }
@@ -170,32 +152,46 @@
     .customer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .customer-name { font-size: 18px; font-weight: 900; }
     .last-visit { font-size: 12px; color: var(--text-sub); background: var(--input-bg); padding: 6px 12px; border-radius: 12px; font-weight: bold; }
-    
     .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
     .c-tag { background: #FDF2F8; color: #DB2777; border: 1px solid #FBCFE8; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-    .c-tag.ai { background: #F5F3FF; color: #7C3AED; border-color: #EDE9FE; }
-    
-    .customer-action { width: 100%; background: #FFF; border: 2px solid #FBCFE8; color: #EC4899; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 900; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; }
-    .customer-action:active { background: #FDF2F8; }
+    .customer-action { width: 100%; background: #FFF; border: 2px solid #FBCFE8; color: #EC4899; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 900; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; }
 
-    /* ==========================================
-       Settings Tab
-       ========================================== */
     .settings-list { background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 24px; }
     .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 16px; }
     .settings-item:last-child { border-bottom: none; }
     .settings-select { border: none; background: var(--input-bg); padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; color: var(--active-color); outline: none; }
 
+    /* ==========================================
+       Initial Setup Modal
+       ========================================== */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+    .modal-content { background: #FFF; border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+    .modal-content h2 { margin: 0 0 10px; font-weight: 900; color: var(--text-main); }
+    .modal-content p { color: var(--text-sub); font-size: 14px; font-weight: bold; margin-bottom: 24px; }
   </style>
 </head>
 <body>
 
-  <!-- Navigation Radios -->
+  <!-- 初回業態設定モーダル -->
+  <div id="setupModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>🎉 初期設定</h2>
+      <p>あなたに最適な日記を作るため、<br>現在の業態を教えてください。</p>
+      
+      <select id="initialBusinessType" class="input-field" style="margin-bottom: 24px; font-weight:bold; text-align:center;">
+        <option value="cabaret">キャバクラ・ラウンジ</option>
+        <option value="fuzoku">風俗・メンズエステ</option>
+        <option value="host">ホストクラブ</option>
+      </select>
+      
+      <button onclick="saveInitialSetup()" style="width:100%; background:var(--primary-gradient); color:#FFF; border:none; padding:18px; border-radius:30px; font-weight:900; font-size:16px;">はじめる ✨</button>
+    </div>
+  </div>
+
   <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
   <input type="radio" name="nav" id="nav-data" class="ui-state">
   <input type="radio" name="nav" id="nav-settings" class="ui-state">
 
-  <!-- Mode & Style Radios -->
   <input type="radio" name="mode" id="mode-text" class="ui-state" checked>
   <input type="radio" name="mode" id="mode-photo" class="ui-state">
   <input type="radio" name="style" id="style-cute" class="ui-state" checked>
@@ -204,7 +200,6 @@
 
   <div class="app-container">
     
-    <!-- Fixed Header -->
     <header class="header-area">
       <div class="app-title">AIお礼日記メーカー</div>
       <div class="toggle-container header-toggle">
@@ -213,62 +208,72 @@
       </div>
     </header>
 
-    <!-- Scrollable Main Content -->
     <main class="scroll-area">
       
-      <!-- ==============================================
-           TAB 1: CREATE
-           ============================================== -->
+      <!-- TAB 1: CREATE -->
       <div class="page page-create">
         
-        <!-- Name Input & Quick Access -->
         <div class="card">
           <span class="label">👤 誰に送る？</span>
-          <div class="quick-access-row">
-            <div class="quick-card" onclick="selectCustomer('ひろしさん', '')">
-              <span class="quick-badge">太客</span>
-              <div class="quick-icon">ひ</div>
-              <span class="quick-name">ひろし</span>
-            </div>
-            <div class="quick-card" onclick="selectCustomer('ケンジさん', '')">
-              <div class="quick-icon" style="background: linear-gradient(135deg, #6488E4, #80BEE3);">ケ</div>
-              <span class="quick-name">ケンジ</span>
-            </div>
-            <div class="quick-card" onclick="selectCustomer('たかしさん', '')">
-              <span class="quick-badge">注意</span>
-              <div class="quick-icon" style="background: linear-gradient(135deg, #FF4B72, #9B51E0);">た</div>
-              <span class="quick-name">たかし</span>
+          
+          <!-- インスタストーリーズ風 UI -->
+          <div class="stories-wrapper">
+            <div class="stories-scroll">
+              
+              <div class="story-item" onclick="selectCustomer('ひろしさん', '')">
+                <span class="story-tag">太客</span>
+                <div class="story-ring"><div class="story-inner">ひ</div></div>
+                <span class="story-name">ひろし</span>
+              </div>
+
+              <div class="story-item" onclick="selectCustomer('ケンジさん', '')">
+                <div class="story-ring" style="background:#BDB2B5;"><div class="story-inner" style="color:#BDB2B5;">ケ</div></div>
+                <span class="story-name">ケンジ</span>
+              </div>
+
+              <div class="story-item" onclick="selectCustomer('たかしさん', '')">
+                <span class="story-tag" style="background:#EF4444;">注意</span>
+                <div class="story-ring"><div class="story-inner">た</div></div>
+                <span class="story-name">たかし</span>
+              </div>
+
+              <div class="story-item" onclick="selectCustomer('りょうさん', '')">
+                <span class="story-tag" style="background:#8B5CF6;">店外狙</span>
+                <div class="story-ring"><div class="story-inner">り</div></div>
+                <span class="story-name">りょう</span>
+              </div>
+              
+              <!-- 余白用（右端が切れないように） -->
+              <div style="width:10px; flex-shrink:0;"></div>
             </div>
           </div>
+          
           <input type="text" id="nameInput" class="input-field" placeholder="名前を入力（例：ひろしさん）">
+          
+          <div class="info-text">
+            <span>💡</span>
+            <span>付与されたタグ（太客など）に合わせてAIが文章を自動調整します。手動での入力・変更も可能です。</span>
+          </div>
         </div>
 
-        <!-- Photo Upload (Photo Mode Only) -->
         <div class="card mode-photo-ui">
           <span class="label">📷 写真を選ぶ</span>
           <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
           <label for="photoUpload" class="upload-area" id="uploadArea">
-            <div id="uploadText">
-              📸<br><br>タップして写真をアップロード<br>
-              <span style="font-size:13px; font-weight:normal; margin-top:8px; display:inline-block;">※顔出しなしでもOK！</span>
-            </div>
+            <div id="uploadText">📸<br><br>タップして写真をアップロード<br><span style="font-size:13px; font-weight:normal;">※顔出しなしでもOK！</span></div>
             <img id="photoPreview">
           </label>
         </div>
 
-        <!-- Episode & Mic & Chips -->
         <div class="card">
           <span class="label">📝 エピソード・キーワード</span>
           <div class="textarea-wrapper">
             <textarea id="episodeInput" class="input-field" placeholder="今日あったことや、伝えたい話題を入力してね。右下のマイクで音声入力もできます！"></textarea>
             <div class="mic-btn" onclick="startDictation()">🎤</div>
           </div>
-          <div class="chip-container" id="dynamicChips">
-            <!-- Chips will be generated by JS based on business type -->
-          </div>
+          <div class="chip-container" id="dynamicChips"></div>
         </div>
 
-        <!-- Style Settings -->
         <div class="card">
           <span class="label">🎨 AIの口調・スタイル</span>
           <div class="style-selector">
@@ -290,104 +295,55 @@
           </div>
         </div>
 
-        <!-- AI Output Area -->
         <div class="output-card" id="outputCard">
           <div class="output-header">
             <span style="font-weight:900; color:var(--active-color); font-size:18px;">✨ 生成完了</span>
             <div style="background:#FDF4F8; color:#DB2777; border:1px solid #FBCFE8; padding:8px 16px; border-radius:20px; font-size:14px; font-weight:bold; cursor:pointer;" onclick="copyOutput(event)">📋 コピー</div>
           </div>
           <div class="output-text-wrapper" id="outputTextWrapper" onclick="this.classList.toggle('expanded')">
-            <div class="output-text" id="aiOutputText">ここに生成された日記が表示されます。</div>
+            <div class="output-text" id="aiOutputText"></div>
             <div class="fade-overlay"></div>
           </div>
         </div>
-
       </div>
 
-      <!-- ==============================================
-           TAB 2: CUSTOMER DATA
-           ============================================== -->
+      <!-- TAB 2: CUSTOMER DATA -->
       <div class="page page-data">
         <h2 style="margin:0 0 20px; font-size:24px; font-weight:900;">顧客カルテ</h2>
-        
         <div class="search-box">
           <span class="search-icon">🔍</span>
           <input type="text" class="input-field" placeholder="名前で検索...">
         </div>
-
         <div class="customer-card">
-          <div class="customer-header">
-            <span class="customer-name">田中 ひろしさん</span>
-            <span class="last-visit">最終: 4/18</span>
-          </div>
-          <div class="tag-row">
-            <span class="c-tag ai">🤖 太客推測</span>
-            <span class="c-tag">同伴狙い</span>
-            <span class="c-tag">+ タグ追加</span>
-          </div>
-          <div style="font-size:14px; margin-bottom:16px; color:var(--text-main); line-height:1.5;">
-            📝 前回メモ：モエ白入れた。犬好き。
-          </div>
-          <div class="customer-action" onclick="selectCustomer('ひろしさん', 'モエ白,犬好き')">
-            📝 この人の日記を書く
-          </div>
-        </div>
-
-        <div class="customer-card">
-          <div class="customer-header">
-            <span class="customer-name">佐藤 ケンジさん</span>
-            <span class="last-visit">最終: 4/15</span>
-          </div>
-          <div class="tag-row">
-            <span class="c-tag ai">🤖 離脱注意</span>
-            <span class="c-tag">愚痴聞き役</span>
-          </div>
-          <div style="font-size:14px; margin-bottom:16px; color:var(--text-main); line-height:1.5;">
-            📝 前回メモ：仕事の愚痴が多い。ビール党。
-          </div>
-          <div class="customer-action" onclick="selectCustomer('ケンジさん', '愚痴聞き役,ビール')">
-            📝 この人の日記を書く
-          </div>
+          <div class="customer-header"><span class="customer-name">田中 ひろしさん</span><span class="last-visit">最終: 4/18</span></div>
+          <div class="tag-row"><span class="c-tag">太客推測</span></div>
+          <div class="customer-action" onclick="selectCustomer('ひろしさん', '')">📝 この人の日記を書く</div>
         </div>
       </div>
 
-      <!-- ==============================================
-           TAB 3: SETTINGS
-           ============================================== -->
+      <!-- TAB 3: SETTINGS -->
       <div class="page page-settings">
         <h2 style="margin:0 0 20px; font-size:24px; font-weight:900;">設定</h2>
-        
         <span class="label">アプリ基本設定</span>
         <div class="settings-list">
           <div class="settings-item">
-            <span>🏢 業態（タグ自動最適化）</span>
-            <select class="settings-select" id="businessType" onchange="updateChips()">
-              <option value="cabaret">キャバクラ・ラウンジ</option>
-              <option value="fuzoku">風俗・メンズエステ</option>
-              <option value="host">ホストクラブ</option>
-            </select>
-          </div>
-          <div class="settings-item">
-            <span>🎨 テーマカラー</span>
-            <select class="settings-select" id="themeColor" onchange="changeTheme()">
-              <option value="pop">ポップ（ピンク系）</option>
-              <option value="lounge">ラウンジ（ブルー系）</option>
-              <option value="host">VIP（ブラック＆ゴールド）</option>
+            <span>🏢 業態</span>
+            <select class="settings-select" id="businessType" onchange="updateChipsAndSave()">
+              <option value="cabaret">キャバクラ</option>
+              <option value="fuzoku">風俗・メンエス</option>
+              <option value="host">ホスト</option>
             </select>
           </div>
         </div>
-
         <span class="label">アカウント・その他</span>
         <div class="settings-list">
           <div class="settings-item" style="color:var(--text-sub);">利用規約</div>
           <div class="settings-item" style="color:var(--text-sub);">プライバシーポリシー</div>
-          <div class="settings-item" style="color:#EF4444;">ログアウト</div>
         </div>
       </div>
 
     </main>
 
-    <!-- Fixed Footer -->
     <footer class="fixed-footer">
       <div class="submit-area">
         <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
@@ -403,6 +359,33 @@
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
+    // --- 初期ログイン・業態設定ロジック ---
+    window.onload = () => {
+      const savedType = localStorage.getItem('businessType');
+      if (!savedType) {
+        // 未設定ならモーダル表示
+        document.getElementById('setupModal').style.display = 'flex';
+      } else {
+        // 設定済みならセレクトボックスに反映してチップ更新
+        document.getElementById('businessType').value = savedType;
+        updateChips();
+      }
+    };
+
+    function saveInitialSetup() {
+      const type = document.getElementById('initialBusinessType').value;
+      localStorage.setItem('businessType', type);
+      document.getElementById('businessType').value = type;
+      updateChips();
+      document.getElementById('setupModal').style.display = 'none';
+    }
+
+    function updateChipsAndSave() {
+      const type = document.getElementById('businessType').value;
+      localStorage.setItem('businessType', type);
+      updateChips();
+    }
+
     // --- Dynamic Chips Logic ---
     const chipData = {
       cabaret: ['🍽️ 同伴', '🥂 アフター', '🍾 シャンパン', '🎁 プレゼント'],
@@ -411,7 +394,7 @@
     };
 
     function updateChips() {
-      const type = document.getElementById('businessType').value;
+      const type = document.getElementById('businessType').value || 'cabaret';
       const container = document.getElementById('dynamicChips');
       container.innerHTML = '';
       chipData[type].forEach(text => {
@@ -426,35 +409,8 @@
         container.appendChild(chip);
       });
     }
-    // Initialize chips
-    updateChips();
 
-    // --- Theme Switcher Logic ---
-    function changeTheme() {
-      const theme = document.getElementById('themeColor').value;
-      const root = document.documentElement;
-      if(theme === 'lounge') {
-        root.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #6488E4, #80BEE3)');
-        root.style.setProperty('--bg-color', '#F5F7FA');
-        root.style.setProperty('--active-color', '#6488E4');
-      } else if(theme === 'host') {
-        root.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #D4AF37, #FFD700)');
-        root.style.setProperty('--bg-color', '#121212');
-        root.style.setProperty('--card-bg', '#1E1E1E');
-        root.style.setProperty('--text-main', '#FFFFFF');
-        root.style.setProperty('--input-bg', '#2A2A2A');
-        root.style.setProperty('--active-color', '#D4AF37');
-      } else {
-        root.style.setProperty('--primary-gradient', 'linear-gradient(135deg, #A855F7, #EC4899)');
-        root.style.setProperty('--bg-color', '#F4F2F7');
-        root.style.setProperty('--card-bg', '#FFFFFF');
-        root.style.setProperty('--text-main', '#4B3E41');
-        root.style.setProperty('--input-bg', '#F8F4F6');
-        root.style.setProperty('--active-color', '#D946EF');
-      }
-    }
-
-    // --- Voice Dictation ---
+    // --- その他のUIロジック ---
     function startDictation() {
       if (window.SpeechRecognition || window.webkitSpeechRecognition) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -469,7 +425,6 @@
       }
     }
 
-    // --- Photo Preview ---
     function previewPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -484,17 +439,12 @@
       reader.readAsDataURL(file);
     }
 
-    // --- Customer Selection ---
     function selectCustomer(name, contextData) {
       document.getElementById('nav-create').checked = true;
       document.getElementById('nameInput').value = name;
-      if(contextData) {
-        document.getElementById('episodeInput').value += `[メモ: ${contextData}] `;
-      }
-      window.scrollTo(0,0);
+      document.querySelector('.scroll-area').scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // --- Output & Copy ---
     function copyOutput(event) {
       event.stopPropagation();
       const text = document.getElementById('aiOutputText').innerText;
@@ -514,15 +464,21 @@
       btn.innerText = "作成中...🚀";
       btn.disabled = true;
       
-      // モックとしての遅延処理
       setTimeout(() => {
-        document.getElementById('outputCard').style.display = 'block';
-        document.getElementById('outputTextWrapper').classList.add('expanded'); // 自動展開
+        const outBox = document.getElementById('outputCard');
+        outBox.style.display = 'block';
+        document.getElementById('aiOutputText').innerText = "ひろしさん！今日は来てくれて本当にありがとう✨\n\nAIがタグ（太客）を考慮して、少し甘えたトーンで生成しました。次も待ってるね💖";
+        document.getElementById('outputTextWrapper').classList.add('expanded');
         btn.innerText = "✨ AIで作成する";
         btn.disabled = false;
         
-        // スクロールを出力エリアに合わせる
-        document.getElementById('outputCard').scrollIntoView({ behavior: 'smooth', block: 'end' });
+        // 生成完了したら下までスクロール
+        setTimeout(() => {
+           document.querySelector('.scroll-area').scrollTo({
+               top: outBox.offsetTop,
+               behavior: 'smooth'
+           });
+        }, 100);
       }, 1500);
     }
   </script>
