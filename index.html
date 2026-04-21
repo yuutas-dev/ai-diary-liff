@@ -15,7 +15,7 @@
     html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: 'Hiragino Maru Gothic ProN', sans-serif; -webkit-tap-highlight-color: transparent; }
     input[type="radio"].ui-state { display: none; }
 
-    /* ナビゲーション */
+    /* ナビゲーション切り替え */
     .page { display: none; flex-direction: column; padding-bottom: 20px; }
     #nav-create:checked ~ .app-container .page-create { display: flex; }
     #nav-data:checked ~ .app-container .page-data { display: flex; }
@@ -29,9 +29,18 @@
     #mode-text:checked ~ .app-container .mode-text-ui { display: block; }
     #mode-photo:checked ~ .app-container .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
     #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
-    
-    /* ★写メ日記モードの時は宛先カードを消す */
     #mode-photo:checked ~ .app-container .customer-select-card { display: none; }
+
+    /* スタイル切り替え（モーダル内も適用されるように修正） */
+    .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
+    
+    #style-cute:checked ~ .modal-overlay .style-desc-cute, #style-cute:checked ~ .app-container .style-desc-cute { display: block; }
+    #style-custom:checked ~ .modal-overlay .style-desc-custom, #style-custom:checked ~ .app-container .style-desc-custom { display: block; }
+    #style-neat:checked ~ .modal-overlay .style-desc-neat, #style-neat:checked ~ .app-container .style-desc-neat { display: block; }
+
+    #style-cute:checked ~ .modal-overlay .btn-cute, #style-cute:checked ~ .app-container .btn-cute { background: var(--primary-gradient); color: white; border-color: transparent; }
+    #style-custom:checked ~ .modal-overlay .btn-custom, #style-custom:checked ~ .app-container .btn-custom { background: var(--primary-gradient); color: white; border-color: transparent; }
+    #style-neat:checked ~ .modal-overlay .btn-neat, #style-neat:checked ~ .app-container .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
 
     /* 基本レイアウト */
     .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
@@ -55,11 +64,6 @@
     .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 16px; font-size: 16px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
 
-    /* サジェスト（検索結果） */
-    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
-    .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
-    .suggest-item:last-child { border-bottom: none; }
-
     /* クイックアクセス */
     .stories-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none; }
     .stories-scroll::-webkit-scrollbar { display: none; }
@@ -67,17 +71,22 @@
     .story-ring { width: 66px; height: 66px; border-radius: 50%; background: var(--primary-gradient); padding: 3px; }
     .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--active-color); border: 2px solid #FFF; }
     .story-name { font-size: 11px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
+    .story-tag { position: absolute; top: -4px; left: -4px; background: #DB2777; color: #FFF; font-size: 9px; font-weight: bold; padding: 2px 4px; border-radius: 6px; z-index: 5; }
+
+    /* サジェスト */
+    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
+    .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
+    .suggest-item:last-child { border-bottom: none; }
 
     /* テキストエリア＆マイク */
     .textarea-wrapper { position: relative; }
     textarea.input-field { height: 140px; resize: none; padding-right: 50px; line-height: 1.6; }
     .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; }
 
-    /* タグ関連（追加可能） */
+    /* タグ関連 */
     .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
     .chip { background: #FFF; border: 1px solid #F0E6EA; color: #9333EA; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.1s; display: flex; align-items: center; gap: 4px; }
     .chip:active { transform: scale(0.95); }
-    .add-tag-btn { background: var(--input-bg); border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
 
     /* 写メ日記アップロード */
     .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; margin-bottom: 10px; cursor: pointer; position: relative; overflow: hidden; }
@@ -120,7 +129,24 @@
 </head>
 <body>
 
-  <!-- ★ 初期設定（業態選択） -->
+  <!-- ==============================================
+       ★重要：ラジオボタン群は一番上に配置（CSS切り替えの起点）
+       ============================================== -->
+  <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
+  <input type="radio" name="nav" id="nav-data" class="ui-state">
+  <input type="radio" name="nav" id="nav-settings" class="ui-state">
+
+  <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
+  <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
+  
+  <input type="radio" name="style" id="style-cute" class="ui-state" checked>
+  <input type="radio" name="style" id="style-custom" class="ui-state">
+  <input type="radio" name="style" id="style-neat" class="ui-state">
+
+
+  <!-- ==============================================
+       初期設定モーダル
+       ============================================== -->
   <div id="setupModal" class="modal-overlay">
     <div class="modal-content" style="text-align: center;">
       <h2 style="margin: 0 0 10px; font-weight: 900;">🎉 初期設定</h2>
@@ -134,7 +160,9 @@
     </div>
   </div>
 
-  <!-- ★ スタイル詳細設定モーダル -->
+  <!-- ==============================================
+       スタイル詳細設定モーダル
+       ============================================== -->
   <div id="styleModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
@@ -148,27 +176,20 @@
       <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
       <div class="style-desc-custom">
         <div class="style-desc-box">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
-        <textarea class="input-field" placeholder="学習用の過去の文章をここにペースト..." style="height: 120px; margin-bottom:20px;"></textarea>
+        <textarea id="customStyleText" class="input-field" placeholder="学習用の過去の文章をここにペースト..." style="height: 120px; margin-bottom:20px;"></textarea>
         <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px;"><span>テンション（低）</span><span>（高）</span></div>
-        <input type="range" min="1" max="5" value="3" style="width:100%; margin-bottom:24px;">
+        <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:24px;">
         <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px;"><span>絵文字の量（少）</span><span>（多）</span></div>
-        <input type="range" min="1" max="5" value="4" style="width:100%; margin-bottom:24px;">
+        <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:24px;">
       </div>
       <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900; font-size:16px;">設定を保存して閉じる</button>
     </div>
   </div>
 
-  <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
-  <input type="radio" name="nav" id="nav-data" class="ui-state">
-  <input type="radio" name="nav" id="nav-settings" class="ui-state">
 
-  <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
-  <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
-  
-  <input type="radio" name="style" id="style-cute" class="ui-state" checked>
-  <input type="radio" name="style" id="style-custom" class="ui-state">
-  <input type="radio" name="style" id="style-neat" class="ui-state">
-
+  <!-- ==============================================
+       メインアプリ UI
+       ============================================== -->
   <div class="app-container">
     <header class="header-area">
       <div class="app-title">AIお礼日記メーカー</div>
@@ -252,7 +273,6 @@
       <div class="page page-settings">
         <h2 style="margin:0 0 20px; font-size:24px; font-weight:900;">設定</h2>
         
-        <!-- ★ スタイル設定をここへ移動 -->
         <div class="card" style="background: linear-gradient(135deg, #FDF4F8, #FFFFFF); border: 2px solid #FBCFE8; cursor: pointer;" onclick="openStyleModal()">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
@@ -298,15 +318,14 @@
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    const LIFF_ID = "2009843865-hghVLuaS"; 
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyWcx1XN8MuLsscHjoi9DdItYm7jCsMdZvNgrohG0o51KlTEheIXVdrHbSmGeSS2FV2/exec"; 
+    const LIFF_ID = "あなたのLIFF_ID"; 
+    const GAS_URL = "あなたのGAS_URL"; 
 
     let liffReady = false;
     let userId = "test-user";
     let customerData = []; 
     let activeTags = []; 
 
-    // シートからデータが取れなかった時のための初期ダミーデータ
     const fallbackDummyData = [
       { name: "ひろしさん", memo: "モエ白。犬好き。", lastVisit: "今日", tags: ["太客"] },
       { name: "ケンジさん", memo: "仕事の愚痴。ビール党。", lastVisit: "昨日", tags: ["注意"] },
@@ -345,38 +364,28 @@
       document.getElementById('setupModal').style.display = 'none';
     }
 
-    // ★ 修正：シートの読み取りを POST に変更
     async function fetchCustomers() {
       try {
         const res = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
+          method: "POST", headers: { "Content-Type": "text/plain" },
           body: JSON.stringify({ action: "getCustomers", userId: userId })
         });
         const data = await res.json();
-        
-        if (data.success && data.customers.length > 0) {
-          customerData = data.customers;
-        } else {
-          customerData = fallbackDummyData; // シートが空ならダミーを表示
-        }
+        if (data.success && data.customers.length > 0) { customerData = data.customers; } 
+        else { customerData = fallbackDummyData; }
       } catch (e) {
         console.error("Fetch Error:", e);
-        customerData = fallbackDummyData; // エラー時もダミーを表示
+        customerData = fallbackDummyData;
       }
       renderCustomerList();
       renderQuickAccess();
     }
 
-    // --- 顧客リスト描画 ---
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea');
       area.innerHTML = "";
-      
       const filtered = customerData.filter(c => c.name.includes(filterText));
-      if (filtered.length === 0) {
-        area.innerHTML = "<p style='text-align:center;'>見つかりません</p>"; return;
-      }
+      if (filtered.length === 0) { area.innerHTML = "<p style='text-align:center;'>見つかりません</p>"; return; }
 
       filtered.forEach(c => {
         let tagsHtml = c.tags.map(t => `<span class="c-tag">${t}</span>`).join('');
@@ -396,17 +405,13 @@
       });
     }
 
-    // --- 横スライド（ストーリーズ風）描画 ---
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea');
       area.innerHTML = "";
-      
       customerData.forEach(c => {
         const initial = c.name.charAt(0);
         let tagHtml = '';
         let ringStyle = 'background: var(--primary-gradient);';
-        
-        // タグによる色分け（ダミー）
         if (c.tags.includes('注意')) {
           tagHtml = `<span class="story-tag" style="background:#EF4444;">${c.tags[0]}</span>`;
           ringStyle = 'background: #EF4444;';
@@ -425,14 +430,10 @@
           </div>
         `;
       });
-      // 右端の余白
       area.innerHTML += `<div style="width:10px; flex-shrink:0;"></div>`;
     }
 
-    function filterCustomerList() {
-      const text = document.getElementById('customerSearch').value;
-      renderCustomerList(text);
-    }
+    function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
     function suggestCustomer() {
       const text = document.getElementById('nameInput').value;
@@ -450,9 +451,7 @@
           div.onclick = () => { selectCustomer(c.name, c.memo); area.style.display = "none"; };
           area.appendChild(div);
         });
-      } else {
-        area.style.display = "none";
-      }
+      } else { area.style.display = "none"; }
     }
 
     function selectCustomer(name, memo) {
@@ -462,7 +461,6 @@
       document.querySelector('.scroll-area').scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // --- タグロジック ---
     const defaultChips = {
       cabaret: ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'], 
       fuzoku:  ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'],
@@ -479,7 +477,6 @@
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
       activeTags = isPhoto ? [...photoChips] : [...(defaultChips[type] || defaultChips.cabaret)];
-      
       const epInput = document.getElementById('episodeInput');
       epInput.placeholder = isPhoto ? "日常のひとコマや、えちえちなアピールなどを入力してね！" : "今日あったことや伝えたい話題を入力。音声入力も便利です！";
       renderChips();
@@ -550,12 +547,17 @@
       });
     }
 
-    // ★ 修正：AI生成リクエストも POST (action: generate) に変更
     async function generateDiary() {
       const btn = document.getElementById('submitBtn');
       const name = document.getElementById('nameInput').value;
       const episode = document.getElementById('episodeInput').value;
       const isPhoto = document.getElementById('mode-photo').checked;
+
+      // ★追加：スタイルとスライダーの取得
+      const selectedStyle = document.querySelector('input[name="style"]:checked').id.replace('style-', '');
+      const tensionVal = document.getElementById('tensionSlider').value;
+      const emojiVal = document.getElementById('emojiSlider').value;
+      const customTextVal = document.getElementById('customStyleText').value;
 
       if (!isPhoto && !name) { alert("宛先を入力してください"); return; }
       if (!episode) { alert("エピソードを入力してください"); return; }
@@ -565,7 +567,16 @@
       try {
         const res = await fetch(GAS_URL, {
           method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "generate", name: isPhoto ? "" : name, episode: episode, userId: userId })
+          body: JSON.stringify({ 
+            action: "generate", 
+            name: isPhoto ? "" : name, 
+            episode: episode, 
+            userId: userId,
+            style: selectedStyle,   // 例: "cute", "neat", "custom"
+            tension: tensionVal,    // 1〜5
+            emoji: emojiVal,        // 1〜5
+            customText: customTextVal
+          })
         });
         const data = await res.json();
         if(data.success) {
