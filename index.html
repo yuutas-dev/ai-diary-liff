@@ -65,7 +65,6 @@
     .story-ring { width: 66px; height: 66px; border-radius: 50%; background: var(--primary-gradient); padding: 3px; }
     .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--active-color); border: 2px solid #FFF; }
     .story-name { font-size: 11px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
-    .story-tag { position: absolute; top: -4px; left: -4px; background: #DB2777; color: #FFF; font-size: 9px; font-weight: bold; padding: 2px 4px; border-radius: 6px; z-index: 5; }
 
     .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
     .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
@@ -82,7 +81,6 @@
     .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
     .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
     .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #7A666B; font-weight: bold; margin-bottom: 20px; }
-    .c-tag { background: #FDF2F8; color: #DB2777; border: 1px solid #FBCFE8; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -101,7 +99,7 @@
   <div id="setupModal" class="modal-overlay">
     <div class="modal-content" style="text-align: center;">
       <h2 style="margin: 0 0 10px; font-weight: 900;">🎉 初期設定</h2>
-      <p style="color:var(--text-sub); font-size:14px; font-weight:bold; margin-bottom:24px;">あなたに最適な日記を作るため、<br>現在の業態を教えてください。</p>
+      <p style="color:var(--text-sub); font-size:14px; font-weight:bold; margin-bottom:24px;">現在の業態を教えてください。</p>
       <select id="initialBusinessType" class="input-field" style="margin-bottom: 24px; font-weight:bold; text-align:center;">
         <option value="cabaret">キャバクラ・ラウンジ</option>
         <option value="fuzoku">風俗・メンエス</option>
@@ -131,6 +129,22 @@
         <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:24px;">
       </div>
       <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900; font-size:16px;">設定を保存して閉じる</button>
+    </div>
+  </div>
+
+  <!-- 顧客編集モーダル -->
+  <div id="editCustomerModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">顧客情報の編集</h2>
+      <input type="hidden" id="editCustomerIndex">
+      <span class="label" style="font-size:14px;">名前</span>
+      <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
+      <span class="label" style="font-size:14px;">メモ</span>
+      <textarea id="editCustomerMemo" class="input-field" style="height: 100px; margin-bottom: 24px;"></textarea>
+      <div style="display:flex; gap:10px;">
+        <button onclick="closeEditModal()" style="flex:1; background:#EAE5ED; color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:900;">キャンセル</button>
+        <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900;">保存する</button>
+      </div>
     </div>
   </div>
 
@@ -181,7 +195,7 @@
         <h2 style="margin:0 0 20px; font-weight:900;">顧客カルテ</h2>
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()">
+          <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:16px;">
         </div>
         <div id="customerListArea"></div>
       </div>
@@ -228,7 +242,6 @@
     let activeTags = [];
     let currentBase64Image = null;
 
-    // --- 業種ごとのハードコード設定（ここを編集！） ---
     const industryConfigs = {
       cabaret: {
         prompt: "あなたは歌舞伎町の人気キャバ嬢です。お客様がまた会いに来たくなるような、甘え上手で華やかなお礼を送ってください。",
@@ -245,9 +258,7 @@
     };
     const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装'];
 
-    // --- 初期化 ---
     async function init() {
-      // URLパラメータのチェック（リッチメニュー連携）
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
@@ -268,7 +279,6 @@
         document.getElementById('businessType').value = savedType;
       }
       
-      // ★重要：ここで保存されたタグを読み込み表示する
       updateChips(); 
       fetchCustomers();
     }
@@ -282,7 +292,7 @@
       document.getElementById('setupModal').style.display = 'none';
     }
 
-    // --- タグ永続化ロジック ---
+    // --- タグ関連 ---
     function updateChips() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
@@ -344,7 +354,7 @@
       updateChips();
     }
 
-    // --- 顧客データ ---
+    // --- 顧客データ関連 ---
     async function fetchCustomers() {
       try {
         const res = await fetch(GAS_URL, {
@@ -361,27 +371,49 @@
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea');
       area.innerHTML = "";
-      customerData.slice(0, 10).forEach(c => {
+      // 【変更点】文字列渡しを廃止し、配列のインデックスを渡す
+      customerData.slice(0, 10).forEach((c, index) => {
         area.innerHTML += `
-          <div class="story-item" onclick="selectCustomer('${c.name}', '${c.memo}')">
+          <div class="story-item" onclick="selectCustomerByIndex(${index})">
             <div class="story-ring"><div class="story-inner">${c.name[0]}</div></div>
             <span class="story-name">${c.name}</span>
           </div>`;
       });
     }
 
+    function filterCustomerList() {
+      renderCustomerList(document.getElementById('customerSearch').value);
+    }
+
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea');
       area.innerHTML = "";
-      customerData.filter(c => c.name.includes(filterText)).forEach(c => {
-        area.innerHTML += `<div class="card" onclick="selectCustomer('${c.name}', '${c.memo}')"><b>${c.name}</b><br><small>${c.memo}</small></div>`;
+      customerData.forEach((c, index) => {
+        if(c.name.includes(filterText)){
+          area.innerHTML += `
+            <div class="card" style="margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="flex:1; margin-right:10px;">
+                  <b style="font-size:16px;">${c.name}</b><br>
+                  <small style="color:var(--text-sub); display:block; margin-top:4px;">${c.memo || "メモなし"}</small>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+                  <button onclick="selectCustomerByIndex(${index})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">✏️ 日記作成</button>
+                  <button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集</button>
+                </div>
+              </div>
+            </div>`;
+        }
       });
     }
 
-    function selectCustomer(name, memo) {
+    // 【変更点】上書き式に変更＆インデックスで検索
+    function selectCustomerByIndex(index) {
+      const c = customerData[index];
       document.getElementById('nav-create').checked = true;
-      document.getElementById('nameInput').value = name;
-      document.getElementById('episodeInput').value += memo ? `\n[メモ: ${memo}]` : "";
+      document.getElementById('nameInput').value = c.name;
+      // 追記（+=）から 上書き（=）に変更
+      document.getElementById('episodeInput').value = c.memo ? `[メモ: ${c.memo}]\n` : "";
     }
 
     function suggestCustomer() {
@@ -389,19 +421,75 @@
       const area = document.getElementById('resultArea');
       area.innerHTML = "";
       if (!text) { area.style.display = "none"; return; }
-      const filtered = customerData.filter(c => c.name.includes(text));
-      if (filtered.length > 0) {
-        area.style.display = "block";
-        filtered.forEach(c => {
+      
+      let matchCount = 0;
+      customerData.forEach((c, index) => {
+        if (c.name.includes(text)) {
+          matchCount++;
           const div = document.createElement('div');
           div.className = "suggest-item";
           div.innerText = c.name;
-          div.onclick = () => { selectCustomer(c.name, c.memo); area.style.display = "none"; };
+          div.onclick = () => { selectCustomerByIndex(index); area.style.display = "none"; };
           area.appendChild(div);
-        });
-      }
+        }
+      });
+      area.style.display = matchCount > 0 ? "block" : "none";
     }
 
+    // --- 顧客編集ロジック ---
+    let editingOriginalName = "";
+    function openEditModal(index) {
+      const c = customerData[index];
+      document.getElementById('editCustomerIndex').value = index;
+      document.getElementById('editCustomerName').value = c.name;
+      document.getElementById('editCustomerMemo').value = c.memo;
+      editingOriginalName = c.name; // シート検索用に元の名前を保持
+      document.getElementById('editCustomerModal').style.display = 'flex';
+    }
+    function closeEditModal() {
+      document.getElementById('editCustomerModal').style.display = 'none';
+    }
+
+    async function saveCustomerEdit() {
+      const index = document.getElementById('editCustomerIndex').value;
+      const newName = document.getElementById('editCustomerName').value.trim();
+      const newMemo = document.getElementById('editCustomerMemo').value.trim();
+      
+      if(!newName) return alert("名前は必須です");
+
+      const btn = document.getElementById('saveCustomerBtn');
+      btn.innerText = "保存中..."; btn.disabled = true;
+
+      try {
+        const payload = {
+          action: "updateCustomer",
+          userId: userId,
+          oldName: editingOriginalName,
+          newName: newName,
+          newMemo: newMemo
+        };
+        const res = await fetch(GAS_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if(data.success) {
+          customerData[index].name = newName;
+          customerData[index].memo = newMemo;
+          renderQuickAccess();
+          renderCustomerList();
+          closeEditModal();
+        } else {
+          alert("保存に失敗しました。");
+        }
+      } catch(e) {
+         alert("エラーが発生しました。");
+      }
+      btn.innerText = "保存する"; btn.disabled = false;
+    }
+
+    // --- その他UI関連 ---
     function previewPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -440,8 +528,8 @@
         tension: document.getElementById('tensionSlider').value,
         emoji: document.getElementById('emojiSlider').value,
         customText: document.getElementById('customStyleText').value,
-        industryPrompt: industryConfigs[type].prompt, // ★業種ごとのプロンプトを送信
-        image: currentBase64Image // ★Vision用
+        industryPrompt: industryConfigs[type].prompt,
+        image: currentBase64Image 
       };
 
       try {
@@ -451,6 +539,9 @@
         });
         if ((await res.json()).success) {
           alert("送信完了！LINEを見てね");
+          // 【変更点】送信完了後にデータをクリア
+          document.getElementById('nameInput').value = "";
+          document.getElementById('episodeInput').value = "";
           liff.closeWindow();
         }
       } catch (e) { alert("エラーだよ"); }
