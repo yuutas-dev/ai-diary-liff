@@ -15,7 +15,7 @@
     html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: 'Hiragino Maru Gothic ProN', sans-serif; -webkit-tap-highlight-color: transparent; }
     input[type="radio"].ui-state { display: none; }
 
-    /* ナビゲーション */
+    /* ナビゲーション・基本レイアウト */
     .page { display: none; flex-direction: column; padding-bottom: 20px; }
     #nav-create:checked ~ .app-container .page-create { display: flex; }
     #nav-data:checked ~ .app-container .page-data { display: flex; }
@@ -23,44 +23,25 @@
     #nav-create:checked ~ .app-container .tab-create, #nav-data:checked ~ .app-container .tab-data, #nav-settings:checked ~ .app-container .tab-settings { color: var(--active-color); }
     #nav-create:not(:checked) ~ .app-container .header-toggle, #nav-create:not(:checked) ~ .app-container .submit-area { display: none; }
 
-    /* モード切り替えUI */
-    .mode-photo-ui, .mode-text-ui { display: none; }
-    #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
-    #mode-text:checked ~ .app-container .mode-text-ui { display: block; }
-    #mode-photo:checked ~ .app-container .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
-    #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
-
-    /* スタイル切り替えUI */
-    .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
-    #style-cute:checked ~ .modal-overlay .style-desc-cute, #style-cute:checked ~ .app-container .style-desc-cute { display: block; }
-    #style-custom:checked ~ .modal-overlay .style-desc-custom, #style-custom:checked ~ .app-container .style-desc-custom { display: block; }
-    #style-neat:checked ~ .modal-overlay .style-desc-neat, #style-neat:checked ~ .app-container .style-desc-neat { display: block; }
-    #style-cute:checked ~ .modal-overlay .btn-cute, #style-cute:checked ~ .app-container .btn-cute { background: var(--primary-gradient); color: white; border-color: transparent; }
-    #style-custom:checked ~ .modal-overlay .btn-custom, #style-custom:checked ~ .app-container .btn-custom { background: var(--primary-gradient); color: white; border-color: transparent; }
-    #style-neat:checked ~ .modal-overlay .btn-neat, #style-neat:checked ~ .app-container .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
-
-    /* レイアウト */
     .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
     .header-area { padding: env(safe-area-inset-top, 20px) 16px 10px; background: rgba(244, 242, 247, 0.85); backdrop-filter: blur(12px); z-index: 100; flex-shrink: 0; }
     .app-title { text-align: center; font-size: 22px; font-weight: 900; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
     .toggle-container { display: flex; background: #EAE5ED; border-radius: 40px; padding: 4px; }
     .toggle-label { flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: 900; color: var(--text-sub); border-radius: 34px; transition: 0.3s; cursor: pointer; }
     .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 160px); }
-    .fixed-footer { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; pointer-events: none; }
-    .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
-    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; transition: 0.2s; }
-    .submit-btn:disabled { background: #E5E7EB; box-shadow: none; color: #9CA3AF; cursor: not-allowed; }
-    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
-    .nav-icon { font-size: 26px; }
+    
+    /* モード切り替え */
+    .mode-photo-ui { display: none; }
+    #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
+    #mode-photo:checked ~ .app-container .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
+    #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
 
-    /* カード・汎用パーツ */
+    /* カード・UIパーツ */
     .card { background: var(--card-bg); border-radius: 20px; padding: 22px 20px; margin-bottom: 20px; box-shadow: var(--shadow-md); }
     .label { font-weight: 900; font-size: 16px; margin-bottom: 12px; display: block; color: var(--text-main); }
     .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 16px; font-size: 16px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
-    .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
 
-    /* 横スクロールUI（顧客アイコン用） */
+    /* 顧客アイコン横スワイプ */
     .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
     .fade-scroll-wrapper::after { content: ""; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(to right, transparent, var(--card-bg)); pointer-events: none; }
     .stories-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 10px 40px 10px 0; scrollbar-width: none; }
@@ -68,91 +49,40 @@
     .story-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; width: 66px; position: relative; }
     .story-ring { width: 66px; height: 66px; border-radius: 50%; background: var(--primary-gradient); padding: 3px; position: relative; }
     .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--active-color); border: 2px solid #FFF; }
-    .story-name { font-size: 11px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
-    .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); border: 1.5px solid #FFF; z-index: 5; white-space: nowrap; max-width: 50px; overflow: hidden; text-overflow: ellipsis; }
+    .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 10px; border: 1.5px solid #FFF; z-index: 5; }
 
-    /* 属性タグ（見るだけ） */
-    .attr-chip { background: #FDF2F8; border: 1px solid #FBCFE8; color: #DB2777; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 900; flex-shrink: 0; display: flex; align-items: center; }
-    .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 40px 10px 0; scrollbar-width: none; align-items: center; }
-    .tags-scroll-container::-webkit-scrollbar { display: none; }
+    /* 【NEW】選択済みエピソードタグ表示エリア */
+    .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; min-height: 30px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
+    .selected-chip { background: var(--primary-gradient); color: #FFF; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 4px; animation: pop 0.2s ease-out; }
+    @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-    /* エピソードタグ（タップ入力・多段折り返し） */
-    .episode-tags-container { 
-      display: flex; 
-      flex-wrap: wrap; /* ここで折り返しを有効化 */
-      gap: 8px; 
-      padding: 4px 0 10px 0; 
-      max-height: 140px; /* 大体3〜4行分 */
-      overflow-y: auto; /* はみ出たら縦スクロール */
-      scrollbar-width: thin;
-      scrollbar-color: #FBCFE8 transparent;
-    }
-    .chip { background: #FFF; border: 1px solid #E5E7EB; color: #4F46E5; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    /* エピソードタグ（多段・動的） */
+    .episode-tags-container { display: flex; flex-wrap: wrap; gap: 8px; max-height: 140px; overflow-y: auto; padding: 4px 0; }
+    .chip { background: #FFF; border: 1px solid #E5E7EB; color: #4F46E5; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; }
+    .chip.dimmed { opacity: 0.3; background: #F3F4F6; color: #9CA3AF; border-color: transparent; pointer-events: none; }
 
-    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
-    .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
-    .textarea-wrapper { position: relative; }
-    textarea.input-field { height: 140px; resize: none; padding-right: 50px; line-height: 1.6; }
-    .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; }
-    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; cursor: pointer; position: relative; overflow: hidden; }
-    .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+    /* 属性タグ（顧客用） */
+    .attr-chip { background: #FDF2F8; border: 1px solid #FBCFE8; color: #DB2777; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 900; flex-shrink: 0; }
+    .edit-attr-chip { padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.1s; border: 1px solid #FBCFE8; }
 
+    /* 送信・ナビ */
+    .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
+    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; }
+    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
+    
     /* モーダル */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
     .modal-content { background: #FFF; border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
-    .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
-    .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
-    .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #7A666B; font-weight: bold; margin-bottom: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- ラジオボタン群 -->
   <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
   <input type="radio" name="nav" id="nav-data" class="ui-state">
   <input type="radio" name="nav" id="nav-settings" class="ui-state">
   <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
   <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
-  <input type="radio" name="style" id="style-cute" class="ui-state" checked>
-  <input type="radio" name="style" id="style-custom" class="ui-state">
-  <input type="radio" name="style" id="style-neat" class="ui-state">
-
-  <!-- 初期設定モーダル -->
-  <div id="setupModal" class="modal-overlay">
-    <div class="modal-content" style="text-align: center;">
-      <h2 style="margin: 0 0 10px; font-weight: 900;">🎉 初期設定</h2>
-      <p style="color:var(--text-sub); font-size:14px; font-weight:bold; margin-bottom:24px;">現在の業態を教えてください。</p>
-      <select id="initialBusinessType" class="input-field" style="margin-bottom: 24px; font-weight:bold; text-align:center;">
-        <option value="cabaret">キャバクラ・ラウンジ</option>
-        <option value="fuzoku">風俗・メンエス</option>
-        <option value="host">ホストクラブ</option>
-      </select>
-      <button onclick="saveInitialSetup()" style="width:100%; background:var(--primary-gradient); color:#FFF; border:none; padding:18px; border-radius:30px; font-weight:900; font-size:16px;">はじめる ✨</button>
-    </div>
-  </div>
-
-  <!-- スタイル設定モーダル -->
-  <div id="styleModal" class="modal-overlay">
-    <div class="modal-content">
-      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
-      <div class="style-selector">
-        <label for="style-cute" class="style-btn btn-cute">かわいい</label>
-        <label for="style-custom" class="style-btn btn-custom">カスタム</label>
-        <label for="style-neat" class="style-btn btn-neat">清楚</label>
-      </div>
-      <div class="style-desc-cute style-desc-box">🎀 可愛らしく、絵文字を多用した親しみやすい文体。</div>
-      <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
-      <div class="style-desc-custom">
-        <div class="style-desc-box">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
-        <textarea id="customStyleText" class="input-field" placeholder="学習用の過去の文章をここにペースト..." style="height: 120px; margin-bottom:20px;"></textarea>
-        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px;"><span>テンション（低）</span><span>（高）</span></div>
-        <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:24px;">
-        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px;"><span>絵文字の量（少）</span><span>（多）</span></div>
-        <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:24px;">
-      </div>
-      <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900; font-size:16px;">設定を保存して閉じる</button>
-    </div>
-  </div>
 
   <!-- 顧客編集モーダル -->
   <div id="editCustomerModal" class="modal-overlay">
@@ -163,8 +93,13 @@
       <span class="label" style="font-size:14px;">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
       
-      <span class="label" style="font-size:14px;">属性タグ（タップで選択）</span>
-      <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;"></div>
+      <span class="label" style="font-size:14px;">属性タグ（タップで選択 / 自由追加）</span>
+      <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
+      
+      <div style="display:flex; gap:8px; margin-bottom:20px;">
+        <input type="text" id="newAttrInput" class="input-field" placeholder="自由タグ追加..." style="padding:10px; font-size:13px;">
+        <button onclick="addNewAttribute()" style="background:var(--active-color); color:#FFF; border:none; border-radius:12px; padding:0 15px; font-weight:bold;">追加</button>
+      </div>
 
       <span class="label" style="font-size:14px;">メモ</span>
       <textarea id="editCustomerMemo" class="input-field" style="height: 100px; margin-bottom: 24px;"></textarea>
@@ -186,87 +121,53 @@
     </header>
 
     <main class="scroll-area">
-      <!-- 作成タブ -->
       <div class="page page-create">
-        <div class="card customer-select-card">
+        <div class="card">
           <span class="label">👤 誰に送る？</span>
-          <div class="fade-scroll-wrapper">
-            <div class="stories-scroll" id="quickAccessArea"></div>
-          </div>
+          <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea"></div></div>
           <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
-          <div id="resultArea" class="result-box"></div>
+          <div id="resultArea" style="display:none;" class="card"></div>
         </div>
 
         <div class="card mode-photo-ui">
           <span class="label">📷 写真を選ぶ</span>
-          <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
-          <label for="photoUpload" class="upload-area" id="uploadArea">
-            <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
-            <img id="photoPreview">
+          <input type="file" id="photoUpload" accept="image/*" style="display:none;" onchange="previewPhoto(event)">
+          <label for="photoUpload" id="uploadArea" class="card" style="text-align:center; border:2px dashed #DDD; cursor:pointer;">
+            <div id="uploadText">📸 タップしてアップロード</div>
+            <img id="photoPreview" style="width:100%; display:none; border-radius:12px;">
           </label>
         </div>
 
         <div class="card">
-          <span class="label">📝 エピソード・キーワード</span>
+          <span class="label">📝 本日の内容</span>
           
-          <!-- 属性タグ表示エリア（横スクロール） -->
-          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display: none; margin-bottom: 8px;">
-            <div class="tags-scroll-container" id="attributeTagsArea"></div>
-          </div>
+          <!-- 選択した属性タグ（見るだけ） -->
+          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none;"><div class="tags-scroll-container" id="attributeTagsArea"></div></div>
+
+          <!-- 【Idea ①】選択済みエピソードタグ -->
+          <div id="selectedEpisodeTags" class="selected-tags-box"></div>
 
           <div class="textarea-wrapper">
-            <textarea id="episodeInput" class="input-field"></textarea>
+            <textarea id="episodeInput" class="input-field" oninput="autoScrollTextarea()"></textarea>
             <div class="mic-btn" onclick="startDictation()">🎤</div>
           </div>
           
-          <!-- ★修正：エピソードタグ（多段折り返し）エリア -->
-          <div class="episode-tags-container" id="dynamicChips" style="margin-top: 12px;"></div>
-          
-          <div style="margin-top: 12px; display: flex; gap: 8px;">
-            <input type="text" id="customTagInput" placeholder="＋タグ追加" style="flex:1; border:none; background:var(--input-bg); padding:10px; border-radius:10px;">
-            <button onclick="addCustomTag()" style="background:var(--active-color); color:#fff; border:none; padding:0 15px; border-radius:10px;">追加</button>
-          </div>
+          <div class="episode-tags-container" id="dynamicChips"></div>
         </div>
       </div>
 
-      <!-- 顧客タブ -->
       <div class="page page-data">
         <h2 style="margin:0 0 20px; font-weight:900;">顧客カルテ</h2>
-        <div class="search-box">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:16px;">
-        </div>
+        <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="renderCustomerList(this.value)" style="margin-bottom:16px;">
         <div id="customerListArea"></div>
-      </div>
-
-      <!-- 設定タブ -->
-      <div class="page page-settings">
-        <h2 style="margin:0 0 20px; font-weight:900;">設定</h2>
-        <div class="card" onclick="openStyleModal()" style="cursor:pointer; border: 2px solid #FBCFE8;">
-          <span style="font-weight:900; color:#DB2777;">🎨 AIの口調・スタイル設定</span>
-          <p style="font-size:12px; color:var(--text-sub); margin-top:5px;">かわいい・清楚・オリジナル学習</p>
-        </div>
-        <div class="settings-list">
-          <div class="settings-item">
-            <span>🏢 業態設定</span>
-            <select class="input-field" id="businessType" onchange="updateChipsAndSave()" style="width:auto; padding:5px;">
-              <option value="cabaret">キャバクラ</option>
-              <option value="fuzoku">風俗・メンエス</option>
-              <option value="host">ホスト</option>
-            </select>
-          </div>
-        </div>
       </div>
     </main>
 
     <footer class="fixed-footer">
-      <div class="submit-area">
-        <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
-      </div>
+      <div class="submit-area"><button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button></div>
       <nav class="bottom-nav">
-        <label for="nav-create" class="nav-item tab-create"><span class="nav-icon">📝</span>作成</label>
-        <label for="nav-data" class="nav-item tab-data"><span class="nav-icon">📖</span>顧客</label>
-        <label for="nav-settings" class="nav-item tab-settings"><span class="nav-icon">⚙️</span>設定</label>
+        <label for="nav-create" class="nav-item tab-create">📝作成</label>
+        <label for="nav-data" class="nav-item tab-data">📖顧客</label>
       </nav>
     </footer>
   </div>
@@ -278,206 +179,93 @@
 
     let userId = "test-user";
     let customerData = [];
-    let activeTags = []; 
     let currentCustomerTags = []; 
+    let selectedEpisodeTags = []; // 現在のセッションで選択されたタグ
     let currentBase64Image = null;
 
-    // 属性タグのプリセット
-    const presetAttributeTags = [
-      '太客', '細客', '新規', '常連', 
-      'デブ', 'ハゲ', 'おじさん', '若者', 'イケメン', 
-      '金持ち', 'ケチ', 'お酒好き', '下戸', 
-      '既婚', '独身', '優しい', '短気', 
-      '寂しがり', 'M', 'S'
-    ];
-    let tempSelectedAttributes = [];
+    const presetAttributeTags = ['太客', '常連', '新規', '痛客', 'デブ', 'ハゲ', '金持ち', 'ケチ', 'お酒好き', '下戸', '既婚', '独身', '優しい', 'M気質', 'S気質'];
+    let tempSelectedAttributes = []; // 編集モーダル用一時配列
 
     const industryConfigs = {
-      cabaret: {
-        prompt: "あなたは歌舞伎町の人気キャバ嬢です。お客様がまた会いに来たくなるような、甘え上手で華やかなお礼を送ってください。",
-        tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '💕 祝・開店', '🥺 会いたい', '👗 ドレス', '🍷 ワイン', '🎤 カラオケ', '🥺 感謝', '💌 連絡待ってる']
-      },
-      fuzoku: {
-        prompt: "あなたはサービス精神旺盛なセラピストです。お客様との親密な時間を大切にし、少し色っぽく、癒やしを与える文章を書いてください。",
-        tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密']
-      },
-      host: {
-        prompt: "あなたはカリスマホストです。姫が自分だけが特別だと感じるような、情熱的で独占欲を煽るメッセージを書いてください。",
-        tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー']
-      }
+      cabaret: { tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '💕 祝・開店', '🥺 会いたい', '👗 ドレス', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', '💖 感謝'] },
+      fuzoku: { tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧸 癒やし', '💋 キス', '🚿 シャワー', '🥺 寂しい', '🛀 お風呂', '🧴 オイル', '💖 大好き'] }
     };
-    const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯'];
 
     async function init() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
-      if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
-      if (params.get('action') === 'style') openStyleModal();
-
       try {
         await liff.init({ liffId: LIFF_ID });
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          userId = profile.userId;
-        }
-      } catch (e) { console.log("LIFF Init Error"); }
-
-      const savedType = localStorage.getItem('businessType');
-      if (!savedType) {
-        document.getElementById('setupModal').style.display = 'flex';
-      } else {
-        document.getElementById('businessType').value = savedType;
-      }
-      
-      updateChips(); 
+        if (liff.isLoggedIn()) { userId = (await liff.getProfile()).userId; }
+      } catch (e) {}
       fetchCustomers();
+      updateChips();
     }
     window.onload = init;
 
-    function saveInitialSetup() {
-      const type = document.getElementById('initialBusinessType').value;
-      localStorage.setItem('businessType', type);
-      document.getElementById('businessType').value = type;
-      updateChips();
-      document.getElementById('setupModal').style.display = 'none';
-    }
-
-    // --- エピソードタグ（ショートカット）関連 ---
+    // --- エピソードタグ（Idea ① 刷新） ---
     function updateChips() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
-      const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
+      const tags = isPhoto ? ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装'] : industryConfigs[type].tags;
       
-      const savedTags = localStorage.getItem(storageKey);
-      if (savedTags) {
-        activeTags = JSON.parse(savedTags);
-      } else {
-        activeTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags];
-      }
-      document.getElementById('episodeInput').placeholder = isPhoto ? "えちえちな日常などを入力！" : "今日あったことを入力！";
-      renderChips();
-    }
-
-    function renderChips() {
       const container = document.getElementById('dynamicChips');
       container.innerHTML = '';
-      activeTags.forEach((text, index) => {
-        const chip = document.createElement('div');
-        chip.className = 'chip';
-        chip.innerHTML = `${text} <span style="color:#CCC; margin-left:4px;" onclick="removeTag(event, ${index})">×</span>`;
-        chip.onclick = (e) => {
-          if (e.target.tagName === 'SPAN') return;
-          const ep = document.getElementById('episodeInput');
-          ep.value += (ep.value ? " " : "") + text;
-        };
-        container.appendChild(chip);
+      tags.forEach(tag => {
+        const isSelected = selectedEpisodeTags.includes(tag);
+        const div = document.createElement('div');
+        div.className = `chip ${isSelected ? 'dimmed' : ''}`;
+        div.innerText = tag;
+        div.onclick = () => selectEpisodeTag(tag);
+        container.appendChild(div);
       });
     }
 
-    function saveTagsToStorage() {
-      const type = localStorage.getItem('businessType') || 'cabaret';
-      const isPhoto = document.getElementById('mode-photo').checked;
-      const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
-      localStorage.setItem(storageKey, JSON.stringify(activeTags));
-    }
-
-    function addCustomTag() {
-      const input = document.getElementById('customTagInput');
-      if(input.value.trim() !== "") {
-        activeTags.unshift(input.value.trim()); 
-        input.value = "";
-        renderChips();
-        saveTagsToStorage();
+    function selectEpisodeTag(tag) {
+      if (!selectedEpisodeTags.includes(tag)) {
+        selectedEpisodeTags.push(tag);
+        renderSelectedEpisodeTags();
+        updateChips();
       }
     }
-    
-    function removeTag(event, index) {
-      event.stopPropagation();
-      activeTags.splice(index, 1);
-      renderChips();
-      saveTagsToStorage();
+
+    function renderSelectedEpisodeTags() {
+      const area = document.getElementById('selectedEpisodeTags');
+      area.innerHTML = '';
+      selectedEpisodeTags.forEach((tag, index) => {
+        const div = document.createElement('div');
+        div.className = 'selected-chip';
+        div.innerHTML = `${tag} <span onclick="removeEpisodeTag(${index})" style="margin-left:4px;">×</span>`;
+        area.appendChild(div);
+      });
     }
 
-    function updateChipsAndSave() {
-      localStorage.setItem('businessType', document.getElementById('businessType').value);
+    function removeEpisodeTag(index) {
+      selectedEpisodeTags.splice(index, 1);
+      renderSelectedEpisodeTags();
       updateChips();
     }
 
-    // --- 1. データの読み込み（完全無敵化） ---
-    async function fetchCustomers() {
-      try {
-        const res = await fetch(GAS_URL, {
-          method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "getCustomers", userId: userId })
-        });
-        const data = await res.json();
-        if(data.success) {
-          customerData = data.customers.map(c => ({
-            ...c,
-            // ★超重要：シートが空でも数字でも、絶対に「文字列」として扱うようガード
-            name: String(c.name || "名前なし"),
-            memo: String(c.memo || ""),
-            tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : []
-          }));
-        } else {
-          customerData = [];
-        }
-        renderCustomerList();
-        renderQuickAccess();
-      } catch (e) { 
-        // ★エラーが起きたら原因をポップアップで表示する（原因究明用）
-        alert("データ読み込みエラー: " + e.message); 
-        renderQuickAccess(); 
-      }
+    function autoScrollTextarea() {
+      const el = document.getElementById('episodeInput');
+      el.scrollTop = el.scrollHeight;
     }
 
-    // --- 2. アイコンの描画（空文字でのクラッシュ防止） ---
+    // --- 顧客データ関連 ---
+    async function fetchCustomers() {
+      const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getCustomers", userId: userId }) });
+      const data = await res.json();
+      customerData = data.success ? data.customers.map(c => ({
+        ...c, name: String(c.name || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : []
+      })) : [];
+      renderCustomerList();
+      renderQuickAccess();
+    }
+
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea');
       area.innerHTML = "";
-      customerData.slice(0, 10).forEach((c, index) => {
-        const firstTag = c.tagsArray.length > 0 ? `<div class="story-badge">${c.tagsArray[0]}</div>` : '';
-        // ★名前の1文字目を取る時も、確実に文字列にしてから切り取る
-        const firstChar = c.name ? String(c.name).charAt(0) : "👤";
-        
-        area.innerHTML += `
-          <div class="story-item" onclick="selectCustomerByIndex(${index})">
-            <div class="story-ring">
-              ${firstTag}
-              <div class="story-inner">${firstChar}</div>
-            </div>
-            <span class="story-name">${c.name}</span>
-          </div>`;
-      });
-    }
-
-    // --- 3. 顧客リストの描画（検索でのクラッシュ防止） ---
-    function renderCustomerList(filterText = "") {
-      const area = document.getElementById('customerListArea');
-      area.innerHTML = "";
-      customerData.forEach((c, index) => {
-        // ★検索する時も、確実に文字列として扱う
-        if(String(c.name).includes(filterText)){
-          const tagHtml = c.tagsArray.length > 0 ? 
-            `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + 
-            c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') +
-            `</div>` : '';
-
-          area.innerHTML += `
-            <div class="card" style="margin-bottom:10px;">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div style="flex:1; margin-right:10px;">
-                  <b style="font-size:16px;">${c.name}</b><br>
-                  <small style="color:var(--text-sub); display:block; margin-top:4px;">${c.memo || "メモなし"}</small>
-                  ${tagHtml}
-                </div>
-                <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
-                  <button onclick="selectCustomerByIndex(${index})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">✏️ 日記作成</button>
-                  <button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集</button>
-                </div>
-              </div>
-            </div>`;
-        }
+      customerData.slice(0, 15).forEach((c, index) => {
+        const badge = c.tagsArray[0] ? `<div class="story-badge">${c.tagsArray[0]}</div>` : '';
+        area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="story-ring">${badge}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
       });
     }
 
@@ -485,60 +273,29 @@
       const c = customerData[index];
       document.getElementById('nav-create').checked = true;
       document.getElementById('nameInput').value = c.name;
-      document.getElementById('episodeInput').value = c.memo ? `[メモ: ${c.memo}]\n` : "";
+      document.getElementById('episodeInput').value = c.memo ? `[接客メモ: ${c.memo}]\n` : "";
       currentCustomerTags = c.tagsArray;
       renderAttributeTags();
+      selectedEpisodeTags = []; // タグ選択をリセット
+      renderSelectedEpisodeTags();
+      updateChips();
     }
 
     function renderAttributeTags() {
       const wrapper = document.getElementById('attributeTagsWrapper');
       const area = document.getElementById('attributeTagsArea');
-      area.innerHTML = '';
-      if (currentCustomerTags.length > 0) {
-        currentCustomerTags.forEach(t => {
-          area.innerHTML += `<div class="attr-chip">#${t}</div>`;
-        });
-        wrapper.style.display = 'block';
-      } else {
-        wrapper.style.display = 'none';
-      }
+      area.innerHTML = currentCustomerTags.map(t => `<div class="attr-chip">#${t}</div>`).join('');
+      wrapper.style.display = currentCustomerTags.length ? 'block' : 'none';
     }
 
-    function suggestCustomer() {
-      const text = document.getElementById('nameInput').value;
-      const area = document.getElementById('resultArea');
-      area.innerHTML = "";
-      if (!text) { 
-        area.style.display = "none"; 
-        currentCustomerTags = [];
-        renderAttributeTags();
-        return; 
-      }
-      let matchCount = 0;
-      customerData.forEach((c, index) => {
-        if (c.name.includes(text)) {
-          matchCount++;
-          const div = document.createElement('div');
-          div.className = "suggest-item";
-          div.innerText = c.name;
-          div.onclick = () => { selectCustomerByIndex(index); area.style.display = "none"; };
-          area.appendChild(div);
-        }
-      });
-      area.style.display = matchCount > 0 ? "block" : "none";
-    }
-
-    // --- 顧客編集ロジック ---
-    let editingOriginalName = "";
-    
+    // --- 顧客編集・属性タグ自由追加 ---
     function openEditModal(index) {
       const c = customerData[index];
       document.getElementById('editCustomerIndex').value = index;
       document.getElementById('editCustomerName').value = c.name;
       document.getElementById('editCustomerMemo').value = c.memo;
-      editingOriginalName = c.name; 
-      
       tempSelectedAttributes = [...c.tagsArray];
+      editingOriginalName = c.name;
       renderEditAttributeTags();
       document.getElementById('editCustomerModal').style.display = 'flex';
     }
@@ -546,138 +303,89 @@
     function renderEditAttributeTags() {
       const area = document.getElementById('editAttributeTagsArea');
       area.innerHTML = '';
-      presetAttributeTags.forEach(tag => {
+      
+      // プリセット + その顧客だけのオリジナルタグを結合
+      const allTags = Array.from(new Set([...presetAttributeTags, ...tempSelectedAttributes]));
+      
+      allTags.forEach(tag => {
         const isSelected = tempSelectedAttributes.includes(tag);
-        const bg = isSelected ? '#DB2777' : '#FFF';
-        const color = isSelected ? '#FFF' : '#DB2777';
-        const border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
-        area.innerHTML += `<div onclick="toggleAttributeTag('${tag}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:900; cursor:pointer; user-select:none;">#${tag}</div>`;
+        const div = document.createElement('div');
+        div.className = 'edit-attr-chip';
+        div.style.background = isSelected ? '#DB2777' : '#FFF';
+        div.style.color = isSelected ? '#FFF' : '#DB2777';
+        div.innerText = `#${tag}`;
+        div.onclick = () => {
+          if(isSelected) tempSelectedAttributes = tempSelectedAttributes.filter(t => t !== tag);
+          else tempSelectedAttributes.push(tag);
+          renderEditAttributeTags();
+        };
+        area.appendChild(div);
       });
     }
 
-    function toggleAttributeTag(tag) {
-      if(tempSelectedAttributes.includes(tag)) {
-        tempSelectedAttributes = tempSelectedAttributes.filter(t => t !== tag);
-      } else {
-        tempSelectedAttributes.push(tag);
+    function addNewAttribute() {
+      const input = document.getElementById('newAttrInput');
+      const val = input.value.trim();
+      if(val && !tempSelectedAttributes.includes(val)) {
+        tempSelectedAttributes.push(val);
+        input.value = '';
+        renderEditAttributeTags();
       }
-      renderEditAttributeTags();
-    }
-    
-    function closeEditModal() {
-      document.getElementById('editCustomerModal').style.display = 'none';
     }
 
     async function saveCustomerEdit() {
       const index = document.getElementById('editCustomerIndex').value;
-      const newName = document.getElementById('editCustomerName').value.trim();
-      const newMemo = document.getElementById('editCustomerMemo').value.trim();
-      const newTagsStr = tempSelectedAttributes.join(', ');
-      
-      if(!newName) return alert("名前は必須です");
-
-      const btn = document.getElementById('saveCustomerBtn');
-      btn.innerText = "保存中..."; btn.disabled = true;
-
-      try {
-        const payload = {
-          action: "updateCustomer",
-          userId: userId,
-          oldName: editingOriginalName,
-          newName: newName,
-          newTags: newTagsStr, 
-          newMemo: newMemo
-        };
-        const res = await fetch(GAS_URL, {
-          method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if(data.success) {
-          customerData[index].name = newName;
-          customerData[index].memo = newMemo;
-          customerData[index].tags = newTagsStr;
-          customerData[index].tagsArray = [...tempSelectedAttributes];
-          
-          renderQuickAccess();
-          renderCustomerList();
-          closeEditModal();
-        } else {
-          alert("保存に失敗しました。");
-        }
-      } catch(e) {
-         alert("エラーが発生しました。");
-      }
-      btn.innerText = "保存する"; btn.disabled = false;
-    }
-
-    // --- その他UI関連 ---
-    function previewPhoto(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        currentBase64Image = e.target.result;
-        document.getElementById('photoPreview').src = e.target.result;
-        document.getElementById('photoPreview').style.display = 'block';
-        document.getElementById('uploadText').style.display = 'none';
+      const payload = {
+        action: "updateCustomer", userId: userId, oldName: editingOriginalName,
+        newName: document.getElementById('editCustomerName').value,
+        newTags: tempSelectedAttributes.join(','),
+        newMemo: document.getElementById('editCustomerMemo').value
       };
-      reader.readAsDataURL(file);
+      const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+      if((await res.json()).success) { fetchCustomers(); closeEditModal(); }
     }
 
-    function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
-    function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
+    function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
 
-    // --- 送信 ---
+    // --- 日記生成 ---
     async function generateDiary() {
       const btn = document.getElementById('submitBtn');
       const name = document.getElementById('nameInput').value;
       const episode = document.getElementById('episodeInput').value;
-      const isPhoto = document.getElementById('mode-photo').checked;
-      const type = localStorage.getItem('businessType') || 'cabaret';
-
-      if (!isPhoto && !name) return alert("名前を入れてね");
-      if (!episode) return alert("内容を入れてね");
+      if(!name || !episode) return alert("名前とエピソードを入れてね");
 
       btn.innerText = "作成中...🚀"; btn.disabled = true;
 
       const payload = {
-        action: "generate",
-        userId: userId,
-        name: name,
-        episode: episode,
-        style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
-        tension: document.getElementById('tensionSlider').value,
-        emoji: document.getElementById('emojiSlider').value,
-        customText: document.getElementById('customStyleText').value,
-        industryPrompt: industryConfigs[type].prompt,
-        customerTags: currentCustomerTags.join(', '), 
-        image: currentBase64Image 
+        action: "generate", userId: userId, name: name, episode: episode,
+        customerTags: currentCustomerTags.join(', '), // 顧客属性
+        episodeTags: selectedEpisodeTags.join(', '),  // 今日のエピソードタグ
+        style: document.querySelector('input[name="style"]:checked')?.id?.replace('style-','') || "cute"
       };
 
-      try {
-        const res = await fetch(GAS_URL, {
-          method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload)
-        });
-        if ((await res.json()).success) {
-          alert("送信完了！LINEを見てね");
-          document.getElementById('nameInput').value = "";
-          document.getElementById('episodeInput').value = "";
-          currentCustomerTags = [];
-          renderAttributeTags();
-          liff.closeWindow();
-        }
-      } catch (e) { alert("エラーだよ"); }
+      const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+      if((await res.json()).success) {
+        alert("送信完了！");
+        location.reload(); // リセット
+      }
       btn.innerText = "✨ AIで作成する"; btn.disabled = false;
     }
 
-    function startDictation() {
-      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Speech) return alert("未対応ブラウザです");
-      const rec = new Speech(); rec.lang = 'ja-JP'; rec.start();
-      rec.onresult = e => { document.getElementById('episodeInput').value += e.results[0][0].transcript; };
+    function renderCustomerList(filter = "") {
+      const area = document.getElementById('customerListArea');
+      area.innerHTML = customerData.filter(c => c.name.includes(filter)).map((c, i) => `
+        <div class="card" style="display:flex; justify-content:space-between;">
+          <div><b>${c.name}</b><br><small>${c.memo || ""}</small></div>
+          <button onclick="selectCustomerByIndex(${customerData.indexOf(c)})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px; border-radius:8px;">作成</button>
+          <button onclick="openEditModal(${customerData.indexOf(c)})" style="background:#EEE; border:none; padding:8px; border-radius:8px;">編集</button>
+        </div>
+      `).join('');
+    }
+    
+    function suggestCustomer() {
+      const text = document.getElementById('nameInput').value;
+      if(!text) { document.getElementById('resultArea').style.display='none'; return; }
+      renderCustomerList(text);
     }
   </script>
 </body>
