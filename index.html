@@ -46,6 +46,9 @@
     .label { font-weight: 900; font-size: 15px; margin-bottom: 8px; display: block; color: var(--text-main); }
     .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 14px; padding: 14px; font-size: 15px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
+    
+    /* プレースホルダーの文字色調整 */
+    ::placeholder { color: #BDB2B5; }
 
     /* 顧客アイコン横スワイプ */
     .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 8px; }
@@ -69,7 +72,7 @@
     .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 0 40px 6px 0; scrollbar-width: none; align-items: center; }
     .tags-scroll-container::-webkit-scrollbar { display: none; }
 
-    /* メモブロックUI (編集用) - フェードアウト対応 */
+    /* メモブロックUI */
     .memo-blocks-wrapper { position: relative; margin-bottom: 8px; }
     .memo-blocks-wrapper::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 24px; background: linear-gradient(to bottom, #FFF, transparent); z-index: 10; pointer-events: none; border-radius: 12px; }
     #editMemoBlocksArea { max-height: 240px; overflow-y: auto; padding-top: 12px; scrollbar-width: thin; scroll-behavior: smooth; }
@@ -82,7 +85,7 @@
     .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: #FDF2F8; transition: 0.2s; }
     .add-memo-btn:active { transform: scale(0.98); }
 
-    /* 過去メモ閲覧（日記作成画面）極小余白 */
+    /* 過去メモ閲覧 */
     .past-memo-box { background: #EAE5ED; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #555; white-space: pre-wrap; margin-bottom: 8px; margin-top: 2px; max-height: 100px; overflow-y: auto; border: 1px solid #D1C5D4; }
     .past-memo-label { font-size: 11px; font-weight: bold; color: var(--text-sub); margin-bottom: 4px; display: block; }
 
@@ -91,12 +94,10 @@
     .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; }
     .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; z-index: 500; position: relative; }
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
-    
-    /* ★FAB: Fixed配置に変更 */
     .fab { position: fixed; bottom: calc(env(safe-area-inset-bottom, 12px) + 90px); right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; justify-content: center; align-items: center; font-size: 30px; font-weight: bold; box-shadow: 0 6px 16px rgba(236,72,153,0.4); cursor: pointer; z-index: 1000; transition: 0.2s; }
     .fab:active { transform: scale(0.9); }
 
-    /* モーダル・テキストエリア等 */
+    /* モーダル等 */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
     .modal-content { background: #FFF; border-radius: 24px; padding: 24px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
     .textarea-wrapper { position: relative; }
@@ -149,7 +150,10 @@
       <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
       <div class="style-desc-custom">
         <div class="style-desc-box">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
-        <textarea id="customStyleText" class="input-field" placeholder="学習用の過去の文章をここにペースト..." style="height: 100px; margin-bottom:16px;"></textarea>
+        
+        <!-- カスタムテキスト入力欄（JSでプレースホルダーが切り替わります） -->
+        <textarea id="customStyleText" class="input-field" style="height: 130px; margin-bottom:16px; font-size: 13px;"></textarea>
+        
         <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;"><span>テンション（低）</span><span>（高）</span></div>
         <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;">
         <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;"><span>絵文字の量（少）</span><span>（多）</span></div>
@@ -159,7 +163,7 @@
     </div>
   </div>
 
-  <!-- 顧客編集モーダル (タイムラインブロック版) -->
+  <!-- 顧客編集モーダル -->
   <div id="editCustomerModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;" id="modalTitle">顧客情報の編集</h2>
@@ -248,8 +252,6 @@
         <h2 style="margin:0 0 16px; font-weight:900;">顧客カルテ</h2>
         <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:16px;">
         <div id="customerListArea"></div>
-        
-        <!-- FABボタン -->
         <div class="fab" onclick="openCreateModal()">＋</div>
       </div>
 
@@ -291,7 +293,16 @@
     let currentCustomerTags = []; 
     let selectedEpisodeTags = []; 
     let currentBase64Image = null;
-    let isDemoMode = false; // ★追加：デモ用の判定フラグ
+    let isDemoMode = false;
+
+    // ==========================================
+    // ★ここに生成した各業態のダミー文を貼り付けます
+    // ==========================================
+    const stylePlaceholders = {
+      cabaret: "（例）\n昨日は来てくれてありがとう🥺\n久しぶりに顔見れて普通に嬉しかった💗\n○○くんへ✨\n仕事終わりで疲れてたのに\nちゃんと来てくれるの、優しいよね\n最初ちょっと元気なかったのに\n途中からいつもの感じになってて安心した☺️\nあの話ほんと笑った😂\nやっぱり一緒にいると楽しいなって思う\nお酒も付き合ってくれてありがとう🥂\nまたゆっくり話したいな🥺\n次はもう少し長く一緒にいれたら嬉しい💭\n今日もいるから\nタイミング合ったら待ってるね✨\n\n※ここに普段のLINEを貼り付けると学習します！",
+      fuzoku: "（例）\n今日はありがとう🥺\nちょっと肌寒かったのに\n来てくれて嬉しかったな☁️\n○○さんへ💗最初少し緊張してたのに\nだんだん近くなっていく感じ、ドキドキした😳\nあの優しい触れ方、すごく好きだったよ\nいっぱい甘えさせてくれて\nちゃんと気持ちよくしてくれて…\n幸せな時間だった💭\nこれ以上は内緒にしておくね🤫\nまたタイミング合ったら\n会いにきてほしいな🥺\n次はもう少し近くなれる気がする\nおやすみ🌙\n\n※ここに普段のLINEを貼り付けると学習します！",
+      host: "（例）\n今日ありがとな😏\nちょっと肌寒かったのに来てくれたの、普通に嬉しかった☁️\n○○へ💗最初少し距離あったのにだんだん近くなっていく感じ、悪くなかったな😳\nあの時の空気、結構好きだったわ\nお前といると無理に作らなくていいし変に気使わなくていいのが楽でさ\n気づいたらちゃんと楽しんでた💭\nこれ以上は内緒にしとく🤫\nまたタイミング合ったら来いよ🥺\n次はもう少しちゃんと向き合ってやるから\nおやすみ🌙\n\n※ここに普段のLINEを貼り付けると学習します！"
+    };
 
     const presetAttributeTags = [
       '太客', '常連', '新規', '痛客', 'デブ', 'ハゲ', 'おじさん', '若者', 'イケメン', 
@@ -347,6 +358,7 @@
       const cuteLabel = document.querySelector('.btn-cute'), neatLabel = document.querySelector('.btn-neat');
       const cuteDesc = document.querySelector('.style-desc-cute'), neatDesc = document.querySelector('.style-desc-neat');
       const overviewText = document.getElementById('styleOverviewText');
+      const customTextArea = document.getElementById('customStyleText'); // ★追加
 
       if (type === 'host') {
         cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)";
@@ -357,6 +369,9 @@
         cuteDesc.innerText = "🎀 可愛らしく、絵文字を多用した親しみやすい文体。"; neatDesc.innerText = "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。";
         overviewText.innerText = "かわいい・清楚・オリジナル学習";
       }
+      
+      // ★プレースホルダーの動的切り替え
+      customTextArea.placeholder = stylePlaceholders[type] || "学習用の過去の文章をここにペースト...";
     }
 
     function updateChips() {
@@ -433,8 +448,6 @@
       customerData.forEach((c, index) => {
         if(String(c.name).includes(filterText)){
           const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
-          
-          // ★すべてのユーザーに編集ボタンを表示（デモユーザーは中で閲覧専用に切り替える）
           const btnLabel = String(c.name).includes("テスト") ? '🔍 閲覧' : '⚙️ 編集';
           const editBtn = `<button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">${btnLabel}</button>`;
 
@@ -479,7 +492,6 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    // --- ブロック式 メモ処理 ---
     function parseMemoToBlocks(memoStr) {
       if (!memoStr) return [];
       return memoStr.split(/\n?---\n?/).map(block => {
@@ -508,7 +520,6 @@
       area.appendChild(div);
       updateDimmedBlocks();
       
-      // ★ブロック追加時、スクロールを一番下（最新）に合わせる
       setTimeout(() => { 
         if(text) { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; }
         area.scrollTop = area.scrollHeight; 
@@ -522,7 +533,6 @@
 
     let editingOriginalName = "";
     
-    // 新規作成 or 編集モーダルの開閉
     function openCreateModal() {
       isDemoMode = false;
       document.getElementById('modalTitle').innerText = "新規顧客の登録";
@@ -543,7 +553,7 @@
 
     function openEditModal(index) {
       const c = customerData[index];
-      isDemoMode = String(c.name).includes("テスト"); // ★デモモード判定
+      isDemoMode = String(c.name).includes("テスト"); 
 
       document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】テスト顧客（閲覧のみ）" : "顧客情報の編集";
       document.getElementById('isCreateMode').value = "false";
@@ -551,7 +561,6 @@
       document.getElementById('editCustomerName').value = c.name;
       editingOriginalName = c.name; 
       
-      // デモ時のUI切り替え
       document.getElementById('editCustomerName').readOnly = isDemoMode;
       document.getElementById('customAttrInput').disabled = isDemoMode;
       document.getElementById('addAttrBtn').style.display = isDemoMode ? 'none' : 'block';
@@ -566,8 +575,6 @@
       if(blocks.length === 0) addMemoBlock(); else blocks.forEach(b => addMemoBlock(b.date, b.text));
 
       document.getElementById('editCustomerModal').style.display = 'flex';
-      
-      // 開いた時に一番下までスクロールさせる
       setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
     }
 
@@ -582,15 +589,13 @@
     }
 
     function toggleAttributeTag(tag) { 
-      if (isDemoMode) return; // デモモード時は変更不可
+      if (isDemoMode) return; 
       tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); 
     }
-    
     function addCustomAttributeTag() { 
       const v = document.getElementById('customAttrInput').value.trim(); 
       if(v && !tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } 
     }
-    
     function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
 
     async function saveCustomerEdit() {
@@ -605,13 +610,11 @@
       const btn = document.getElementById('saveCustomerBtn'); btn.innerText = "保存中..."; btn.disabled = true;
 
       try {
-        const payload = {
-        action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, 
-        style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value,
-        customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt,
-        customerTags: currentCustomerTags.join(', '), episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image,
-        mode: isPhoto ? "photo" : "text" // ★追加：Difyに写メ日記かお礼日記かを伝える
-      };
+        const payload = { action: isCreate ? "createCustomer" : "updateCustomer", userId: userId, oldName: editingOriginalName, newName: newName, newTags: newTagsStr, newMemo: newMemo };
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+        if((await res.json()).success) { fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
+      } catch(e) { alert("エラーが発生しました。"); }
+      btn.innerText = "保存する"; btn.disabled = false;
     }
 
     function previewPhoto(event) {
@@ -642,11 +645,13 @@
         newCombinedMemo = actualPastMemo ? actualPastMemo + "\n---\n" + todayText : todayText;
       }
 
+      // ★Difyに「写メ日記モードか」を教える変数 mode を追加済み
       const payload = {
         action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, 
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value,
         customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt,
-        customerTags: currentCustomerTags.join(', '), episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image 
+        customerTags: currentCustomerTags.join(', '), episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image,
+        mode: isPhoto ? "photo" : "text" 
       };
 
       try {
