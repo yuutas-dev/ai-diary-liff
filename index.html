@@ -378,16 +378,28 @@
       const isPhoto = document.getElementById('mode-photo').checked;
       const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
       
+      // 最新のマスターデータを取得
+      const masterTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags];
+      
       const savedTags = localStorage.getItem(storageKey);
       if (savedTags) {
-        activeTags = JSON.parse(savedTags);
+        let parsed = JSON.parse(savedTags);
+        // ★修正：保存されているタグの数が、コード上のマスターより少ない場合はマスターで上書き！
+        // （これでコードを更新した際に、古いキャッシュが自動でリセットされます）
+        if (parsed.length < masterTags.length) {
+          activeTags = masterTags;
+          localStorage.setItem(storageKey, JSON.stringify(masterTags));
+        } else {
+          activeTags = parsed;
+        }
       } else {
-        activeTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags];
+        activeTags = masterTags;
       }
+      
       document.getElementById('episodeInput').placeholder = isPhoto ? "えちえちな日常などを入力！" : "今日あったことを入力！";
       renderChips();
     }
-
+    
     function renderChips() {
       const container = document.getElementById('dynamicChips');
       container.innerHTML = '';
