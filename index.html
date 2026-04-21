@@ -123,7 +123,6 @@
   <input type="radio" name="style" id="style-custom" class="ui-state">
   <input type="radio" name="style" id="style-neat" class="ui-state">
 
-  <!-- 初期設定モーダル -->
   <div id="setupModal" class="modal-overlay">
     <div class="modal-content" style="text-align: center;">
       <h2 style="margin: 0 0 10px; font-weight: 900;">🎉 初期設定</h2>
@@ -137,7 +136,6 @@
     </div>
   </div>
 
-  <!-- スタイル設定モーダル -->
   <div id="styleModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
@@ -150,10 +148,7 @@
       <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
       <div class="style-desc-custom">
         <div class="style-desc-box">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
-        
-        <!-- カスタムテキスト入力欄（JSでプレースホルダーが切り替わります） -->
         <textarea id="customStyleText" class="input-field" style="height: 130px; margin-bottom:16px; font-size: 13px;"></textarea>
-        
         <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;"><span>テンション（低）</span><span>（高）</span></div>
         <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;">
         <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;"><span>絵文字の量（少）</span><span>（多）</span></div>
@@ -163,7 +158,6 @@
     </div>
   </div>
 
-  <!-- 顧客編集モーダル -->
   <div id="editCustomerModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;" id="modalTitle">顧客情報の編集</h2>
@@ -294,18 +288,14 @@
     let selectedEpisodeTags = []; 
     let currentBase64Image = null;
     let isDemoMode = false;
-    let myCustomAttrs = []; // 自分が追加したオリジナル属性タグを保存する箱
+    let myCustomAttrs = []; 
 
-    // ==========================================
-    // ★ここに生成した各業態のダミー文を貼り付けます
-    // ==========================================
     const stylePlaceholders = {
       cabaret: "（例）\n昨日は来てくれてありがとう🥺\n久しぶりに顔見れて普通に嬉しかった💗\n○○くんへ✨\n仕事終わりで疲れてたのに\nちゃんと来てくれるの、優しいよね\n最初ちょっと元気なかったのに\n途中からいつもの感じになってて安心した☺️\nあの話ほんと笑った😂\nやっぱり一緒にいると楽しいなって思う\nお酒も付き合ってくれてありがとう🥂\nまたゆっくり話したいな🥺\n次はもう少し長く一緒にいれたら嬉しい💭\n今日もいるから\nタイミング合ったら待ってるね✨\n\n※ここに普段のLINEを貼り付けると学習します！",
       fuzoku: "（例）\n今日はありがとう🥺\nちょっと肌寒かったのに\n来てくれて嬉しかったな☁️\n○○さんへ💗最初少し緊張してたのに\nだんだん近くなっていく感じ、ドキドキした😳\nあの優しい触れ方、すごく好きだったよ\nいっぱい甘えさせてくれて\nちゃんと気持ちよくしてくれて…\n幸せな時間だった💭\nこれ以上は内緒にしておくね🤫\nまたタイミング合ったら\n会いにきてほしいな🥺\n次はもう少し近くなれる気がする\nおやすみ🌙\n\n※ここに普段のLINEを貼り付けると学習します！",
       host: "（例）\n今日ありがとな。\nちょっと肌寒かったのに来てくれたの、普通に嬉しかった☁️\n○○へ\n最初少し距離あったのにだんだん近くなっていく感じ、悪くなかったな😳\nあの時の空気、結構好きだったわ\nお前といると無理に作らなくていいし変に気使わなくていいのが楽でさ\n気づいたらちゃんと楽しんでた💭\nこれ以上は内緒にしとく🤫\nまたタイミング合ったら来いよ\n次はもう少しちゃんと向き合ってやるから\nおやすみ🌙\n\n※ここに普段のLINEを貼り付けると学習します！"
     };
 
-    // ★ 業種ごとの属性タグリスト
     const industryAttributeTags = {
       cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'],
       fuzoku: ['M気質', 'S気質', '常連', '新規', 'キモい', '優しい', '痛客', '匂いキツめ', 'マナー良', '本番要求', 'おじさん', '若者', 'イケメン', 'デブ', 'ハゲ'],
@@ -343,7 +333,6 @@
 
       try { await liff.init({ liffId: LIFF_ID }); if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; } catch (e) {}
 
-      // ★ カスタム属性タグの読み込み
       if (localStorage.getItem('myCustomAttrs')) {
         myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
       }
@@ -366,7 +355,7 @@
       const cuteLabel = document.querySelector('.btn-cute'), neatLabel = document.querySelector('.btn-neat');
       const cuteDesc = document.querySelector('.style-desc-cute'), neatDesc = document.querySelector('.style-desc-neat');
       const overviewText = document.getElementById('styleOverviewText');
-      const customTextArea = document.getElementById('customStyleText'); // ★追加
+      const customTextArea = document.getElementById('customStyleText'); 
 
       if (type === 'host') {
         cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)";
@@ -377,8 +366,6 @@
         cuteDesc.innerText = "🎀 可愛らしく、絵文字を多用した親しみやすい文体。"; neatDesc.innerText = "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。";
         overviewText.innerText = "かわいい・清楚・オリジナル学習";
       }
-      
-      // ★プレースホルダーの動的切り替え
       customTextArea.placeholder = stylePlaceholders[type] || "学習用の過去の文章をここにペースト...";
     }
 
@@ -430,7 +417,14 @@
         localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
       }
     }
-    function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); updateChips(); }
+
+    // ★ 業種を変更した時にダミー顧客も再描画するように変更
+    function updateChipsAndSave() { 
+      localStorage.setItem('businessType', document.getElementById('businessType').value); 
+      updateChips(); 
+      renderQuickAccess(); 
+      renderCustomerList();
+    }
 
     async function fetchCustomers() {
       try {
@@ -441,22 +435,46 @@
       } catch (e) { alert("データ読み込みエラー"); renderQuickAccess(); }
     }
 
+    // ★ クイックアクセスに「ダミー顧客の業種フィルター」を追加
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
-      customerData.slice(0, 15).forEach((c, index) => {
+      const currentType = localStorage.getItem('businessType') || 'cabaret';
+      const targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+      
+      let displayedCount = 0;
+      for (let index = 0; index < customerData.length; index++) {
+        if (displayedCount >= 15) break;
+        const c = customerData[index];
+        
+        // タグに「ダミー」が含まれている場合、現在の業種のタグを持っていない人はスキップ
+        if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) {
+          continue; 
+        }
+
         const firstTag = c.tagsArray.length > 0 ? `<div class="story-badge">${c.tagsArray[0]}</div>` : '';
         area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="story-ring">${firstTag}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
-      });
+        displayedCount++;
+      }
     }
 
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
+    // ★ 顧客リストに「ダミー顧客の業種フィルター」と「ダミー判定」を追加
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
+      const currentType = localStorage.getItem('businessType') || 'cabaret';
+      const targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+
       customerData.forEach((c, index) => {
+        // タグに「ダミー」が含まれている場合、現在の業種のタグを持っていない人はスキップ
+        if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return;
+
         if(String(c.name).includes(filterText)){
           const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
-          const btnLabel = String(c.name).includes("テスト") ? '🔍 閲覧' : '⚙️ 編集';
+          
+          // 「ダミー」タグを持っている人は編集不可（閲覧のみ）にする
+          const isDummy = c.tagsArray.includes("ダミー");
+          const btnLabel = isDummy ? '🔍 閲覧' : '⚙️ 編集';
           const editBtn = `<button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">${btnLabel}</button>`;
 
           area.innerHTML += `
@@ -477,11 +495,30 @@
       });
     }
 
+    // ★ 選択キャンセル（トグル）機能の追加
     function selectCustomerByIndex(index) {
       const c = customerData[index];
-      document.getElementById('nav-create').checked = true; document.getElementById('nameInput').value = c.name;
-      document.getElementById('pastMemoDisplay').innerText = c.memo || "(過去の記録はありません)"; document.getElementById('todayEpisodeInput').value = "";
-      currentCustomerTags = c.tagsArray; renderAttributeTags(); selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips(); 
+      const nameInput = document.getElementById('nameInput');
+
+      // すでに同じ名前が選ばれている場合は、すべて空っぽにしてリセットする
+      if (nameInput.value === c.name) {
+        nameInput.value = "";
+        document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)";
+        document.getElementById('todayEpisodeInput').value = "";
+        currentCustomerTags = []; renderAttributeTags(); 
+        selectedEpisodeTags = []; renderSelectedEpisodeTags(); 
+        renderChips();
+        return; // ここで処理を終わらせる
+      }
+
+      // 選ばれていない場合は普通にセットする
+      document.getElementById('nav-create').checked = true; 
+      nameInput.value = c.name;
+      document.getElementById('pastMemoDisplay').innerText = c.memo || "(過去の記録はありません)"; 
+      document.getElementById('todayEpisodeInput').value = "";
+      currentCustomerTags = c.tagsArray; renderAttributeTags(); 
+      selectedEpisodeTags = []; renderSelectedEpisodeTags(); 
+      renderChips(); 
     }
 
     function renderAttributeTags() {
@@ -559,11 +596,12 @@
       document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
+    // ★ 編集モーダルを開く際のダミー判定も「ダミー」タグに変更
     function openEditModal(index) {
       const c = customerData[index];
-      isDemoMode = String(c.name).includes("テスト"); 
+      isDemoMode = c.tagsArray.includes("ダミー"); 
 
-      document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】テスト顧客（閲覧のみ）" : "顧客情報の編集";
+      document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】ダミー顧客（閲覧のみ）" : "顧客情報の編集";
       document.getElementById('isCreateMode').value = "false";
       document.getElementById('editCustomerIndex').value = index;
       document.getElementById('editCustomerName').value = c.name;
@@ -591,7 +629,6 @@
       const type = localStorage.getItem('businessType') || 'cabaret';
       const currentPresets = industryAttributeTags[type] || industryAttributeTags['cabaret'];
       
-      // ★ オリジナル辞書 -> 業種別プリセット -> 既存の選択済みタグ の順に並べて重複をなくす
       const allTags = Array.from(new Set([...myCustomAttrs, ...currentPresets, ...tempSelectedAttributes]));
       
       allTags.forEach(tag => {
@@ -606,16 +643,15 @@
       tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); 
     }
     
-    // ★ 属性タグ追加時の処理をアップデート（オリジナル辞書に保存）
     function addCustomAttributeTag() { 
       const v = document.getElementById('customAttrInput').value.trim(); 
       if(v) { 
         if(!myCustomAttrs.includes(v)) {
-          myCustomAttrs.unshift(v); // オリジナル辞書の先頭に追加
+          myCustomAttrs.unshift(v); 
           localStorage.setItem('myCustomAttrs', JSON.stringify(myCustomAttrs));
         }
         if(!tempSelectedAttributes.includes(v)) {
-          tempSelectedAttributes.push(v); // 今回の選択中タグに追加
+          tempSelectedAttributes.push(v); 
         }
         document.getElementById('customAttrInput').value = ''; 
         renderEditAttributeTags(); 
@@ -671,7 +707,6 @@
         newCombinedMemo = actualPastMemo ? actualPastMemo + "\n---\n" + todayText : todayText;
       }
 
-      // ★Difyに「写メ日記モードか」を教える変数 mode を追加済み
       const payload = {
         action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, 
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value,
