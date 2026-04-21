@@ -15,8 +15,8 @@
     html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: 'Hiragino Maru Gothic ProN', sans-serif; -webkit-tap-highlight-color: transparent; }
     input[type="radio"].ui-state { display: none; }
 
-    /* ナビゲーション・基本レイアウト */
-    .page { display: none; flex-direction: column; padding-bottom: 20px; }
+    /* ナビゲーション・レイアウト */
+    .page { display: none; flex-direction: column; padding-bottom: 20px; position: relative; height: 100%; }
     #nav-create:checked ~ .app-container .page-create { display: flex; }
     #nav-data:checked ~ .app-container .page-data { display: flex; }
     #nav-settings:checked ~ .app-container .page-settings { display: flex; }
@@ -30,78 +30,79 @@
     .toggle-label { flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: 900; color: var(--text-sub); border-radius: 34px; transition: 0.3s; cursor: pointer; }
     .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 160px); }
     
-    /* モード切り替え */
+    /* モード・スタイル切り替えUI */
     .mode-photo-ui { display: none; }
     #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
     #mode-photo:checked ~ .app-container .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
     #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
-
-    /* スタイル切り替えUI */
     .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
     #style-cute:checked ~ .modal-overlay .style-desc-cute { display: block; }
     #style-custom:checked ~ .modal-overlay .style-desc-custom { display: block; }
     #style-neat:checked ~ .modal-overlay .style-desc-neat { display: block; }
-    #style-cute:checked ~ .modal-overlay .btn-cute { background: var(--primary-gradient); color: white; border-color: transparent; }
-    #style-custom:checked ~ .modal-overlay .btn-custom { background: var(--primary-gradient); color: white; border-color: transparent; }
-    #style-neat:checked ~ .modal-overlay .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
+    #style-cute:checked ~ .modal-overlay .btn-cute, #style-custom:checked ~ .modal-overlay .btn-custom, #style-neat:checked ~ .modal-overlay .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
 
     /* カード・UIパーツ */
-    .card { background: var(--card-bg); border-radius: 20px; padding: 22px 20px; margin-bottom: 20px; box-shadow: var(--shadow-md); }
-    .label { font-weight: 900; font-size: 16px; margin-bottom: 12px; display: block; color: var(--text-main); }
-    .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 16px; font-size: 16px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
+    .card { background: var(--card-bg); border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-md); }
+    .label { font-weight: 900; font-size: 15px; margin-bottom: 8px; display: block; color: var(--text-main); }
+    .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 14px; padding: 14px; font-size: 15px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
 
     /* 顧客アイコン横スワイプ */
-    .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
+    .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 8px; }
     .fade-scroll-wrapper::after { content: ""; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(to right, transparent, var(--card-bg)); pointer-events: none; }
-    .stories-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 10px 40px 10px 0; scrollbar-width: none; }
+    .stories-scroll { display: flex; gap: 14px; overflow-x: auto; padding: 6px 40px 10px 0; scrollbar-width: none; }
     .stories-scroll::-webkit-scrollbar { display: none; }
-    .story-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; width: 66px; position: relative; }
-    .story-ring { width: 66px; height: 66px; border-radius: 50%; background: var(--primary-gradient); padding: 3px; position: relative; }
-    .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--active-color); border: 2px solid #FFF; }
+    .story-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex-shrink: 0; width: 62px; position: relative; }
+    .story-ring { width: 62px; height: 62px; border-radius: 50%; background: var(--primary-gradient); padding: 3px; position: relative; }
+    .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: var(--active-color); border: 2px solid #FFF; }
     .story-name { font-size: 11px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
     .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 10px; border: 1.5px solid #FFF; z-index: 5; }
 
-    /* 選択済みエピソードタグ表示エリア */
-    .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; min-height: 30px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
+    /* タグ関連 */
+    .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 24px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
     .selected-chip { background: var(--primary-gradient); color: #FFF; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 4px; animation: pop 0.2s ease-out; }
     @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
-    /* エピソードタグ（多段・動的・3段スクロール） */
-    .episode-tags-container { display: flex; flex-wrap: wrap; gap: 8px; max-height: 200px; overflow-y: auto; padding: 4px 0; align-content: flex-start; scrollbar-width: thin; scrollbar-color: #FBCFE8 transparent; }
+    .episode-tags-container { display: flex; flex-wrap: wrap; gap: 8px; max-height: 180px; overflow-y: auto; padding: 4px 0; align-content: flex-start; scrollbar-width: thin; scrollbar-color: #FBCFE8 transparent; margin-top: 12px; }
     .chip { background: #FFF; border: 1px solid #E5E7EB; color: #4F46E5; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
     .chip.dimmed { opacity: 0.3; background: #F3F4F6; color: #9CA3AF; border-color: transparent; pointer-events: none; }
-
-    /* 属性タグ（顧客用） */
     .attr-chip { background: #FDF2F8; border: 1px solid #FBCFE8; color: #DB2777; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 900; flex-shrink: 0; }
-    .edit-attr-chip { padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.1s; border: 1px solid #FBCFE8; }
+    .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 0 40px 6px 0; scrollbar-width: none; align-items: center; }
+    .tags-scroll-container::-webkit-scrollbar { display: none; }
 
-    /* 送信・ナビ */
+    /* メモブロックUI (編集用) */
+    .memo-block { background: #FDFDFD; border: 1px solid #EFEAF0; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; position: relative; transition: 0.3s; }
+    .memo-block.dimmed { opacity: 0.5; background: #FAF5F8; border-color: transparent; }
+    .memo-block.dimmed:focus-within { opacity: 1; background: #FFF; border: 1px solid #F472B6; box-shadow: var(--shadow-sm); }
+    .memo-date { font-weight: bold; color: var(--active-color); border: none; background: transparent; font-size: 12px; margin-bottom: 2px; outline: none; font-family: inherit; width: 100%; }
+    .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.5; color: var(--text-main); font-family: inherit; margin-top: 4px; }
+    .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: #FDF2F8; transition: 0.2s; }
+    .add-memo-btn:active { transform: scale(0.98); }
+
+    /* 過去メモ閲覧（日記作成画面）極小余白 */
+    .past-memo-box { background: #EAE5ED; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #555; white-space: pre-wrap; margin-bottom: 8px; margin-top: 2px; max-height: 100px; overflow-y: auto; border: 1px solid #D1C5D4; }
+    .past-memo-label { font-size: 11px; font-weight: bold; color: var(--text-sub); margin-bottom: 4px; display: block; }
+
+    /* 送信・ナビ・FAB */
     .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
     .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; }
     .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; }
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
-    
-    /* 過去メモ閲覧エリア */
-    .past-memo-box { background: #EAE5ED; border-radius: 12px; padding: 16px; font-size: 14px; color: #555; white-space: pre-wrap; margin-bottom: 12px; max-height: 120px; overflow-y: auto; border: 1px solid #D1C5D4; }
-    .past-memo-label { font-size: 12px; font-weight: bold; color: var(--text-sub); margin-bottom: 6px; display: block; }
+    .fab { position: absolute; bottom: 30px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; justify-content: center; align-items: center; font-size: 30px; font-weight: bold; box-shadow: 0 6px 16px rgba(236,72,153,0.4); cursor: pointer; z-index: 100; transition: 0.2s; }
+    .fab:active { transform: scale(0.9); }
 
-    /* モーダル */
+    /* モーダル・テキストエリア等 */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
-    .modal-content { background: #FFF; border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
-    .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
-    .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
-    .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #7A666B; font-weight: bold; margin-bottom: 20px; }
-
+    .modal-content { background: #FFF; border-radius: 24px; padding: 24px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
     .textarea-wrapper { position: relative; }
-    textarea.input-field { height: 100px; resize: none; padding-right: 50px; line-height: 1.6; }
-    .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; }
-    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; cursor: pointer; position: relative; overflow: hidden; }
+    textarea.input-field { height: 80px; resize: none; padding-right: 50px; line-height: 1.5; }
+    .mic-btn { position: absolute; bottom: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; color: #EC4899; }
+    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; cursor: pointer; position: relative; overflow: hidden; }
     .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
-    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
-    .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
-    .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 40px 10px 0; scrollbar-width: none; align-items: center; }
-    .tags-scroll-container::-webkit-scrollbar { display: none; }
+    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 4px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
+    .suggest-item { padding: 10px 12px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; cursor: pointer; }
+    .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+    .style-btn { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer; }
+    .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 14px; border-radius: 10px; font-size: 13px; line-height: 1.5; color: #7A666B; font-weight: bold; margin-bottom: 16px; }
   </style>
 </head>
 <body>
@@ -142,35 +143,36 @@
       <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
       <div class="style-desc-custom">
         <div class="style-desc-box">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
-        <textarea id="customStyleText" class="input-field" placeholder="学習用の過去の文章をここにペースト..." style="height: 120px; margin-bottom:20px;"></textarea>
-        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px;"><span>テンション（低）</span><span>（高）</span></div>
-        <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:24px;">
-        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px;"><span>絵文字の量（少）</span><span>（多）</span></div>
-        <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:24px;">
+        <textarea id="customStyleText" class="input-field" placeholder="学習用の過去の文章をここにペースト..." style="height: 100px; margin-bottom:16px;"></textarea>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;"><span>テンション（低）</span><span>（高）</span></div>
+        <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;"><span>絵文字の量（少）</span><span>（多）</span></div>
+        <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:20px;">
       </div>
-      <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900; font-size:16px;">設定を保存して閉じる</button>
+      <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900;">設定を保存して閉じる</button>
     </div>
   </div>
 
-  <!-- 顧客編集モーダル -->
+  <!-- 顧客編集モーダル (タイムラインブロック版) -->
   <div id="editCustomerModal" class="modal-overlay">
     <div class="modal-content">
-      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">顧客情報の編集</h2>
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;" id="modalTitle">顧客情報の編集</h2>
       <input type="hidden" id="editCustomerIndex">
+      <input type="hidden" id="isCreateMode" value="false">
       
-      <span class="label" style="font-size:14px;">名前</span>
+      <span class="label">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
       
-      <span class="label" style="font-size:14px;">属性タグ（タップで選択 / 自由追加）</span>
-      <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
-      
+      <span class="label">属性タグ（タップで選択 / 自由追加）</span>
+      <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
       <div style="display:flex; gap:8px; margin-bottom:16px;">
         <input type="text" id="customAttrInput" class="input-field" placeholder="オリジナルタグを入力..." style="padding:10px; font-size:13px;">
         <button onclick="addCustomAttributeTag()" style="background:var(--active-color); color:#FFF; border:none; border-radius:12px; padding:0 15px; font-weight:bold; white-space:nowrap;">追加</button>
       </div>
 
-      <span class="label" style="font-size:14px;">接客メモ（過去の蓄積）</span>
-      <textarea id="editCustomerMemo" class="input-field" style="height: 120px; margin-bottom: 24px;"></textarea>
+      <span class="label">接客メモ（エピソード履歴）</span>
+      <div id="editMemoBlocksArea" style="margin-bottom: 8px;"></div>
+      <div class="add-memo-btn" onclick="addMemoBlock()">＋ 日付とエピソードを追加</div>
       
       <div style="display:flex; gap:10px;">
         <button onclick="closeEditModal()" style="flex:1; background:#EAE5ED; color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:900;">キャンセル</button>
@@ -190,7 +192,7 @@
 
     <main class="scroll-area">
       <div class="page page-create">
-        <div class="card customer-select-card">
+        <div class="card">
           <span class="label">👤 誰に送る？</span>
           <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea"></div></div>
           <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
@@ -209,28 +211,23 @@
         <div class="card">
           <span class="label">📝 エピソード作成</span>
           
-          <!-- 選択した属性タグ（見るだけ） -->
-          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 12px;">
+          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 8px;">
             <div class="tags-scroll-container" id="attributeTagsArea"></div>
           </div>
 
-          <!-- 過去のメモ閲覧エリア -->
           <div class="past-memo-box">
             <span class="past-memo-label">📖 過去のメモ</span>
             <div id="pastMemoDisplay">(顧客を選択するか、過去の記録がありません)</div>
           </div>
 
-          <!-- 選択済みエピソードタグ -->
           <div id="selectedEpisodeTags" class="selected-tags-box"></div>
 
-          <!-- 今日の出来事入力エリア -->
           <div class="textarea-wrapper">
             <textarea id="todayEpisodeInput" class="input-field" placeholder="今日の出来事や特記事項を入力..." oninput="autoScrollTextarea()"></textarea>
             <div class="mic-btn" onclick="startDictation()">🎤</div>
           </div>
           
-          <!-- エピソードタグ（多段） -->
-          <div class="episode-tags-container" id="dynamicChips" style="margin-top:16px;"></div>
+          <div class="episode-tags-container" id="dynamicChips"></div>
 
           <div style="margin-top: 12px; display: flex; gap: 8px;">
             <input type="text" id="customTagInput" placeholder="＋タグ追加" style="flex:1; border:none; background:var(--input-bg); padding:10px; border-radius:10px;">
@@ -240,29 +237,27 @@
       </div>
 
       <div class="page page-data">
-        <h2 style="margin:0 0 20px; font-weight:900;">顧客カルテ</h2>
-        <div class="search-box">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:16px;">
-        </div>
+        <h2 style="margin:0 0 16px; font-weight:900;">顧客カルテ</h2>
+        <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:16px;">
         <div id="customerListArea"></div>
+        
+        <!-- ★新規顧客作成FABボタン -->
+        <div class="fab" onclick="openCreateModal()">＋</div>
       </div>
 
       <div class="page page-settings">
-        <h2 style="margin:0 0 20px; font-weight:900;">設定</h2>
+        <h2 style="margin:0 0 16px; font-weight:900;">設定</h2>
         <div class="card" onclick="openStyleModal()" style="cursor:pointer; border: 2px solid #FBCFE8;">
           <span style="font-weight:900; color:#DB2777;">🎨 AIの口調・スタイル設定</span>
           <p style="font-size:12px; color:var(--text-sub); margin-top:5px;" id="styleOverviewText">かわいい・清楚・オリジナル学習</p>
         </div>
-        <div class="settings-list">
-          <div class="settings-item">
-            <span>🏢 業態設定</span>
-            <select class="input-field" id="businessType" onchange="updateChipsAndSave()" style="width:auto; padding:5px;">
-              <option value="cabaret">キャバクラ</option>
-              <option value="fuzoku">風俗・メンエス</option>
-              <option value="host">ホスト</option>
-            </select>
-          </div>
+        <div class="card">
+          <span class="label">🏢 業態設定</span>
+          <select class="input-field" id="businessType" onchange="updateChipsAndSave()">
+            <option value="cabaret">キャバクラ・ラウンジ</option>
+            <option value="fuzoku">風俗・メンエス</option>
+            <option value="host">ホストクラブ</option>
+          </select>
         </div>
       </div>
     </main>
@@ -299,46 +294,34 @@
     const industryConfigs = {
       cabaret: {
         prompt: "あなたは歌舞伎町の人気キャバ嬢です。お客様がまた会いに来たくなるような、甘え上手で華やかなお礼を送ってください。",
-        tags: [
-          '✨ 本指名', '🥂 同伴', '🍾 シャンパン', '💕 祝・開店', '🥺 会いたい', 
-          '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', 
-          '💖 感謝', '🍰 アフター', '🎁 プレゼント', '🧴 良い香り', '🥰 癒やされた', 
-          '🍺 ビール', '🥃 ウイスキー', '🥘 美味しいご飯', '🌟 酔っ払った', '📱 LINE嬉しい', 
-          '🚗 送り', '💤 おやすみ', '⏰ 早起き', '🌞 休日デート', '💍 特別な人'
-        ]
+        tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '💕 祝・開店', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '🧴 良い香り', '🥰 癒やされた', '🍺 ビール', '🥃 ウイスキー', '🥘 美味しいご飯', '🌟 酔っ払った', '📱 LINE嬉しい', '🚗 送り', '💤 おやすみ', '⏰ 早起き', '🌞 休日デート', '💍 特別な人']
       },
       fuzoku: {
         prompt: "あなたはサービス精神旺盛なセラピストです。お客様との親密な時間を大切にし、少し色っぽく、癒やしを与える文章を書いてください。",
-        tags: [
-          '✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', 
-          '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', 
-          '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🧖‍♂️ 密着', '💤 寝顔', 
-          '👕 お着替え', '🥵 ドキドキ', '🛌 ベッド', '🕯️ アロマ', '🍵 お茶タイム', 
-          '💓 心音', '🤝 手繋ぎ', '👣 またすぐ来て', '🛌 延長', '🌹 夢心地'
-        ]
+        tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🧖‍♂️ 密着', '💤 寝顔', '👕 お着替え', '🥵 ドキドキ', '🛌 ベッド', '🕯️ アロマ', '🍵 お茶タイム', '💓 心音', '🤝 手繋ぎ', '👣 またすぐ来て', '🛌 延長', '🌹 夢心地']
       },
       host: {
         prompt: "あなたはカリスマホストです。姫が自分だけが特別だと感じるような、情熱的で独占欲を煽るメッセージを書いてください。",
-        tags: [
-          '🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', 
-          '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', 
-          '🍷 高額ボトル', '🌟 Ｎｏ.１', '👔 スーツ', '💍 運命', '🌹 薔薇', 
-          '🤐 誰にも内緒', '🖤 独占', '🌙 締め日', '🍱 出前', '🚘 ドライブ', 
-          '🥃 飲み直し', '🚬 タバコ', '🛌 お泊まり', '🤝 信頼', '🌍 世界一'
-        ]
+        tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '👔 スーツ', '💍 運命', '🌹 薔薇', '🤐 誰にも内緒', '🖤 独占', '🌙 締め日', '🍱 出前', '🚘 ドライブ', '🥃 飲み直し', '🚬 タバコ', '🛌 お泊まり', '🤝 信頼', '🌍 世界一']
       }
     };
-    const photoChips = [
-      '📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', 
-      '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯', 
-      '🤳 自撮り', '🛏️ 寝起き', '🏠 お家', '🏋️‍♀️ ジム', '🛍️ お買い物'
-    ];
+    const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯', '🤳 自撮り', '🛏️ 寝起き', '🏠 お家', '🏋️‍♀️ ジム', '🛍️ お買い物'];
+
+    function getTodayString() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    function getTodayFormatted() {
+      return getTodayString().replace(/-/g, '/');
+    }
 
     async function init() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
-      if (params.get('action') === 'style') openStyleModal();
 
       try {
         await liff.init({ liffId: LIFF_ID });
@@ -346,11 +329,8 @@
       } catch (e) {}
 
       const savedType = localStorage.getItem('businessType');
-      if (!savedType) {
-        document.getElementById('setupModal').style.display = 'flex';
-      } else {
-        document.getElementById('businessType').value = savedType;
-      }
+      if (!savedType) document.getElementById('setupModal').style.display = 'flex';
+      else document.getElementById('businessType').value = savedType;
       
       updateChips(); 
       fetchCustomers();
@@ -365,7 +345,6 @@
       document.getElementById('setupModal').style.display = 'none';
     }
 
-    // --- 業種に応じたスタイルUIの動的変更 ---
     function updateStyleUI(type) {
       const cuteLabel = document.querySelector('.btn-cute');
       const neatLabel = document.querySelector('.btn-neat');
@@ -374,16 +353,12 @@
       const overviewText = document.getElementById('styleOverviewText');
 
       if (type === 'host') {
-        cuteLabel.innerText = "オラオラ";
-        neatLabel.innerText = "子犬(甘え)";
-        cuteDesc.innerText = "😎 強気でSっ気のある、独占欲強めのオラオラ系文体。";
-        neatDesc.innerText = "🐶 母性本能をくすぐる、可愛くて甘えん坊な文体。";
+        cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)";
+        cuteDesc.innerText = "😎 強気でSっ気のある、独占欲強めのオラオラ系文体。"; neatDesc.innerText = "🐶 母性本能をくすぐる、可愛くて甘えん坊な文体。";
         overviewText.innerText = "オラオラ・子犬・オリジナル学習";
       } else {
-        cuteLabel.innerText = "かわいい";
-        neatLabel.innerText = "清楚";
-        cuteDesc.innerText = "🎀 可愛らしく、絵文字を多用した親しみやすい文体。";
-        neatDesc.innerText = "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。";
+        cuteLabel.innerText = "かわいい"; neatLabel.innerText = "清楚";
+        cuteDesc.innerText = "🎀 可愛らしく、絵文字を多用した親しみやすい文体。"; neatDesc.innerText = "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。";
         overviewText.innerText = "かわいい・清楚・オリジナル学習";
       }
     }
@@ -392,7 +367,6 @@
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
       const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
-      
       updateStyleUI(type);
 
       const masterTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags];
@@ -401,32 +375,22 @@
       if (savedTags) {
         let parsed = JSON.parse(savedTags);
         if (parsed.length < masterTags.length) {
-          activeTags = masterTags;
-          localStorage.setItem(storageKey, JSON.stringify(masterTags));
-        } else {
-          activeTags = parsed;
-        }
-      } else {
-        activeTags = masterTags;
-      }
-      
+          activeTags = masterTags; localStorage.setItem(storageKey, JSON.stringify(masterTags));
+        } else { activeTags = parsed; }
+      } else { activeTags = masterTags; }
       renderChips();
     }
 
     function renderChips() {
       const container = document.getElementById('dynamicChips');
       container.innerHTML = '';
-      activeTags.forEach((text, index) => {
+      activeTags.forEach(text => {
         const isSelected = selectedEpisodeTags.includes(text);
         const chip = document.createElement('div');
         chip.className = 'chip' + (isSelected ? ' dimmed' : '');
-        chip.innerHTML = `${text}`;
+        chip.innerHTML = text;
         chip.onclick = () => {
-          if (!isSelected) {
-            selectedEpisodeTags.push(text);
-            renderSelectedEpisodeTags();
-            renderChips(); 
-          }
+          if (!isSelected) { selectedEpisodeTags.push(text); renderSelectedEpisodeTags(); renderChips(); }
         };
         container.appendChild(chip);
       });
@@ -443,58 +407,29 @@
       });
     }
 
-    function removeEpisodeTag(index) {
-      selectedEpisodeTags.splice(index, 1);
-      renderSelectedEpisodeTags();
-      renderChips();
-    }
-
-    function saveTagsToStorage() {
-      const type = localStorage.getItem('businessType') || 'cabaret';
-      const isPhoto = document.getElementById('mode-photo').checked;
-      const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
-      localStorage.setItem(storageKey, JSON.stringify(activeTags));
-    }
-
+    function removeEpisodeTag(index) { selectedEpisodeTags.splice(index, 1); renderSelectedEpisodeTags(); renderChips(); }
+    
     function addCustomTag() {
       const input = document.getElementById('customTagInput');
       if(input.value.trim() !== "") {
-        activeTags.unshift(input.value.trim()); 
-        input.value = "";
+        activeTags.unshift(input.value.trim()); input.value = "";
         renderChips();
-        saveTagsToStorage();
+        const type = localStorage.getItem('businessType') || 'cabaret';
+        const isPhoto = document.getElementById('mode-photo').checked;
+        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
         document.getElementById('dynamicChips').scrollTop = 0;
       }
     }
     
-    function updateChipsAndSave() {
-      localStorage.setItem('businessType', document.getElementById('businessType').value);
-      updateChips();
-    }
+    function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); updateChips(); }
 
     async function fetchCustomers() {
       try {
-        const res = await fetch(GAS_URL, {
-          method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "getCustomers", userId: userId })
-        });
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "getCustomers", userId: userId }) });
         const data = await res.json();
-        if(data.success) {
-          customerData = data.customers.map(c => ({
-            ...c,
-            name: String(c.name || "名前なし"),
-            memo: String(c.memo || ""),
-            tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : []
-          }));
-        } else {
-          customerData = [];
-        }
-        renderCustomerList();
-        renderQuickAccess();
-      } catch (e) { 
-        alert("データ読み込みエラー: " + e.message); 
-        renderQuickAccess(); 
-      }
+        customerData = data.success ? data.customers.map(c => ({ ...c, name: String(c.name || "名前なし"), memo: String(c.memo || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : [] })) : [];
+        renderCustomerList(); renderQuickAccess();
+      } catch (e) { alert("データ読み込みエラー"); renderQuickAccess(); }
     }
 
     function renderQuickAccess() {
@@ -502,39 +437,24 @@
       area.innerHTML = "";
       customerData.slice(0, 15).forEach((c, index) => {
         const firstTag = c.tagsArray.length > 0 ? `<div class="story-badge">${c.tagsArray[0]}</div>` : '';
-        const firstChar = c.name ? String(c.name).charAt(0) : "👤";
-        area.innerHTML += `
-          <div class="story-item" onclick="selectCustomerByIndex(${index})">
-            <div class="story-ring">
-              ${firstTag}
-              <div class="story-inner">${firstChar}</div>
-            </div>
-            <span class="story-name">${c.name}</span>
-          </div>`;
+        area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="story-ring">${firstTag}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
       });
     }
 
-    function filterCustomerList() {
-      renderCustomerList(document.getElementById('customerSearch').value);
-    }
+    function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea');
       area.innerHTML = "";
       customerData.forEach((c, index) => {
         if(String(c.name).includes(filterText)){
-          const tagHtml = c.tagsArray.length > 0 ? 
-            `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + 
-            c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') +
-            `</div>` : '';
-
-          // ★テスト顧客の場合は編集ボタンを無効化（グレーアウト）する
-          const editButtonHtml = String(c.name).includes("テスト") 
+          const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
+          const editBtn = String(c.name).includes("テスト") 
             ? `<button onclick="alert('デモ用のテスト顧客は編集できません🙇‍♂️')" style="background:#E5E7EB; color:#9CA3AF; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集不可</button>`
             : `<button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集</button>`;
 
           area.innerHTML += `
-            <div class="card" style="margin-bottom:10px;">
+            <div class="card" style="margin-bottom:12px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div style="flex:1; margin-right:10px;">
                   <b style="font-size:16px;">${c.name}</b><br>
@@ -543,7 +463,7 @@
                 </div>
                 <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
                   <button onclick="selectCustomerByIndex(${index})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">✏️ 日記作成</button>
-                  ${editButtonHtml}
+                  ${editBtn}
                 </div>
               </div>
             </div>`;
@@ -555,51 +475,30 @@
       const c = customerData[index];
       document.getElementById('nav-create').checked = true;
       document.getElementById('nameInput').value = c.name;
-      
-      // 過去メモを閲覧専用エリアに表示し、今日のエピソード入力をクリア
       document.getElementById('pastMemoDisplay').innerText = c.memo || "(過去の記録はありません)";
       document.getElementById('todayEpisodeInput').value = "";
-      
       currentCustomerTags = c.tagsArray;
       renderAttributeTags();
-
-      selectedEpisodeTags = [];
-      renderSelectedEpisodeTags();
-      renderChips(); 
+      selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips(); 
     }
 
     function renderAttributeTags() {
       const wrapper = document.getElementById('attributeTagsWrapper');
       const area = document.getElementById('attributeTagsArea');
-      area.innerHTML = '';
-      if (currentCustomerTags.length > 0) {
-        currentCustomerTags.forEach(t => {
-          area.innerHTML += `<div class="attr-chip">#${t}</div>`;
-        });
-        wrapper.style.display = 'block';
-      } else {
-        wrapper.style.display = 'none';
-      }
+      area.innerHTML = currentCustomerTags.map(t => `<div class="attr-chip">#${t}</div>`).join('');
+      wrapper.style.display = currentCustomerTags.length > 0 ? 'block' : 'none';
     }
 
     function suggestCustomer() {
       const text = document.getElementById('nameInput').value;
       const area = document.getElementById('resultArea');
       area.innerHTML = "";
-      if (!text) { 
-        area.style.display = "none"; 
-        currentCustomerTags = [];
-        renderAttributeTags();
-        document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)";
-        return; 
-      }
+      if (!text) { area.style.display = "none"; currentCustomerTags = []; renderAttributeTags(); document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; return; }
       let matchCount = 0;
       customerData.forEach((c, index) => {
         if (c.name.includes(text)) {
           matchCount++;
-          const div = document.createElement('div');
-          div.className = "suggest-item";
-          div.innerText = c.name;
+          const div = document.createElement('div'); div.className = "suggest-item"; div.innerText = c.name;
           div.onclick = () => { selectCustomerByIndex(index); area.style.display = "none"; };
           area.appendChild(div);
         }
@@ -607,17 +506,76 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
+    // --- ブロック式 メモ処理 ---
+    function parseMemoToBlocks(memoStr) {
+      if (!memoStr) return [];
+      return memoStr.split(/\n?---\n?/).map(block => {
+        const match = block.trim().match(/^(\d{4}\/\d{2}\/\d{2}):\s*([\s\S]*)$/);
+        if (match) return { date: match[1].replace(/\//g, '-'), text: match[2].trim() };
+        return { date: '', text: block.trim() };
+      }).filter(b => b.text || b.date);
+    }
+
+    function buildMemoFromBlocks() {
+      const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block'));
+      return blocks.map(block => {
+        const d = block.querySelector('.memo-date').value.replace(/-/g, '/');
+        const t = block.querySelector('.memo-text').value.trim();
+        if(!t && !d) return null;
+        return d ? `${d}: ${t}` : t;
+      }).filter(text => text).join('\n---\n');
+    }
+
+    function addMemoBlock(date = getTodayString(), text = "") {
+      const area = document.getElementById('editMemoBlocksArea');
+      const div = document.createElement('div');
+      div.className = 'memo-block';
+      div.innerHTML = `<input type="date" class="memo-date" value="${date}"><textarea class="memo-text" rows="2" placeholder="エピソードを入力..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>`;
+      area.appendChild(div);
+      updateDimmedBlocks();
+      
+      // Auto-resize if text exists
+      if(text) {
+        setTimeout(() => { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; }, 10);
+      }
+    }
+
+    function updateDimmedBlocks() {
+      const blocks = document.querySelectorAll('#editMemoBlocksArea .memo-block');
+      blocks.forEach((b, i) => { b.className = (i === blocks.length - 1) ? 'memo-block' : 'memo-block dimmed'; });
+    }
+
     let editingOriginalName = "";
     
+    // 新規作成 or 編集モーダルの開閉
+    function openCreateModal() {
+      document.getElementById('modalTitle').innerText = "新規顧客の登録";
+      document.getElementById('isCreateMode').value = "true";
+      document.getElementById('editCustomerName').value = "";
+      tempSelectedAttributes = [];
+      renderEditAttributeTags();
+      document.getElementById('editMemoBlocksArea').innerHTML = '';
+      addMemoBlock(); // 最初から1つ空ブロックを用意
+      document.getElementById('editCustomerModal').style.display = 'flex';
+    }
+
     function openEditModal(index) {
       const c = customerData[index];
+      document.getElementById('modalTitle').innerText = "顧客情報の編集";
+      document.getElementById('isCreateMode').value = "false";
       document.getElementById('editCustomerIndex').value = index;
       document.getElementById('editCustomerName').value = c.name;
-      document.getElementById('editCustomerMemo').value = c.memo;
       editingOriginalName = c.name; 
       
       tempSelectedAttributes = [...c.tagsArray];
       renderEditAttributeTags();
+
+      const area = document.getElementById('editMemoBlocksArea');
+      area.innerHTML = '';
+      const blocks = parseMemoToBlocks(c.memo);
+      if(blocks.length === 0) addMemoBlock();
+      else blocks.forEach(b => addMemoBlock(b.date, b.text));
+
       document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
@@ -625,43 +583,21 @@
       const area = document.getElementById('editAttributeTagsArea');
       area.innerHTML = '';
       const allTags = Array.from(new Set([...presetAttributeTags, ...tempSelectedAttributes]));
-
       allTags.forEach(tag => {
         const isSelected = tempSelectedAttributes.includes(tag);
-        const bg = isSelected ? '#DB2777' : '#FFF';
-        const color = isSelected ? '#FFF' : '#DB2777';
-        const border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
+        const bg = isSelected ? '#DB2777' : '#FFF', color = isSelected ? '#FFF' : '#DB2777', border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
         area.innerHTML += `<div onclick="toggleAttributeTag('${tag}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:900; cursor:pointer; user-select:none;">#${tag}</div>`;
       });
     }
 
-    function toggleAttributeTag(tag) {
-      if(tempSelectedAttributes.includes(tag)) {
-        tempSelectedAttributes = tempSelectedAttributes.filter(t => t !== tag);
-      } else {
-        tempSelectedAttributes.push(tag);
-      }
-      renderEditAttributeTags();
-    }
-
-    function addCustomAttributeTag() {
-      const input = document.getElementById('customAttrInput');
-      const val = input.value.trim();
-      if(val && !tempSelectedAttributes.includes(val)) {
-        tempSelectedAttributes.push(val); 
-        input.value = '';
-        renderEditAttributeTags();
-      }
-    }
-    
-    function closeEditModal() {
-      document.getElementById('editCustomerModal').style.display = 'none';
-    }
+    function toggleAttributeTag(tag) { tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); }
+    function addCustomAttributeTag() { const v = document.getElementById('customAttrInput').value.trim(); if(v && !tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } }
+    function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
 
     async function saveCustomerEdit() {
-      const index = document.getElementById('editCustomerIndex').value;
+      const isCreate = document.getElementById('isCreateMode').value === "true";
       const newName = document.getElementById('editCustomerName').value.trim();
-      const newMemo = document.getElementById('editCustomerMemo').value.trim();
+      const newMemo = buildMemoFromBlocks();
       const newTagsStr = tempSelectedAttributes.join(', ');
       
       if(!newName) return alert("名前は必須です");
@@ -671,57 +607,32 @@
 
       try {
         const payload = {
-          action: "updateCustomer",
+          action: isCreate ? "createCustomer" : "updateCustomer",
           userId: userId,
           oldName: editingOriginalName,
           newName: newName,
           newTags: newTagsStr, 
           newMemo: newMemo
         };
-        const res = await fetch(GAS_URL, {
-          method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if(data.success) {
-          customerData[index].name = newName;
-          customerData[index].memo = newMemo;
-          customerData[index].tags = newTagsStr;
-          customerData[index].tagsArray = [...tempSelectedAttributes];
-          
-          renderQuickAccess();
-          renderCustomerList();
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+        if((await res.json()).success) {
+          fetchCustomers(); // リスト再取得
           closeEditModal();
-        } else {
-          alert("保存に失敗しました。");
-        }
-      } catch(e) {
-         alert("エラーが発生しました。");
-      }
+        } else alert("保存に失敗しました。");
+      } catch(e) { alert("エラーが発生しました。"); }
       btn.innerText = "保存する"; btn.disabled = false;
     }
 
     function previewPhoto(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+      const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
-      reader.onload = e => {
-        currentBase64Image = e.target.result;
-        document.getElementById('photoPreview').src = e.target.result;
-        document.getElementById('photoPreview').style.display = 'block';
-        document.getElementById('uploadText').style.display = 'none';
-      };
+      reader.onload = e => { currentBase64Image = e.target.result; document.getElementById('photoPreview').src = e.target.result; document.getElementById('photoPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; };
       reader.readAsDataURL(file);
     }
 
     function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
     function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
-
-    function autoScrollTextarea() {
-      const el = document.getElementById('todayEpisodeInput');
-      el.scrollTop = el.scrollHeight;
-    }
+    function autoScrollTextarea() { const el = document.getElementById('todayEpisodeInput'); el.scrollTop = el.scrollHeight; }
 
     async function generateDiary() {
       const btn = document.getElementById('submitBtn');
@@ -732,51 +643,32 @@
       const type = localStorage.getItem('businessType') || 'cabaret';
 
       if (!isPhoto && !name) return alert("名前を入れてね");
-
       btn.innerText = "作成中...🚀"; btn.disabled = true;
 
       let actualPastMemo = (pastMemoText === "(顧客を選択するか、過去の記録がありません)" || pastMemoText === "(過去の記録はありません)") ? "" : pastMemoText;
       let newCombinedMemo = actualPastMemo;
+      
+      // ★自動で今日の日付を付与して結合
       if (todayEpisode || selectedEpisodeTags.length > 0) {
-        let todayText = `[今日のエピソード] ${todayEpisode} ${selectedEpisodeTags.length > 0 ? '(' + selectedEpisodeTags.join(',') + ')' : ''}`;
+        let tagsStr = selectedEpisodeTags.length > 0 ? '(' + selectedEpisodeTags.join(',') + ')' : '';
+        let todayText = `${getTodayFormatted()}: ${todayEpisode} ${tagsStr}`.trim();
         newCombinedMemo = actualPastMemo ? actualPastMemo + "\n---\n" + todayText : todayText;
       }
 
       const payload = {
-        action: "generate",
-        userId: userId,
-        name: name,
-        episode: todayEpisode,
-        pastMemo: actualPastMemo, 
-        combinedMemoToSave: newCombinedMemo, 
-        style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
-        tension: document.getElementById('tensionSlider').value,
-        emoji: document.getElementById('emojiSlider').value,
-        customText: document.getElementById('customStyleText').value,
-        businessType: type, 
-        industryPrompt: industryConfigs[type].prompt,
-        customerTags: currentCustomerTags.join(', '), 
-        episodeTags: selectedEpisodeTags.join(', '), 
-        image: currentBase64Image 
+        action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, 
+        combinedMemoToSave: newCombinedMemo, style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
+        tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value,
+        customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt,
+        customerTags: currentCustomerTags.join(', '), episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image 
       };
 
       try {
-        const res = await fetch(GAS_URL, {
-          method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload)
-        });
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
         if ((await res.json()).success) {
           alert("送信完了！LINEを見てね");
-          document.getElementById('nameInput').value = "";
-          document.getElementById('todayEpisodeInput').value = "";
-          document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)";
-          currentCustomerTags = [];
-          selectedEpisodeTags = [];
-          renderAttributeTags();
-          renderSelectedEpisodeTags();
-          renderChips();
-          fetchCustomers(); 
-          liff.closeWindow();
+          document.getElementById('nameInput').value = ""; document.getElementById('todayEpisodeInput').value = ""; document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)";
+          currentCustomerTags = []; selectedEpisodeTags = []; renderAttributeTags(); renderSelectedEpisodeTags(); renderChips(); fetchCustomers(); liff.closeWindow();
         }
       } catch (e) { alert("エラーだよ"); }
       btn.innerText = "✨ AIで作成する"; btn.disabled = false;
@@ -786,10 +678,7 @@
       const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!Speech) return alert("未対応ブラウザです");
       const rec = new Speech(); rec.lang = 'ja-JP'; rec.start();
-      rec.onresult = e => { 
-        document.getElementById('todayEpisodeInput').value += e.results[0][0].transcript; 
-        autoScrollTextarea();
-      };
+      rec.onresult = e => { document.getElementById('todayEpisodeInput').value += e.results[0][0].transcript; autoScrollTextarea(); };
     }
   </script>
 </body>
