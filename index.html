@@ -15,7 +15,7 @@
     html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: 'Hiragino Maru Gothic ProN', sans-serif; -webkit-tap-highlight-color: transparent; }
     input[type="radio"].ui-state { display: none; }
 
-    /* ナビゲーション */
+    /* ナビゲーション・基本レイアウト */
     .page { display: none; flex-direction: column; padding-bottom: 20px; }
     #nav-create:checked ~ .app-container .page-create { display: flex; }
     #nav-data:checked ~ .app-container .page-data { display: flex; }
@@ -23,44 +23,35 @@
     #nav-create:checked ~ .app-container .tab-create, #nav-data:checked ~ .app-container .tab-data, #nav-settings:checked ~ .app-container .tab-settings { color: var(--active-color); }
     #nav-create:not(:checked) ~ .app-container .header-toggle, #nav-create:not(:checked) ~ .app-container .submit-area { display: none; }
 
-    /* モード切り替えUI */
-    .mode-photo-ui, .mode-text-ui { display: none; }
-    #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
-    #mode-text:checked ~ .app-container .mode-text-ui { display: block; }
-    #mode-photo:checked ~ .app-container .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
-    #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
-
-    /* スタイル切り替えUI */
-    .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
-    #style-cute:checked ~ .modal-overlay .style-desc-cute, #style-cute:checked ~ .app-container .style-desc-cute { display: block; }
-    #style-custom:checked ~ .modal-overlay .style-desc-custom, #style-custom:checked ~ .app-container .style-desc-custom { display: block; }
-    #style-neat:checked ~ .modal-overlay .style-desc-neat, #style-neat:checked ~ .app-container .style-desc-neat { display: block; }
-    #style-cute:checked ~ .modal-overlay .btn-cute, #style-cute:checked ~ .app-container .btn-cute { background: var(--primary-gradient); color: white; border-color: transparent; }
-    #style-custom:checked ~ .modal-overlay .btn-custom, #style-custom:checked ~ .app-container .btn-custom { background: var(--primary-gradient); color: white; border-color: transparent; }
-    #style-neat:checked ~ .modal-overlay .btn-neat, #style-neat:checked ~ .app-container .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
-
-    /* レイアウト */
     .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
     .header-area { padding: env(safe-area-inset-top, 20px) 16px 10px; background: rgba(244, 242, 247, 0.85); backdrop-filter: blur(12px); z-index: 100; flex-shrink: 0; }
     .app-title { text-align: center; font-size: 22px; font-weight: 900; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
     .toggle-container { display: flex; background: #EAE5ED; border-radius: 40px; padding: 4px; }
     .toggle-label { flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: 900; color: var(--text-sub); border-radius: 34px; transition: 0.3s; cursor: pointer; }
     .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 160px); }
-    .fixed-footer { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; pointer-events: none; }
-    .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
-    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; transition: 0.2s; }
-    .submit-btn:disabled { background: #E5E7EB; box-shadow: none; color: #9CA3AF; cursor: not-allowed; }
-    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
-    .nav-icon { font-size: 26px; }
+    
+    /* モード切り替え */
+    .mode-photo-ui { display: none; }
+    #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
+    #mode-photo:checked ~ .app-container .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
+    #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
 
-    /* カード・汎用パーツ */
+    /* スタイル切り替えUI */
+    .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
+    #style-cute:checked ~ .modal-overlay .style-desc-cute { display: block; }
+    #style-custom:checked ~ .modal-overlay .style-desc-custom { display: block; }
+    #style-neat:checked ~ .modal-overlay .style-desc-neat { display: block; }
+    #style-cute:checked ~ .modal-overlay .btn-cute { background: var(--primary-gradient); color: white; border-color: transparent; }
+    #style-custom:checked ~ .modal-overlay .btn-custom { background: var(--primary-gradient); color: white; border-color: transparent; }
+    #style-neat:checked ~ .modal-overlay .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
+
+    /* カード・UIパーツ */
     .card { background: var(--card-bg); border-radius: 20px; padding: 22px 20px; margin-bottom: 20px; box-shadow: var(--shadow-md); }
     .label { font-weight: 900; font-size: 16px; margin-bottom: 12px; display: block; color: var(--text-main); }
     .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 16px; font-size: 16px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
 
-    /* 横スクロールUI（顧客アイコン用） */
+    /* 顧客アイコン横スワイプ */
     .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
     .fade-scroll-wrapper::after { content: ""; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(to right, transparent, var(--card-bg)); pointer-events: none; }
     .stories-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 10px 40px 10px 0; scrollbar-width: none; }
@@ -69,29 +60,31 @@
     .story-ring { width: 66px; height: 66px; border-radius: 50%; background: var(--primary-gradient); padding: 3px; position: relative; }
     .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--active-color); border: 2px solid #FFF; }
     .story-name { font-size: 11px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
-    .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); border: 1.5px solid #FFF; z-index: 5; white-space: nowrap; max-width: 50px; overflow: hidden; text-overflow: ellipsis; }
+    .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 10px; border: 1.5px solid #FFF; z-index: 5; }
 
-    /* 属性タグ（見るだけ） */
-    .attr-chip { background: #FDF2F8; border: 1px solid #FBCFE8; color: #DB2777; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 900; flex-shrink: 0; display: flex; align-items: center; }
-    .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 40px 10px 0; scrollbar-width: none; align-items: center; }
-    .tags-scroll-container::-webkit-scrollbar { display: none; }
+    /* 選択済みエピソードタグ表示エリア */
+    .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; min-height: 30px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
+    .selected-chip { background: var(--primary-gradient); color: #FFF; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 4px; animation: pop 0.2s ease-out; }
+    @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-    /* ★NEW: 選択済みエピソードタグのエリア */
-    .selected-tags-area { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 36px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
-    .selected-chip { background: var(--primary-gradient); color: #FFF; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 4px; animation: popIn 0.2s ease-out; }
-    @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    /* エピソードタグ（多段・動的・3段スクロール） */
+    .episode-tags-container { display: flex; flex-wrap: wrap; gap: 8px; max-height: 200px; overflow-y: auto; padding: 4px 0; align-content: flex-start; scrollbar-width: thin; scrollbar-color: #FBCFE8 transparent; }
+    .chip { background: #FFF; border: 1px solid #E5E7EB; color: #4F46E5; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+    .chip.dimmed { opacity: 0.3; background: #F3F4F6; color: #9CA3AF; border-color: transparent; pointer-events: none; }
 
-    /* エピソードタグ（プール側） */
-    .chip { background: #FFF; border: 1px solid #E5E7EB; color: #4F46E5; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: 0.2s; }
-    .chip.dimmed { opacity: 0.4; background: #F3F4F6; color: #9CA3AF; border-color: transparent; box-shadow: none; pointer-events: none; }
+    /* 属性タグ（顧客用） */
+    .attr-chip { background: #FDF2F8; border: 1px solid #FBCFE8; color: #DB2777; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 900; flex-shrink: 0; }
+    .edit-attr-chip { padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.1s; border: 1px solid #FBCFE8; }
 
-    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
-    .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
-    .textarea-wrapper { position: relative; }
-    textarea.input-field { height: 140px; resize: none; padding-right: 50px; line-height: 1.6; }
-    .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; }
-    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; cursor: pointer; position: relative; overflow: hidden; }
-    .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+    /* 送信・ナビ */
+    .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
+    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; }
+    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
+    
+    /* 過去メモ閲覧エリア */
+    .past-memo-box { background: #EAE5ED; border-radius: 12px; padding: 16px; font-size: 14px; color: #555; white-space: pre-wrap; margin-bottom: 12px; max-height: 120px; overflow-y: auto; border: 1px solid #D1C5D4; }
+    .past-memo-label { font-size: 12px; font-weight: bold; color: var(--text-sub); margin-bottom: 6px; display: block; }
 
     /* モーダル */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
@@ -99,11 +92,20 @@
     .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
     .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
     .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #7A666B; font-weight: bold; margin-bottom: 20px; }
+
+    .textarea-wrapper { position: relative; }
+    textarea.input-field { height: 100px; resize: none; padding-right: 50px; line-height: 1.6; }
+    .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; }
+    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; cursor: pointer; position: relative; overflow: hidden; }
+    .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
+    .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
+    .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 40px 10px 0; scrollbar-width: none; align-items: center; }
+    .tags-scroll-container::-webkit-scrollbar { display: none; }
   </style>
 </head>
 <body>
 
-  <!-- ラジオボタン群 -->
   <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
   <input type="radio" name="nav" id="nav-data" class="ui-state">
   <input type="radio" name="nav" id="nav-settings" class="ui-state">
@@ -159,17 +161,16 @@
       <span class="label" style="font-size:14px;">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
       
-      <span class="label" style="font-size:14px;">属性タグ（タップで選択）</span>
+      <span class="label" style="font-size:14px;">属性タグ（タップで選択 / 自由追加）</span>
       <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
       
-      <!-- ★追加：オリジナル属性タグの追加エリア -->
       <div style="display:flex; gap:8px; margin-bottom:16px;">
         <input type="text" id="customAttrInput" class="input-field" placeholder="オリジナルタグを入力..." style="padding:10px; font-size:13px;">
         <button onclick="addCustomAttributeTag()" style="background:var(--active-color); color:#FFF; border:none; border-radius:12px; padding:0 15px; font-weight:bold; white-space:nowrap;">追加</button>
       </div>
 
-      <span class="label" style="font-size:14px;">メモ</span>
-      <textarea id="editCustomerMemo" class="input-field" style="height: 100px; margin-bottom: 24px;"></textarea>
+      <span class="label" style="font-size:14px;">接客メモ（過去の蓄積）</span>
+      <textarea id="editCustomerMemo" class="input-field" style="height: 120px; margin-bottom: 24px;"></textarea>
       
       <div style="display:flex; gap:10px;">
         <button onclick="closeEditModal()" style="flex:1; background:#EAE5ED; color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:900;">キャンセル</button>
@@ -188,47 +189,49 @@
     </header>
 
     <main class="scroll-area">
-      <!-- 作成タブ -->
       <div class="page page-create">
         <div class="card customer-select-card">
           <span class="label">👤 誰に送る？</span>
-          <div class="fade-scroll-wrapper">
-            <div class="stories-scroll" id="quickAccessArea"></div>
-          </div>
+          <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea"></div></div>
           <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
           <div id="resultArea" class="result-box"></div>
         </div>
 
         <div class="card mode-photo-ui">
           <span class="label">📷 写真を選ぶ</span>
-          <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
-          <label for="photoUpload" class="upload-area" id="uploadArea">
+          <input type="file" id="photoUpload" accept="image/*" style="display:none;" onchange="previewPhoto(event)">
+          <label for="photoUpload" id="uploadArea" class="upload-area">
             <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
             <img id="photoPreview">
           </label>
         </div>
 
         <div class="card">
-          <span class="label">📝 エピソード・キーワード</span>
+          <span class="label">📝 エピソード作成</span>
           
-          <!-- 属性タグ表示エリア（横スクロール） -->
-          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display: none; margin-bottom: 8px;">
+          <!-- 選択した属性タグ（見るだけ） -->
+          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 12px;">
             <div class="tags-scroll-container" id="attributeTagsArea"></div>
           </div>
 
-          <!-- ★追加：選択済みエピソードタグ表示エリア -->
-          <div id="selectedEpisodeTagsArea" class="selected-tags-area"></div>
+          <!-- 過去のメモ閲覧エリア -->
+          <div class="past-memo-box">
+            <span class="past-memo-label">📖 過去のメモ</span>
+            <div id="pastMemoDisplay">(顧客を選択するか、過去の記録がありません)</div>
+          </div>
 
+          <!-- 選択済みエピソードタグ -->
+          <div id="selectedEpisodeTags" class="selected-tags-box"></div>
+
+          <!-- 今日の出来事入力エリア -->
           <div class="textarea-wrapper">
-            <textarea id="episodeInput" class="input-field"></textarea>
+            <textarea id="todayEpisodeInput" class="input-field" placeholder="今日の出来事や特記事項を入力..." oninput="autoScrollTextarea()"></textarea>
             <div class="mic-btn" onclick="startDictation()">🎤</div>
           </div>
           
-          <!-- エピソードタグ・プールエリア（横スクロール維持） -->
-          <div class="fade-scroll-wrapper" style="margin-top: 12px; margin-bottom:0;">
-            <div class="tags-scroll-container" id="dynamicChips"></div>
-          </div>
-          
+          <!-- エピソードタグ（多段） -->
+          <div class="episode-tags-container" id="dynamicChips" style="margin-top:16px;"></div>
+
           <div style="margin-top: 12px; display: flex; gap: 8px;">
             <input type="text" id="customTagInput" placeholder="＋タグ追加" style="flex:1; border:none; background:var(--input-bg); padding:10px; border-radius:10px;">
             <button onclick="addCustomTag()" style="background:var(--active-color); color:#fff; border:none; padding:0 15px; border-radius:10px;">追加</button>
@@ -236,7 +239,6 @@
         </div>
       </div>
 
-      <!-- 顧客タブ -->
       <div class="page page-data">
         <h2 style="margin:0 0 20px; font-weight:900;">顧客カルテ</h2>
         <div class="search-box">
@@ -246,12 +248,11 @@
         <div id="customerListArea"></div>
       </div>
 
-      <!-- 設定タブ -->
       <div class="page page-settings">
         <h2 style="margin:0 0 20px; font-weight:900;">設定</h2>
         <div class="card" onclick="openStyleModal()" style="cursor:pointer; border: 2px solid #FBCFE8;">
           <span style="font-weight:900; color:#DB2777;">🎨 AIの口調・スタイル設定</span>
-          <p style="font-size:12px; color:var(--text-sub); margin-top:5px;">かわいい・清楚・オリジナル学習</p>
+          <p style="font-size:12px; color:var(--text-sub); margin-top:5px;" id="styleOverviewText">かわいい・清楚・オリジナル学習</p>
         </div>
         <div class="settings-list">
           <div class="settings-item">
@@ -267,9 +268,7 @@
     </main>
 
     <footer class="fixed-footer">
-      <div class="submit-area">
-        <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
-      </div>
+      <div class="submit-area"><button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button></div>
       <nav class="bottom-nav">
         <label for="nav-create" class="nav-item tab-create"><span class="nav-icon">📝</span>作成</label>
         <label for="nav-data" class="nav-item tab-data"><span class="nav-icon">📖</span>顧客</label>
@@ -285,17 +284,14 @@
 
     let userId = "test-user";
     let customerData = [];
-    let activeTags = []; // エピソードタグ（プール）
+    let activeTags = []; 
     let currentCustomerTags = []; 
-    let selectedEpisodeTags = []; // ★NEW: 選択されたエピソードタグ
+    let selectedEpisodeTags = []; 
     let currentBase64Image = null;
 
-    // 属性タグのプリセット
     const presetAttributeTags = [
-      '太客', '常連', '新規', '痛客', 
-      'デブ', 'ハゲ', 'おじさん', '若者', 'イケメン', 
-      '金持ち', 'ケチ', 'お酒好き', '下戸', 
-      '既婚', '独身', '優しい', '短気', 
+      '太客', '常連', '新規', '痛客', 'デブ', 'ハゲ', 'おじさん', '若者', 'イケメン', 
+      '金持ち', 'ケチ', 'お酒好き', '下戸', '既婚', '独身', '優しい', '短気', 
       '寂しがり', 'M気質', 'S気質'
     ];
     let tempSelectedAttributes = [];
@@ -332,12 +328,12 @@
         ]
       }
     };
-    // 写メ日記用（全業種共通）
     const photoChips = [
       '📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', 
       '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯', 
       '🤳 自撮り', '🛏️ 寝起き', '🏠 お家', '🏋️‍♀️ ジム', '🛍️ お買い物'
     ];
+
     async function init() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
@@ -346,11 +342,8 @@
 
       try {
         await liff.init({ liffId: LIFF_ID });
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          userId = profile.userId;
-        }
-      } catch (e) { console.log("LIFF Init Error"); }
+        if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId;
+      } catch (e) {}
 
       const savedType = localStorage.getItem('businessType');
       if (!savedType) {
@@ -372,20 +365,41 @@
       document.getElementById('setupModal').style.display = 'none';
     }
 
-    // --- エピソードタグ（ショートカット）関連 ---
+    // --- 業種に応じたスタイルUIの動的変更 ---
+    function updateStyleUI(type) {
+      const cuteLabel = document.querySelector('.btn-cute');
+      const neatLabel = document.querySelector('.btn-neat');
+      const cuteDesc = document.querySelector('.style-desc-cute');
+      const neatDesc = document.querySelector('.style-desc-neat');
+      const overviewText = document.getElementById('styleOverviewText');
+
+      if (type === 'host') {
+        cuteLabel.innerText = "オラオラ";
+        neatLabel.innerText = "子犬(甘え)";
+        cuteDesc.innerText = "😎 強気でSっ気のある、独占欲強めのオラオラ系文体。";
+        neatDesc.innerText = "🐶 母性本能をくすぐる、可愛くて甘えん坊な文体。";
+        overviewText.innerText = "オラオラ・子犬・オリジナル学習";
+      } else {
+        cuteLabel.innerText = "かわいい";
+        neatLabel.innerText = "清楚";
+        cuteDesc.innerText = "🎀 可愛らしく、絵文字を多用した親しみやすい文体。";
+        neatDesc.innerText = "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。";
+        overviewText.innerText = "かわいい・清楚・オリジナル学習";
+      }
+    }
+
     function updateChips() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
       const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
       
-      // 最新のマスターデータを取得
+      updateStyleUI(type);
+
       const masterTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags];
-      
       const savedTags = localStorage.getItem(storageKey);
+      
       if (savedTags) {
         let parsed = JSON.parse(savedTags);
-        // ★修正：保存されているタグの数が、コード上のマスターより少ない場合はマスターで上書き！
-        // （これでコードを更新した際に、古いキャッシュが自動でリセットされます）
         if (parsed.length < masterTags.length) {
           activeTags = masterTags;
           localStorage.setItem(storageKey, JSON.stringify(masterTags));
@@ -396,33 +410,30 @@
         activeTags = masterTags;
       }
       
-      document.getElementById('episodeInput').placeholder = isPhoto ? "えちえちな日常などを入力！" : "今日あったことを入力！";
       renderChips();
     }
-    
+
     function renderChips() {
       const container = document.getElementById('dynamicChips');
       container.innerHTML = '';
       activeTags.forEach((text, index) => {
         const isSelected = selectedEpisodeTags.includes(text);
         const chip = document.createElement('div');
-        // ★修正: 選択済みの場合は dimmed クラスを付与
         chip.className = 'chip' + (isSelected ? ' dimmed' : '');
         chip.innerHTML = `${text}`;
         chip.onclick = () => {
           if (!isSelected) {
             selectedEpisodeTags.push(text);
             renderSelectedEpisodeTags();
-            renderChips(); // プールの状態を更新
+            renderChips(); 
           }
         };
         container.appendChild(chip);
       });
     }
 
-    // ★NEW: 選択済みエピソードタグを描画
     function renderSelectedEpisodeTags() {
-      const area = document.getElementById('selectedEpisodeTagsArea');
+      const area = document.getElementById('selectedEpisodeTags');
       area.innerHTML = '';
       selectedEpisodeTags.forEach((tag, index) => {
         const chip = document.createElement('div');
@@ -432,11 +443,10 @@
       });
     }
 
-    // ★NEW: 選択済みエピソードタグを削除
     function removeEpisodeTag(index) {
       selectedEpisodeTags.splice(index, 1);
       renderSelectedEpisodeTags();
-      renderChips(); // プールのグレーアウトを解除
+      renderChips();
     }
 
     function saveTagsToStorage() {
@@ -446,7 +456,6 @@
       localStorage.setItem(storageKey, JSON.stringify(activeTags));
     }
 
-    // プールへの新規タグ追加
     function addCustomTag() {
       const input = document.getElementById('customTagInput');
       if(input.value.trim() !== "") {
@@ -454,7 +463,7 @@
         input.value = "";
         renderChips();
         saveTagsToStorage();
-        document.getElementById('dynamicChips').scrollLeft = 0;
+        document.getElementById('dynamicChips').scrollTop = 0;
       }
     }
     
@@ -463,7 +472,6 @@
       updateChips();
     }
 
-    // --- 顧客データ関連 ---
     async function fetchCustomers() {
       try {
         const res = await fetch(GAS_URL, {
@@ -492,7 +500,7 @@
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea');
       area.innerHTML = "";
-      customerData.slice(0, 10).forEach((c, index) => {
+      customerData.slice(0, 15).forEach((c, index) => {
         const firstTag = c.tagsArray.length > 0 ? `<div class="story-badge">${c.tagsArray[0]}</div>` : '';
         const firstChar = c.name ? String(c.name).charAt(0) : "👤";
         area.innerHTML += `
@@ -525,7 +533,7 @@
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div style="flex:1; margin-right:10px;">
                   <b style="font-size:16px;">${c.name}</b><br>
-                  <small style="color:var(--text-sub); display:block; margin-top:4px;">${c.memo || "メモなし"}</small>
+                  <small style="color:var(--text-sub); display:block; margin-top:4px;">${c.memo ? c.memo.substring(0,40)+"..." : "メモなし"}</small>
                   ${tagHtml}
                 </div>
                 <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
@@ -542,14 +550,17 @@
       const c = customerData[index];
       document.getElementById('nav-create').checked = true;
       document.getElementById('nameInput').value = c.name;
-      document.getElementById('episodeInput').value = c.memo ? `[メモ: ${c.memo}]\n` : "";
+      
+      // 過去メモを閲覧専用エリアに表示し、今日のエピソード入力をクリア
+      document.getElementById('pastMemoDisplay').innerText = c.memo || "(過去の記録はありません)";
+      document.getElementById('todayEpisodeInput').value = "";
+      
       currentCustomerTags = c.tagsArray;
       renderAttributeTags();
 
-      // ★NEW: 顧客切り替え時に選択済みエピソードタグをリセット
       selectedEpisodeTags = [];
       renderSelectedEpisodeTags();
-      renderChips(); // プールのグレーアウトも解除
+      renderChips(); 
     }
 
     function renderAttributeTags() {
@@ -574,6 +585,7 @@
         area.style.display = "none"; 
         currentCustomerTags = [];
         renderAttributeTags();
+        document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)";
         return; 
       }
       let matchCount = 0;
@@ -590,7 +602,6 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    // --- 顧客編集ロジック ---
     let editingOriginalName = "";
     
     function openEditModal(index) {
@@ -608,8 +619,6 @@
     function renderEditAttributeTags() {
       const area = document.getElementById('editAttributeTagsArea');
       area.innerHTML = '';
-      
-      // ★修正: プリセットタグと、カスタムで追加されたタグを統合して重複排除
       const allTags = Array.from(new Set([...presetAttributeTags, ...tempSelectedAttributes]));
 
       allTags.forEach(tag => {
@@ -630,12 +639,11 @@
       renderEditAttributeTags();
     }
 
-    // ★NEW: オリジナル属性タグの追加
     function addCustomAttributeTag() {
       const input = document.getElementById('customAttrInput');
       const val = input.value.trim();
       if(val && !tempSelectedAttributes.includes(val)) {
-        tempSelectedAttributes.push(val); // 選択済みに直接追加
+        tempSelectedAttributes.push(val); 
         input.value = '';
         renderEditAttributeTags();
       }
@@ -689,7 +697,6 @@
       btn.innerText = "保存する"; btn.disabled = false;
     }
 
-    // --- その他UI関連 ---
     function previewPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -706,31 +713,47 @@
     function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
     function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
 
-    // --- 送信 ---
+    function autoScrollTextarea() {
+      const el = document.getElementById('todayEpisodeInput');
+      el.scrollTop = el.scrollHeight;
+    }
+
     async function generateDiary() {
       const btn = document.getElementById('submitBtn');
       const name = document.getElementById('nameInput').value;
-      const episode = document.getElementById('episodeInput').value;
+      const todayEpisode = document.getElementById('todayEpisodeInput').value;
+      const pastMemoText = document.getElementById('pastMemoDisplay').innerText;
       const isPhoto = document.getElementById('mode-photo').checked;
       const type = localStorage.getItem('businessType') || 'cabaret';
 
       if (!isPhoto && !name) return alert("名前を入れてね");
-      if (!episode) return alert("内容を入れてね");
+      // 空欄でもOKな仕様にしたため、今日のエピソードの必須チェックは除外
 
       btn.innerText = "作成中...🚀"; btn.disabled = true;
+
+      // 過去メモと今日のエピソードを結合してシート保存用データを作成
+      let actualPastMemo = (pastMemoText === "(顧客を選択するか、過去の記録がありません)" || pastMemoText === "(過去の記録はありません)") ? "" : pastMemoText;
+      let newCombinedMemo = actualPastMemo;
+      if (todayEpisode || selectedEpisodeTags.length > 0) {
+        let todayText = `[今日のエピソード] ${todayEpisode} ${selectedEpisodeTags.length > 0 ? '(' + selectedEpisodeTags.join(',') + ')' : ''}`;
+        newCombinedMemo = actualPastMemo ? actualPastMemo + "\n---\n" + todayText : todayText;
+      }
 
       const payload = {
         action: "generate",
         userId: userId,
         name: name,
-        episode: episode,
+        episode: todayEpisode, // LLMへは今日の分だけ渡す（過去分は別途渡すか判断）
+        pastMemo: actualPastMemo, // LLM用
+        combinedMemoToSave: newCombinedMemo, // GAS保存用
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
         tension: document.getElementById('tensionSlider').value,
         emoji: document.getElementById('emojiSlider').value,
         customText: document.getElementById('customStyleText').value,
+        businessType: type, // Dify分岐用
         industryPrompt: industryConfigs[type].prompt,
         customerTags: currentCustomerTags.join(', '), 
-        episodeTags: selectedEpisodeTags.join(', '), // ★追加：LLMへ送信
+        episodeTags: selectedEpisodeTags.join(', '), 
         image: currentBase64Image 
       };
 
@@ -742,12 +765,14 @@
         if ((await res.json()).success) {
           alert("送信完了！LINEを見てね");
           document.getElementById('nameInput').value = "";
-          document.getElementById('episodeInput').value = "";
+          document.getElementById('todayEpisodeInput').value = "";
+          document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)";
           currentCustomerTags = [];
           selectedEpisodeTags = [];
           renderAttributeTags();
           renderSelectedEpisodeTags();
           renderChips();
+          fetchCustomers(); // 新しいメモを再取得
           liff.closeWindow();
         }
       } catch (e) { alert("エラーだよ"); }
@@ -758,7 +783,10 @@
       const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!Speech) return alert("未対応ブラウザです");
       const rec = new Speech(); rec.lang = 'ja-JP'; rec.start();
-      rec.onresult = e => { document.getElementById('episodeInput').value += e.results[0][0].transcript; };
+      rec.onresult = e => { 
+        document.getElementById('todayEpisodeInput').value += e.results[0][0].transcript; 
+        autoScrollTextarea();
+      };
     }
   </script>
 </body>
