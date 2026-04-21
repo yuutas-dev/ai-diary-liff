@@ -403,7 +403,7 @@
       updateChips();
     }
 
-    // --- 顧客データ関連 ---
+    // --- 1. データの読み込み（完全無敵化） ---
     async function fetchCustomers() {
       try {
         const res = await fetch(GAS_URL, {
@@ -414,7 +414,9 @@
         if(data.success) {
           customerData = data.customers.map(c => ({
             ...c,
-            // シートの内容を強制的に文字列化して分割（エラー防止）
+            // ★超重要：シートが空でも数字でも、絶対に「文字列」として扱うようガード
+            name: String(c.name || "名前なし"),
+            memo: String(c.memo || ""),
             tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : []
           }));
         } else {
@@ -422,34 +424,40 @@
         }
         renderCustomerList();
         renderQuickAccess();
-      } catch (e) { renderQuickAccess(); }
+      } catch (e) { 
+        // ★エラーが起きたら原因をポップアップで表示する（原因究明用）
+        alert("データ読み込みエラー: " + e.message); 
+        renderQuickAccess(); 
+      }
     }
 
+    // --- 2. アイコンの描画（空文字でのクラッシュ防止） ---
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea');
       area.innerHTML = "";
       customerData.slice(0, 10).forEach((c, index) => {
         const firstTag = c.tagsArray.length > 0 ? `<div class="story-badge">${c.tagsArray[0]}</div>` : '';
+        // ★名前の1文字目を取る時も、確実に文字列にしてから切り取る
+        const firstChar = c.name ? String(c.name).charAt(0) : "👤";
+        
         area.innerHTML += `
           <div class="story-item" onclick="selectCustomerByIndex(${index})">
             <div class="story-ring">
               ${firstTag}
-              <div class="story-inner">${c.name[0]}</div>
+              <div class="story-inner">${firstChar}</div>
             </div>
             <span class="story-name">${c.name}</span>
           </div>`;
       });
     }
 
-    function filterCustomerList() {
-      renderCustomerList(document.getElementById('customerSearch').value);
-    }
-
+    // --- 3. 顧客リストの描画（検索でのクラッシュ防止） ---
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea');
       area.innerHTML = "";
       customerData.forEach((c, index) => {
-        if(c.name.includes(filterText)){
+        // ★検索する時も、確実に文字列として扱う
+        if(String(c.name).includes(filterText)){
           const tagHtml = c.tagsArray.length > 0 ? 
             `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + 
             c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') +
