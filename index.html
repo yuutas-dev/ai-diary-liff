@@ -402,7 +402,6 @@
       updateChips();
     }
 
-    // --- 顧客データ関連 ---
     async function fetchCustomers() {
       try {
         const res = await fetch(GAS_URL, {
@@ -411,10 +410,10 @@
         });
         const data = await res.json();
         if(data.success) {
-          // tags文字列を配列に変換しておく
+          // ★修正：String(c.tags) で囲むことで、シート側の型エラーを完全ブロック
           customerData = data.customers.map(c => ({
             ...c,
-            tagsArray: c.tags ? c.tags.split(',').map(t => t.trim()).filter(t => t) : []
+            tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : []
           }));
         } else {
           customerData = [];
