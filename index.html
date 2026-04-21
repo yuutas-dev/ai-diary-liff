@@ -294,6 +294,7 @@
     let selectedEpisodeTags = []; 
     let currentBase64Image = null;
     let isDemoMode = false;
+    let myCustomAttrs = []; // 自分が追加したオリジナル属性タグを保存する箱
 
     // ==========================================
     // ★ここに生成した各業態のダミー文を貼り付けます
@@ -304,11 +305,13 @@
       host: "（例）\n今日ありがとな。\nちょっと肌寒かったのに来てくれたの、普通に嬉しかった☁️\n○○へ\n最初少し距離あったのにだんだん近くなっていく感じ、悪くなかったな😳\nあの時の空気、結構好きだったわ\nお前といると無理に作らなくていいし変に気使わなくていいのが楽でさ\n気づいたらちゃんと楽しんでた💭\nこれ以上は内緒にしとく🤫\nまたタイミング合ったら来いよ\n次はもう少しちゃんと向き合ってやるから\nおやすみ🌙\n\n※ここに普段のLINEを貼り付けると学習します！"
     };
 
-    const presetAttributeTags = [
-      '太客', '常連', '新規', '痛客', 'デブ', 'ハゲ', 'おじさん', '若者', 'イケメン', 
-      '金持ち', 'ケチ', 'お酒好き', '下戸', '既婚', '独身', '優しい', '短気', 
-      '寂しがり', 'M気質', 'S気質'
-    ];
+    // ★ 業種ごとの属性タグリスト
+    const industryAttributeTags = {
+      cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'],
+      fuzoku: ['M気質', 'S気質', '常連', '新規', 'キモい', '優しい', '痛客', '匂いキツめ', 'マナー良', '本番要求', 'おじさん', '若者', 'イケメン', 'デブ', 'ハゲ'],
+      host: ['太客', '細客', 'エース', '痛客', '常連', '新規', 'メンヘラ', '金持ち', 'ケチ', '酒癖悪い', 'マナー良', '独身', '既婚', '若者', 'おばさん']
+    };
+    
     let tempSelectedAttributes = [];
 
     const industryConfigs = {
@@ -339,6 +342,11 @@
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
 
       try { await liff.init({ liffId: LIFF_ID }); if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; } catch (e) {}
+
+      // ★ カスタム属性タグの読み込み
+      if (localStorage.getItem('myCustomAttrs')) {
+        myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
+      }
 
       const savedType = localStorage.getItem('businessType');
       if (!savedType) document.getElementById('setupModal').style.display = 'flex';
@@ -580,7 +588,12 @@
 
     function renderEditAttributeTags() {
       const area = document.getElementById('editAttributeTagsArea'); area.innerHTML = '';
-      const allTags = Array.from(new Set([...presetAttributeTags, ...tempSelectedAttributes]));
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const currentPresets = industryAttributeTags[type] || industryAttributeTags['cabaret'];
+      
+      // ★ オリジナル辞書 -> 業種別プリセット -> 既存の選択済みタグ の順に並べて重複をなくす
+      const allTags = Array.from(new Set([...myCustomAttrs, ...currentPresets, ...tempSelectedAttributes]));
+      
       allTags.forEach(tag => {
         const isSelected = tempSelectedAttributes.includes(tag);
         const bg = isSelected ? '#DB2777' : '#FFF', color = isSelected ? '#FFF' : '#DB2777', border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
@@ -592,10 +605,23 @@
       if (isDemoMode) return; 
       tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); 
     }
+    
+    // ★ 属性タグ追加時の処理をアップデート（オリジナル辞書に保存）
     function addCustomAttributeTag() { 
       const v = document.getElementById('customAttrInput').value.trim(); 
-      if(v && !tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } 
+      if(v) { 
+        if(!myCustomAttrs.includes(v)) {
+          myCustomAttrs.unshift(v); // オリジナル辞書の先頭に追加
+          localStorage.setItem('myCustomAttrs', JSON.stringify(myCustomAttrs));
+        }
+        if(!tempSelectedAttributes.includes(v)) {
+          tempSelectedAttributes.push(v); // 今回の選択中タグに追加
+        }
+        document.getElementById('customAttrInput').value = ''; 
+        renderEditAttributeTags(); 
+      } 
     }
+    
     function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
 
     async function saveCustomerEdit() {
