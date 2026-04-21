@@ -498,14 +498,47 @@
       updateChips();
     }
 
-    function updateChips() {
-      const type = localStorage.getItem('businessType') || 'cabaret';
-      const isPhoto = document.getElementById('mode-photo').checked;
-      activeTags = isPhoto ? [...photoChips] : [...(defaultChips[type] || defaultChips.cabaret)];
-      const epInput = document.getElementById('episodeInput');
-      epInput.placeholder = isPhoto ? "日常のひとコマや、えちえちなアピールなどを入力してね！" : "今日あったことや伝えたい話題を入力。音声入力も便利です！";
-      renderChips();
-    }
+    // --- タグロジック（改良版） ---
+function updateChips() {
+  const type = localStorage.getItem('businessType') || 'cabaret';
+  const isPhoto = document.getElementById('mode-photo').checked;
+  const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
+  
+  // 保存されたタグがあれば読み込み、なければデフォルトを使う
+  const savedTags = localStorage.getItem(storageKey);
+  if (savedTags) {
+    activeTags = JSON.parse(savedTags);
+  } else {
+    activeTags = isPhoto ? [...photoChips] : [...(defaultChips[type] || defaultChips.cabaret)];
+  }
+
+  renderChips();
+}
+
+function saveTagsToStorage() {
+  const type = localStorage.getItem('businessType') || 'cabaret';
+  const isPhoto = document.getElementById('mode-photo').checked;
+  const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
+  localStorage.setItem(storageKey, JSON.stringify(activeTags));
+}
+
+// addCustomTag と removeTag の最後に saveTagsToStorage() を実行するように変更
+function addCustomTag() {
+  const input = document.getElementById('customTagInput');
+  if(input.value.trim() !== "") {
+    activeTags.push(input.value.trim());
+    input.value = "";
+    renderChips();
+    saveTagsToStorage(); // 保存！
+  }
+}
+
+function removeTag(event, index) {
+  event.stopPropagation();
+  activeTags.splice(index, 1);
+  renderChips();
+  saveTagsToStorage(); // 保存！
+}
 
     function renderChips() {
       const container = document.getElementById('dynamicChips');
