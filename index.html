@@ -605,11 +605,13 @@
       const btn = document.getElementById('saveCustomerBtn'); btn.innerText = "保存中..."; btn.disabled = true;
 
       try {
-        const payload = { action: isCreate ? "createCustomer" : "updateCustomer", userId: userId, oldName: editingOriginalName, newName: newName, newTags: newTagsStr, newMemo: newMemo };
-        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
-        if((await res.json()).success) { fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
-      } catch(e) { alert("エラーが発生しました。"); }
-      btn.innerText = "保存する"; btn.disabled = false;
+        const payload = {
+        action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, 
+        style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value,
+        customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt,
+        customerTags: currentCustomerTags.join(', '), episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image,
+        mode: isPhoto ? "photo" : "text" // ★追加：Difyに写メ日記かお礼日記かを伝える
+      };
     }
 
     function previewPhoto(event) {
