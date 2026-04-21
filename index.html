@@ -36,10 +36,19 @@
     #mode-photo:checked ~ .app-container .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
     #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
     .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
+    /* スタイルタブの切り替えアニメーションと固定枠 */
+    .style-content-wrapper { min-height: 310px; position: relative; }
+    .style-desc-cute, .style-desc-custom, .style-desc-neat { 
+      display: none; 
+      animation: fadeInTab 0.3s ease-out forwards;
+    }
     #style-cute:checked ~ .modal-overlay .style-desc-cute { display: block; }
     #style-custom:checked ~ .modal-overlay .style-desc-custom { display: block; }
     #style-neat:checked ~ .modal-overlay .style-desc-neat { display: block; }
-    #style-cute:checked ~ .modal-overlay .btn-cute, #style-custom:checked ~ .modal-overlay .btn-custom, #style-neat:checked ~ .modal-overlay .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
+    @keyframes fadeInTab {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     /* カード・UIパーツ */
     .card { background: var(--card-bg); border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-md); }
@@ -136,6 +145,7 @@
     </div>
   </div>
 
+  <!-- スタイル設定モーダル -->
   <div id="styleModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
@@ -144,16 +154,28 @@
         <label for="style-custom" class="style-btn btn-custom">カスタム</label>
         <label for="style-neat" class="style-btn btn-neat">清楚</label>
       </div>
-      <div class="style-desc-cute style-desc-box">🎀 可愛らしく、絵文字を多用した親しみやすい文体。</div>
-      <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
-      <div class="style-desc-custom">
-        <div class="style-desc-box">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
-        <textarea id="customStyleText" class="input-field" style="height: 130px; margin-bottom:16px; font-size: 13px;"></textarea>
-        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;"><span>テンション（低）</span><span>（高）</span></div>
-        <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;">
-        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;"><span>絵文字の量（少）</span><span>（多）</span></div>
-        <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:20px;">
+      
+      <!-- 高さを固定してガタつきを無くすラッパー -->
+      <div class="style-content-wrapper">
+        <div class="style-desc-cute style-desc-box">🎀 可愛らしく、絵文字を多用した親しみやすい文体。</div>
+        <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
+        
+        <div class="style-desc-custom">
+          <div class="style-desc-box" style="margin-bottom: 12px;">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
+          <textarea id="customStyleText" class="input-field" style="height: 120px; margin-bottom:16px; font-size: 13px;"></textarea>
+          
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;">
+            <span>テンション（低）</span><span>（高）</span>
+          </div>
+          <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;">
+          
+          <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: var(--text-sub); margin-bottom: 8px;">
+            <span>絵文字の量（少）</span><span>（多）</span>
+          </div>
+          <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:10px;">
+        </div>
       </div>
+
       <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900;">設定を保存して閉じる</button>
     </div>
   </div>
