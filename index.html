@@ -15,7 +15,7 @@
     html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: 'Hiragino Maru Gothic ProN', sans-serif; -webkit-tap-highlight-color: transparent; }
     input[type="radio"].ui-state { display: none; }
 
-    /* ナビゲーション切り替え */
+    /* ナビゲーション */
     .page { display: none; flex-direction: column; padding-bottom: 20px; }
     #nav-create:checked ~ .app-container .page-create { display: flex; }
     #nav-data:checked ~ .app-container .page-data { display: flex; }
@@ -23,7 +23,7 @@
     #nav-create:checked ~ .app-container .tab-create, #nav-data:checked ~ .app-container .tab-data, #nav-settings:checked ~ .app-container .tab-settings { color: var(--active-color); }
     #nav-create:not(:checked) ~ .app-container .header-toggle, #nav-create:not(:checked) ~ .app-container .submit-area { display: none; }
 
-    /* モード切替（写メ日記時のUI隠蔽） */
+    /* モード・スタイル切り替えUI */
     .mode-photo-ui, .mode-text-ui { display: none; }
     #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
     #mode-text:checked ~ .app-container .mode-text-ui { display: block; }
@@ -31,24 +31,20 @@
     #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
     #mode-photo:checked ~ .app-container .customer-select-card { display: none; }
 
-    /* スタイル切り替え（モーダル内も適用されるように修正） */
     .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
-    
     #style-cute:checked ~ .modal-overlay .style-desc-cute, #style-cute:checked ~ .app-container .style-desc-cute { display: block; }
     #style-custom:checked ~ .modal-overlay .style-desc-custom, #style-custom:checked ~ .app-container .style-desc-custom { display: block; }
     #style-neat:checked ~ .modal-overlay .style-desc-neat, #style-neat:checked ~ .app-container .style-desc-neat { display: block; }
-
     #style-cute:checked ~ .modal-overlay .btn-cute, #style-cute:checked ~ .app-container .btn-cute { background: var(--primary-gradient); color: white; border-color: transparent; }
     #style-custom:checked ~ .modal-overlay .btn-custom, #style-custom:checked ~ .app-container .btn-custom { background: var(--primary-gradient); color: white; border-color: transparent; }
     #style-neat:checked ~ .modal-overlay .btn-neat, #style-neat:checked ~ .app-container .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
 
-    /* 基本レイアウト */
+    /* レイアウト */
     .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
     .header-area { padding: env(safe-area-inset-top, 20px) 16px 10px; background: rgba(244, 242, 247, 0.85); backdrop-filter: blur(12px); z-index: 100; flex-shrink: 0; }
     .app-title { text-align: center; font-size: 22px; font-weight: 900; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
     .toggle-container { display: flex; background: #EAE5ED; border-radius: 40px; padding: 4px; }
     .toggle-label { flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: 900; color: var(--text-sub); border-radius: 34px; transition: 0.3s; cursor: pointer; }
-
     .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 160px); }
     .fixed-footer { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; pointer-events: none; }
     .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
@@ -58,13 +54,11 @@
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
     .nav-icon { font-size: 26px; }
 
-    /* UIコンポーネント */
+    /* カード・UIパーツ */
     .card { background: var(--card-bg); border-radius: 20px; padding: 22px 20px; margin-bottom: 20px; box-shadow: var(--shadow-md); }
     .label { font-weight: 900; font-size: 16px; margin-bottom: 12px; display: block; color: var(--text-main); }
     .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 16px; font-size: 16px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
-
-    /* クイックアクセス */
     .stories-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none; }
     .stories-scroll::-webkit-scrollbar { display: none; }
     .story-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; width: 66px; position: relative; }
@@ -73,80 +67,37 @@
     .story-name { font-size: 11px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
     .story-tag { position: absolute; top: -4px; left: -4px; background: #DB2777; color: #FFF; font-size: 9px; font-weight: bold; padding: 2px 4px; border-radius: 6px; z-index: 5; }
 
-    /* サジェスト */
     .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
     .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
-    .suggest-item:last-child { border-bottom: none; }
-
-    /* テキストエリア＆マイク */
     .textarea-wrapper { position: relative; }
     textarea.input-field { height: 140px; resize: none; padding-right: 50px; line-height: 1.6; }
     .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; }
-
-    /* タグ関連 */
     .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
-    .chip { background: #FFF; border: 1px solid #F0E6EA; color: #9333EA; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.1s; display: flex; align-items: center; gap: 4px; }
-    .chip:active { transform: scale(0.95); }
-
-    /* 写メ日記アップロード */
-    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; margin-bottom: 10px; cursor: pointer; position: relative; overflow: hidden; }
-    .upload-area.has-image { border: none; }
+    .chip { background: #FFF; border: 1px solid #F0E6EA; color: #9333EA; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; cursor: pointer; position: relative; overflow: hidden; }
     .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
 
-    /* AI出力 */
-    .output-card { background: #FFF; border: 2px solid #F472B6; border-radius: 20px; padding: 24px; margin-top: 20px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15); display: none; }
-    .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color); }
-    .output-text-wrapper { position: relative; max-height: 140px; overflow: hidden; cursor: pointer; transition: 0.4s; }
-    .output-text-wrapper.expanded { max-height: 2000px; }
-    .output-text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; padding-bottom: 10px; font-weight: bold; }
-    .fade-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); pointer-events: none; transition: 0.3s; }
-    .output-text-wrapper.expanded .fade-overlay { opacity: 0; }
-
-    /* 顧客カルテ */
-    .search-box { position: relative; margin-bottom: 24px; }
-    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; }
-    .search-box .input-field { padding-left: 44px; }
-    .customer-card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border-color); }
-    .customer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .customer-name { font-size: 18px; font-weight: 900; }
-    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-    .c-tag { background: #FDF2F8; color: #DB2777; border: 1px solid #FBCFE8; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-    .customer-action { width: 100%; background: #FFF; border: 2px solid #FBCFE8; color: #EC4899; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 900; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-
-    /* 設定・モーダル */
-    .settings-list { background: var(--card-bg); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
-    .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 16px; cursor: pointer; }
-    .settings-item:last-child { border-bottom: none; }
-    
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
-    .modal-content { background: #FFF; border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; text-align: left; }
-    
-    /* スタイル詳細設定UI */
+    .modal-content { background: #FFF; border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
     .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
     .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
     .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #7A666B; font-weight: bold; margin-bottom: 20px; }
+    .c-tag { background: #FDF2F8; color: #DB2777; border: 1px solid #FBCFE8; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <!-- ==============================================
-       ★重要：ラジオボタン群は一番上に配置（CSS切り替えの起点）
-       ============================================== -->
+  <!-- ラジオボタン群 -->
   <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
   <input type="radio" name="nav" id="nav-data" class="ui-state">
   <input type="radio" name="nav" id="nav-settings" class="ui-state">
-
   <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
   <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
-  
   <input type="radio" name="style" id="style-cute" class="ui-state" checked>
   <input type="radio" name="style" id="style-custom" class="ui-state">
   <input type="radio" name="style" id="style-neat" class="ui-state">
 
-
-  <!-- ==============================================
-       初期設定モーダル
-       ============================================== -->
+  <!-- 初期設定モーダル -->
   <div id="setupModal" class="modal-overlay">
     <div class="modal-content" style="text-align: center;">
       <h2 style="margin: 0 0 10px; font-weight: 900;">🎉 初期設定</h2>
@@ -160,13 +111,10 @@
     </div>
   </div>
 
-  <!-- ==============================================
-       スタイル詳細設定モーダル
-       ============================================== -->
+  <!-- スタイル設定モーダル -->
   <div id="styleModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
-      
       <div class="style-selector">
         <label for="style-cute" class="style-btn btn-cute">かわいい</label>
         <label for="style-custom" class="style-btn btn-custom">カスタム</label>
@@ -186,10 +134,6 @@
     </div>
   </div>
 
-
-  <!-- ==============================================
-       メインアプリ UI
-       ============================================== -->
   <div class="app-container">
     <header class="header-area">
       <div class="app-title">AIお礼日記メーカー</div>
@@ -200,107 +144,66 @@
     </header>
 
     <main class="scroll-area">
-      
-      <!-- ==================== 作成タブ ==================== -->
+      <!-- 作成タブ -->
       <div class="page page-create">
-        
-        <!-- 宛先（写メ日記の時はCSSで非表示） -->
         <div class="card customer-select-card">
           <span class="label">👤 誰に送る？</span>
-          <div class="stories-scroll" id="quickAccessArea">
-            <!-- JSでダミーや顧客を展開 -->
-          </div>
+          <div class="stories-scroll" id="quickAccessArea"></div>
           <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
           <div id="resultArea" class="result-box"></div>
-          <div style="background:#FDF4F8; color:#DB2777; font-size:12px; font-weight:bold; padding:10px; border-radius:12px; margin-top:10px;">
-            💡 タグや過去のメモを読み込み、AIが相手に合わせて文章を自動調整します。
-          </div>
         </div>
 
-        <!-- 写真（写メ日記のみ） -->
         <div class="card mode-photo-ui">
           <span class="label">📷 写真を選ぶ</span>
           <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
           <label for="photoUpload" class="upload-area" id="uploadArea">
-            <div id="uploadText">📸<br><br>タップして写真をアップロード<br><span style="font-size:13px; font-weight:normal;">※顔出しなしでもOK！</span></div>
+            <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
             <img id="photoPreview">
           </label>
         </div>
 
-        <!-- エピソード＆タグ -->
         <div class="card">
           <span class="label">📝 エピソード・キーワード</span>
           <div class="textarea-wrapper">
-            <textarea id="episodeInput" class="input-field" placeholder="今日あったことや伝えたい話題を入力。音声入力も便利です！"></textarea>
+            <textarea id="episodeInput" class="input-field"></textarea>
             <div class="mic-btn" onclick="startDictation()">🎤</div>
           </div>
-          
-          <div class="chip-container" id="dynamicChips">
-            <!-- JSでタグ生成 -->
-          </div>
-          <div style="margin-top: 8px;">
-            <input type="text" id="customTagInput" placeholder="＋オリジナルタグ追加" style="background:var(--input-bg); border:none; padding:8px 12px; border-radius:12px; font-size:13px; font-weight:bold; outline:none; width:150px;">
-            <button onclick="addCustomTag()" style="background:var(--active-color); color:#fff; border:none; padding:8px 12px; border-radius:12px; font-weight:bold;">追加</button>
-          </div>
-        </div>
-
-        <!-- 出力エリア -->
-        <div class="output-card" id="outputCard">
-          <div class="output-header">
-            <span style="font-weight:900; color:var(--active-color); font-size:18px;">✨ 生成完了</span>
-            <div style="background:#FDF4F8; color:#DB2777; border:1px solid #FBCFE8; padding:8px 16px; border-radius:20px; font-size:14px; font-weight:bold; cursor:pointer;" onclick="copyOutput(event)">📋 コピー</div>
-          </div>
-          <div class="output-text-wrapper" id="outputTextWrapper" onclick="this.classList.toggle('expanded')">
-            <div class="output-text" id="aiOutputText"></div>
-            <div class="fade-overlay"></div>
+          <div class="chip-container" id="dynamicChips"></div>
+          <div style="margin-top: 12px; display: flex; gap: 8px;">
+            <input type="text" id="customTagInput" placeholder="＋タグ追加" style="flex:1; border:none; background:var(--input-bg); padding:10px; border-radius:10px;">
+            <button onclick="addCustomTag()" style="background:var(--active-color); color:#fff; border:none; padding:0 15px; border-radius:10px;">追加</button>
           </div>
         </div>
       </div>
 
-      <!-- ==================== 顧客タブ ==================== -->
+      <!-- 顧客タブ -->
       <div class="page page-data">
-        <h2 style="margin:0 0 20px; font-size:24px; font-weight:900;">顧客カルテ</h2>
+        <h2 style="margin:0 0 20px; font-weight:900;">顧客カルテ</h2>
         <div class="search-box">
           <span class="search-icon">🔍</span>
           <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()">
         </div>
-        <div id="customerListArea">
-          <p style="text-align:center; color:var(--text-sub); font-weight:bold;">読み込み中...</p>
-        </div>
+        <div id="customerListArea"></div>
       </div>
 
-      <!-- ==================== 設定タブ ==================== -->
+      <!-- 設定タブ -->
       <div class="page page-settings">
-        <h2 style="margin:0 0 20px; font-size:24px; font-weight:900;">設定</h2>
-        
-        <div class="card" style="background: linear-gradient(135deg, #FDF4F8, #FFFFFF); border: 2px solid #FBCFE8; cursor: pointer;" onclick="openStyleModal()">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span style="font-size:18px; font-weight:900; color:#DB2777; display:block; margin-bottom:4px;">🎨 AIの口調・スタイル設定</span>
-              <span style="font-size:13px; color:var(--text-sub); font-weight:bold;">かわいい・清楚・オリジナル学習</span>
-            </div>
-            <span style="font-size:20px;">⚙️</span>
-          </div>
+        <h2 style="margin:0 0 20px; font-weight:900;">設定</h2>
+        <div class="card" onclick="openStyleModal()" style="cursor:pointer; border: 2px solid #FBCFE8;">
+          <span style="font-weight:900; color:#DB2777;">🎨 AIの口調・スタイル設定</span>
+          <p style="font-size:12px; color:var(--text-sub); margin-top:5px;">かわいい・清楚・オリジナル学習</p>
         </div>
-
-        <span class="label">アプリ基本設定</span>
         <div class="settings-list">
           <div class="settings-item">
-            <span>🏢 業態（タグ最適化）</span>
-            <select class="input-field" id="businessType" onchange="updateChipsAndSave()" style="width:auto; padding:8px;">
+            <span>🏢 業態設定</span>
+            <select class="input-field" id="businessType" onchange="updateChipsAndSave()" style="width:auto; padding:5px;">
               <option value="cabaret">キャバクラ</option>
               <option value="fuzoku">風俗・メンエス</option>
               <option value="host">ホスト</option>
             </select>
           </div>
         </div>
-        
-        <span class="label">アカウント・その他</span>
-        <div class="settings-list">
-          <div class="settings-item" style="color:var(--text-sub);">利用規約</div>
-        </div>
       </div>
-
     </main>
 
     <footer class="fixed-footer">
@@ -313,73 +216,63 @@
         <label for="nav-settings" class="nav-item tab-settings"><span class="nav-icon">⚙️</span>設定</label>
       </nav>
     </footer>
-
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    const LIFF_ID = "2009843865-hghVLuaS"; 
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyWcx1XN8MuLsscHjoi9DdItYm7jCsMdZvNgrohG0o51KlTEheIXVdrHbSmGeSS2FV2/exec"; 
+    const LIFF_ID = "2009843865-hghVLuaS";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyWcx1XN8MuLsscHjoi9DdItYm7jCsMdZvNgrohG0o51KlTEheIXVdrHbSmGeSS2FV2/exec";
 
-    let liffReady = false;
     let userId = "test-user";
-    let customerData = []; 
-    let activeTags = []; 
+    let customerData = [];
+    let activeTags = [];
+    let currentBase64Image = null;
 
-    const fallbackDummyData = [
-      { name: "ひろしさん", memo: "モエ白。犬好き。", lastVisit: "今日", tags: ["太客"] },
-      { name: "ケンジさん", memo: "仕事の愚痴。ビール党。", lastVisit: "昨日", tags: ["注意"] },
-      { name: "りょうさん", memo: "同伴希望。次回の約束あり。", lastVisit: "3日前", tags: ["店外狙"] },
-      { name: "たかしさん", memo: "新規客。大人しい。", lastVisit: "1週間前", tags: [] },
-      { name: "さとるさん", memo: "ワイン好き。", lastVisit: "1ヶ月前", tags: ["細客"] }
-    ];
+    // --- 業種ごとのハードコード設定（ここを編集！） ---
+    const industryConfigs = {
+      cabaret: {
+        prompt: "あなたは歌舞伎町の人気キャバ嬢です。お客様がまた会いに来たくなるような、甘え上手で華やかなお礼を送ってください。",
+        tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '💕 祝・開店', '🥺 会いたい']
+      },
+      fuzoku: {
+        prompt: "あなたはサービス精神旺盛なセラピストです。お客様との親密な時間を大切にし、少し色っぽく、癒やしを与える文章を書いてください。",
+        tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし']
+      },
+      host: {
+        prompt: "あなたはカリスマホストです。姫が自分だけが特別だと感じるような、情熱的で独占欲を煽るメッセージを書いてください。",
+        tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕']
+      }
+    };
+    const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装'];
 
+    // --- 初期化 ---
     async function init() {
-      // ===== 追加：URLの目印を読み取って画面を切り替える =====
+      // URLパラメータのチェック（リッチメニュー連携）
       const params = new URLSearchParams(window.location.search);
-      const targetPage = params.get('page');
-      const targetMode = params.get('mode');
-      const action = params.get('action');
+      if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
+      if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
+      if (params.get('action') === 'style') openStyleModal();
 
-      // タブの切り替え
-      if (targetPage) {
-        const tabElement = document.getElementById('nav-' + targetPage);
-        if (tabElement) tabElement.checked = true;
-      }
-      
-      // モード（お礼/写メ）の切り替え
-      if (targetMode) {
-        const modeElement = document.getElementById('mode-' + targetMode);
-        if (modeElement) modeElement.checked = true;
-      }
-
-      // 特殊なアクション（文体管理モーダルを開く等）
-      if (action === 'style') {
-        openStyleModal();
-      } else if (action === 'clear') {
-        document.getElementById('nameInput').value = "";
-        document.getElementById('episodeInput').value = "";
-      }
       try {
         await liff.init({ liffId: LIFF_ID });
         if (liff.isLoggedIn()) {
-          liffReady = true;
           const profile = await liff.getProfile();
           userId = profile.userId;
         }
-      } catch (e) { console.error(e); }
+      } catch (e) { console.log("LIFF Init Error"); }
 
       const savedType = localStorage.getItem('businessType');
       if (!savedType) {
         document.getElementById('setupModal').style.display = 'flex';
       } else {
         document.getElementById('businessType').value = savedType;
-        updateChips();
       }
-
+      
+      // ★重要：ここで保存されたタグを読み込み表示する
+      updateChips(); 
       fetchCustomers();
     }
-    init();
+    window.onload = init;
 
     function saveInitialSetup() {
       const type = document.getElementById('initialBusinessType').value;
@@ -389,141 +282,23 @@
       document.getElementById('setupModal').style.display = 'none';
     }
 
-    async function fetchCustomers() {
-      try {
-        const res = await fetch(GAS_URL, {
-          method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "getCustomers", userId: userId })
-        });
-        const data = await res.json();
-        if (data.success && data.customers.length > 0) { customerData = data.customers; } 
-        else { customerData = fallbackDummyData; }
-      } catch (e) {
-        console.error("Fetch Error:", e);
-        customerData = fallbackDummyData;
-      }
-      renderCustomerList();
-      renderQuickAccess();
-    }
-
-    function renderCustomerList(filterText = "") {
-      const area = document.getElementById('customerListArea');
-      area.innerHTML = "";
-      const filtered = customerData.filter(c => c.name.includes(filterText));
-      if (filtered.length === 0) { area.innerHTML = "<p style='text-align:center;'>見つかりません</p>"; return; }
-
-      filtered.forEach(c => {
-        let tagsHtml = c.tags.map(t => `<span class="c-tag">${t}</span>`).join('');
-        area.innerHTML += `
-          <div class="card" style="padding:16px; margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-              <span style="font-weight:900; font-size:18px;">${c.name}</span>
-              <span style="font-size:12px; color:gray;">最終: ${c.lastVisit}</span>
-            </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">${tagsHtml}</div>
-            <div style="font-size:14px; margin-bottom:12px; color:#555;">📝 ${c.memo}</div>
-            <div style="background:#FFF; border:2px solid #FBCFE8; color:#EC4899; padding:10px; border-radius:12px; font-weight:900; text-align:center; cursor:pointer;" onclick="selectCustomer('${c.name}', '${c.memo}')">
-              📝 この人の日記を書く
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    function renderQuickAccess() {
-      const area = document.getElementById('quickAccessArea');
-      area.innerHTML = "";
-      customerData.forEach(c => {
-        const initial = c.name.charAt(0);
-        let tagHtml = '';
-        let ringStyle = 'background: var(--primary-gradient);';
-        if (c.tags.includes('注意')) {
-          tagHtml = `<span class="story-tag" style="background:#EF4444;">${c.tags[0]}</span>`;
-          ringStyle = 'background: #EF4444;';
-        } else if (c.tags.includes('店外狙')) {
-          tagHtml = `<span class="story-tag" style="background:#8B5CF6;">${c.tags[0]}</span>`;
-          ringStyle = 'background: #8B5CF6;';
-        } else if (c.tags.length > 0) {
-          tagHtml = `<span class="story-tag">${c.tags[0]}</span>`;
-        }
-
-        area.innerHTML += `
-          <div class="story-item" onclick="selectCustomer('${c.name}', '${c.memo}')">
-            ${tagHtml}
-            <div class="story-ring" style="${ringStyle}"><div class="story-inner">${initial}</div></div>
-            <span class="story-name">${c.name}</span>
-          </div>
-        `;
-      });
-      area.innerHTML += `<div style="width:10px; flex-shrink:0;"></div>`;
-    }
-
-    function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
-
-    function suggestCustomer() {
-      const text = document.getElementById('nameInput').value;
-      const area = document.getElementById('resultArea');
-      area.innerHTML = "";
-      if (!text) { area.style.display = "none"; return; }
-      
-      const filtered = customerData.filter(c => c.name.includes(text));
-      if (filtered.length > 0) {
-        area.style.display = "block";
-        filtered.forEach(c => {
-          const div = document.createElement('div');
-          div.className = "suggest-item";
-          div.innerText = `${c.name} (メモ: ${c.memo.substring(0,10)}...)`;
-          div.onclick = () => { selectCustomer(c.name, c.memo); area.style.display = "none"; };
-          area.appendChild(div);
-        });
-      } else { area.style.display = "none"; }
-    }
-
-    function selectCustomer(name, memo) {
-      document.getElementById('nav-create').checked = true;
-      document.getElementById('nameInput').value = name;
-      if(memo) document.getElementById('episodeInput').value += `\n[顧客メモ: ${memo}]`;
-      document.querySelector('.scroll-area').scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    const defaultChips = {
-      cabaret: ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'], 
-      fuzoku:  ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'],
-      host:    ['🍾 オリシャン', '🎤 ラスソン', '🥂 同伴', '💸 エース']
-    };
-    const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装'];
-
-    function updateChipsAndSave() {
-      localStorage.setItem('businessType', document.getElementById('businessType').value);
-      updateChips();
-    }
-
-    // --- 1. タグの読み込みと表示 ---
+    // --- タグ永続化ロジック ---
     function updateChips() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
-      
-      // 保存先キーを業態やモードごとに分ける
       const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
       
-      // localStorageから取得
       const savedTags = localStorage.getItem(storageKey);
-      
       if (savedTags) {
-        // 保存データがあればそれを展開
         activeTags = JSON.parse(savedTags);
       } else {
-        // なければデフォルトをセット
-        activeTags = isPhoto ? [...photoChips] : [...(defaultChips[type] || defaultChips.cabaret)];
+        activeTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags];
       }
 
-      const epInput = document.getElementById('episodeInput');
-      epInput.placeholder = isPhoto ? "日常のひとコマや、アピールなどを入力！" : "今日あったことや話題を入力。音声入力も便利です！";
-      
+      document.getElementById('episodeInput').placeholder = isPhoto ? "えちえちな日常などを入力！" : "今日あったことを入力！";
       renderChips();
     }
 
-    // --- 2. タグを画面に描画する ---
     function renderChips() {
       const container = document.getElementById('dynamicChips');
       container.innerHTML = '';
@@ -535,56 +310,16 @@
           if (e.target.tagName === 'SPAN') return;
           const ep = document.getElementById('episodeInput');
           ep.value += (ep.value ? " " : "") + text;
-          ep.focus();
         };
         container.appendChild(chip);
       });
     }
 
-    // --- 3. タグをブラウザに保存する ---
     function saveTagsToStorage() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
       const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
-      
       localStorage.setItem(storageKey, JSON.stringify(activeTags));
-      console.log("Tags saved to:", storageKey); // デバッグ用
-    }
-
-    // --- 4. 追加・削除（ここがポイント：最後に保存関数を呼ぶ） ---
-    function addCustomTag() {
-      const input = document.getElementById('customTagInput');
-      const val = input.value.trim();
-      if(val !== "") {
-        activeTags.push(val);
-        input.value = "";
-        renderChips();
-        saveTagsToStorage(); // ★追加した瞬間に保存！
-      }
-    }
-    
-    function removeTag(event, index) {
-      event.stopPropagation();
-      activeTags.splice(index, 1);
-      renderChips();
-      saveTagsToStorage(); // ★削除した瞬間に保存！
-    }
-
-    function renderChips() {
-      const container = document.getElementById('dynamicChips');
-      container.innerHTML = '';
-      activeTags.forEach((text, index) => {
-        const chip = document.createElement('div');
-        chip.className = 'chip';
-        chip.innerHTML = `${text} <span style="color:#CCC; margin-left:4px;" onclick="removeTag(event, ${index})">×</span>`;
-        chip.onclick = (e) => {
-          if (e.target.tagName === 'SPAN') return;
-          const ep = document.getElementById('episodeInput');
-          ep.value += (ep.value ? " " : "") + text;
-          ep.focus();
-        };
-        container.appendChild(chip);
-      });
     }
 
     function addCustomTag() {
@@ -593,6 +328,7 @@
         activeTags.push(input.value.trim());
         input.value = "";
         renderChips();
+        saveTagsToStorage();
       }
     }
     
@@ -600,18 +336,70 @@
       event.stopPropagation();
       activeTags.splice(index, 1);
       renderChips();
+      saveTagsToStorage();
     }
 
-    function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
-    function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
+    function updateChipsAndSave() {
+      localStorage.setItem('businessType', document.getElementById('businessType').value);
+      updateChips();
+    }
 
-    function startDictation() {
-      if (window.SpeechRecognition || window.webkitSpeechRecognition) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'ja-JP'; recognition.start();
-        recognition.onresult = e => { document.getElementById('episodeInput').value += (document.getElementById('episodeInput').value ? " " : "") + e.results[0][0].transcript; };
-      } else { alert("非対応ブラウザです"); }
+    // --- 顧客データ ---
+    async function fetchCustomers() {
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ action: "getCustomers", userId: userId })
+        });
+        const data = await res.json();
+        customerData = data.success ? data.customers : [];
+        renderCustomerList();
+        renderQuickAccess();
+      } catch (e) { renderQuickAccess(); }
+    }
+
+    function renderQuickAccess() {
+      const area = document.getElementById('quickAccessArea');
+      area.innerHTML = "";
+      customerData.slice(0, 10).forEach(c => {
+        area.innerHTML += `
+          <div class="story-item" onclick="selectCustomer('${c.name}', '${c.memo}')">
+            <div class="story-ring"><div class="story-inner">${c.name[0]}</div></div>
+            <span class="story-name">${c.name}</span>
+          </div>`;
+      });
+    }
+
+    function renderCustomerList(filterText = "") {
+      const area = document.getElementById('customerListArea');
+      area.innerHTML = "";
+      customerData.filter(c => c.name.includes(filterText)).forEach(c => {
+        area.innerHTML += `<div class="card" onclick="selectCustomer('${c.name}', '${c.memo}')"><b>${c.name}</b><br><small>${c.memo}</small></div>`;
+      });
+    }
+
+    function selectCustomer(name, memo) {
+      document.getElementById('nav-create').checked = true;
+      document.getElementById('nameInput').value = name;
+      document.getElementById('episodeInput').value += memo ? `\n[メモ: ${memo}]` : "";
+    }
+
+    function suggestCustomer() {
+      const text = document.getElementById('nameInput').value;
+      const area = document.getElementById('resultArea');
+      area.innerHTML = "";
+      if (!text) { area.style.display = "none"; return; }
+      const filtered = customerData.filter(c => c.name.includes(text));
+      if (filtered.length > 0) {
+        area.style.display = "block";
+        filtered.forEach(c => {
+          const div = document.createElement('div');
+          div.className = "suggest-item";
+          div.innerText = c.name;
+          div.onclick = () => { selectCustomer(c.name, c.memo); area.style.display = "none"; };
+          area.appendChild(div);
+        });
+      }
     }
 
     function previewPhoto(event) {
@@ -619,63 +407,61 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = e => {
+        currentBase64Image = e.target.result;
+        document.getElementById('photoPreview').src = e.target.result;
+        document.getElementById('photoPreview').style.display = 'block';
         document.getElementById('uploadText').style.display = 'none';
-        const preview = document.getElementById('photoPreview');
-        preview.src = e.target.result; preview.style.display = 'block';
-        document.getElementById('uploadArea').classList.add('has-image');
-      }
+      };
       reader.readAsDataURL(file);
     }
 
-    function copyOutput(event) {
-      event.stopPropagation();
-      navigator.clipboard.writeText(document.getElementById('aiOutputText').innerText).then(() => {
-        const btn = event.target; btn.innerHTML = "✅ 完了";
-        setTimeout(() => { btn.innerHTML = "📋 コピー"; }, 2000);
-      });
-    }
+    function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
+    function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
 
+    // --- 送信 ---
     async function generateDiary() {
       const btn = document.getElementById('submitBtn');
       const name = document.getElementById('nameInput').value;
       const episode = document.getElementById('episodeInput').value;
       const isPhoto = document.getElementById('mode-photo').checked;
+      const type = localStorage.getItem('businessType') || 'cabaret';
 
-      // ★追加：スタイルとスライダーの取得
-      const selectedStyle = document.querySelector('input[name="style"]:checked').id.replace('style-', '');
-      const tensionVal = document.getElementById('tensionSlider').value;
-      const emojiVal = document.getElementById('emojiSlider').value;
-      const customTextVal = document.getElementById('customStyleText').value;
-
-      if (!isPhoto && !name) { alert("宛先を入力してください"); return; }
-      if (!episode) { alert("エピソードを入力してください"); return; }
+      if (!isPhoto && !name) return alert("名前を入れてね");
+      if (!episode) return alert("内容を入れてね");
 
       btn.innerText = "作成中...🚀"; btn.disabled = true;
+
+      const payload = {
+        action: "generate",
+        userId: userId,
+        name: name,
+        episode: episode,
+        style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
+        tension: document.getElementById('tensionSlider').value,
+        emoji: document.getElementById('emojiSlider').value,
+        customText: document.getElementById('customStyleText').value,
+        industryPrompt: industryConfigs[type].prompt, // ★業種ごとのプロンプトを送信
+        image: currentBase64Image // ★Vision用
+      };
 
       try {
         const res = await fetch(GAS_URL, {
           method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ 
-            action: "generate", 
-            name: isPhoto ? "" : name, 
-            episode: episode, 
-            userId: userId,
-            style: selectedStyle,   // 例: "cute", "neat", "custom"
-            tension: tensionVal,    // 1〜5
-            emoji: emojiVal,        // 1〜5
-            customText: customTextVal
-          })
+          body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if(data.success) {
-          alert("送信完了！LINEボットからの返信をお待ちください。");
-          if(liffReady && liff.isInClient()) liff.closeWindow();
-        } else { throw new Error(data.error); }
-      } catch (err) {
-        alert("通信エラー: " + err.message);
-      } finally {
-        btn.innerText = "✨ AIで作成する"; btn.disabled = false;
-      }
+        if ((await res.json()).success) {
+          alert("送信完了！LINEを見てね");
+          liff.closeWindow();
+        }
+      } catch (e) { alert("エラーだよ"); }
+      btn.innerText = "✨ AIで作成する"; btn.disabled = false;
+    }
+
+    function startDictation() {
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Speech) return alert("未対応ブラウザです");
+      const rec = new Speech(); rec.lang = 'ja-JP'; rec.start();
+      rec.onresult = e => { document.getElementById('episodeInput').value += e.results[0][0].transcript; };
     }
   </script>
 </body>
