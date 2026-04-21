@@ -498,47 +498,77 @@
       updateChips();
     }
 
-    // --- タグロジック（改良版） ---
-function updateChips() {
-  const type = localStorage.getItem('businessType') || 'cabaret';
-  const isPhoto = document.getElementById('mode-photo').checked;
-  const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
-  
-  // 保存されたタグがあれば読み込み、なければデフォルトを使う
-  const savedTags = localStorage.getItem(storageKey);
-  if (savedTags) {
-    activeTags = JSON.parse(savedTags);
-  } else {
-    activeTags = isPhoto ? [...photoChips] : [...(defaultChips[type] || defaultChips.cabaret)];
-  }
+    // --- 1. タグの読み込みと表示 ---
+    function updateChips() {
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const isPhoto = document.getElementById('mode-photo').checked;
+      
+      // 保存先キーを業態やモードごとに分ける
+      const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
+      
+      // localStorageから取得
+      const savedTags = localStorage.getItem(storageKey);
+      
+      if (savedTags) {
+        // 保存データがあればそれを展開
+        activeTags = JSON.parse(savedTags);
+      } else {
+        // なければデフォルトをセット
+        activeTags = isPhoto ? [...photoChips] : [...(defaultChips[type] || defaultChips.cabaret)];
+      }
 
-  renderChips();
-}
+      const epInput = document.getElementById('episodeInput');
+      epInput.placeholder = isPhoto ? "日常のひとコマや、アピールなどを入力！" : "今日あったことや話題を入力。音声入力も便利です！";
+      
+      renderChips();
+    }
 
-function saveTagsToStorage() {
-  const type = localStorage.getItem('businessType') || 'cabaret';
-  const isPhoto = document.getElementById('mode-photo').checked;
-  const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
-  localStorage.setItem(storageKey, JSON.stringify(activeTags));
-}
+    // --- 2. タグを画面に描画する ---
+    function renderChips() {
+      const container = document.getElementById('dynamicChips');
+      container.innerHTML = '';
+      activeTags.forEach((text, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.innerHTML = `${text} <span style="color:#CCC; margin-left:4px;" onclick="removeTag(event, ${index})">×</span>`;
+        chip.onclick = (e) => {
+          if (e.target.tagName === 'SPAN') return;
+          const ep = document.getElementById('episodeInput');
+          ep.value += (ep.value ? " " : "") + text;
+          ep.focus();
+        };
+        container.appendChild(chip);
+      });
+    }
 
-// addCustomTag と removeTag の最後に saveTagsToStorage() を実行するように変更
-function addCustomTag() {
-  const input = document.getElementById('customTagInput');
-  if(input.value.trim() !== "") {
-    activeTags.push(input.value.trim());
-    input.value = "";
-    renderChips();
-    saveTagsToStorage(); // 保存！
-  }
-}
+    // --- 3. タグをブラウザに保存する ---
+    function saveTagsToStorage() {
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const isPhoto = document.getElementById('mode-photo').checked;
+      const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
+      
+      localStorage.setItem(storageKey, JSON.stringify(activeTags));
+      console.log("Tags saved to:", storageKey); // デバッグ用
+    }
 
-function removeTag(event, index) {
-  event.stopPropagation();
-  activeTags.splice(index, 1);
-  renderChips();
-  saveTagsToStorage(); // 保存！
-}
+    // --- 4. 追加・削除（ここがポイント：最後に保存関数を呼ぶ） ---
+    function addCustomTag() {
+      const input = document.getElementById('customTagInput');
+      const val = input.value.trim();
+      if(val !== "") {
+        activeTags.push(val);
+        input.value = "";
+        renderChips();
+        saveTagsToStorage(); // ★追加した瞬間に保存！
+      }
+    }
+    
+    function removeTag(event, index) {
+      event.stopPropagation();
+      activeTags.splice(index, 1);
+      renderChips();
+      saveTagsToStorage(); // ★削除した瞬間に保存！
+    }
 
     function renderChips() {
       const container = document.getElementById('dynamicChips');
