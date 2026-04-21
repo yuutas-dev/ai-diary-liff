@@ -76,18 +76,14 @@
     .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 40px 10px 0; scrollbar-width: none; align-items: center; }
     .tags-scroll-container::-webkit-scrollbar { display: none; }
 
-    /* エピソードタグ（タップ入力・多段折り返し） */
-    .episode-tags-container { 
-      display: flex; 
-      flex-wrap: wrap; /* ここで折り返しを有効化 */
-      gap: 8px; 
-      padding: 4px 0 10px 0; 
-      max-height: 140px; /* 大体3〜4行分 */
-      overflow-y: auto; /* はみ出たら縦スクロール */
-      scrollbar-width: thin;
-      scrollbar-color: #FBCFE8 transparent;
-    }
-    .chip { background: #FFF; border: 1px solid #E5E7EB; color: #4F46E5; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    /* ★NEW: 選択済みエピソードタグのエリア */
+    .selected-tags-area { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 36px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
+    .selected-chip { background: var(--primary-gradient); color: #FFF; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 4px; animation: popIn 0.2s ease-out; }
+    @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    /* エピソードタグ（プール側） */
+    .chip { background: #FFF; border: 1px solid #E5E7EB; color: #4F46E5; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: 0.2s; }
+    .chip.dimmed { opacity: 0.4; background: #F3F4F6; color: #9CA3AF; border-color: transparent; box-shadow: none; pointer-events: none; }
 
     .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
     .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
@@ -164,7 +160,13 @@
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
       
       <span class="label" style="font-size:14px;">属性タグ（タップで選択）</span>
-      <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;"></div>
+      <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
+      
+      <!-- ★追加：オリジナル属性タグの追加エリア -->
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <input type="text" id="customAttrInput" class="input-field" placeholder="オリジナルタグを入力..." style="padding:10px; font-size:13px;">
+        <button onclick="addCustomAttributeTag()" style="background:var(--active-color); color:#FFF; border:none; border-radius:12px; padding:0 15px; font-weight:bold; white-space:nowrap;">追加</button>
+      </div>
 
       <span class="label" style="font-size:14px;">メモ</span>
       <textarea id="editCustomerMemo" class="input-field" style="height: 100px; margin-bottom: 24px;"></textarea>
@@ -214,13 +216,18 @@
             <div class="tags-scroll-container" id="attributeTagsArea"></div>
           </div>
 
+          <!-- ★追加：選択済みエピソードタグ表示エリア -->
+          <div id="selectedEpisodeTagsArea" class="selected-tags-area"></div>
+
           <div class="textarea-wrapper">
             <textarea id="episodeInput" class="input-field"></textarea>
             <div class="mic-btn" onclick="startDictation()">🎤</div>
           </div>
           
-          <!-- ★修正：エピソードタグ（多段折り返し）エリア -->
-          <div class="episode-tags-container" id="dynamicChips" style="margin-top: 12px;"></div>
+          <!-- エピソードタグ・プールエリア（横スクロール維持） -->
+          <div class="fade-scroll-wrapper" style="margin-top: 12px; margin-bottom:0;">
+            <div class="tags-scroll-container" id="dynamicChips"></div>
+          </div>
           
           <div style="margin-top: 12px; display: flex; gap: 8px;">
             <input type="text" id="customTagInput" placeholder="＋タグ追加" style="flex:1; border:none; background:var(--input-bg); padding:10px; border-radius:10px;">
@@ -278,8 +285,9 @@
 
     let userId = "test-user";
     let customerData = [];
-    let activeTags = []; 
+    let activeTags = []; // エピソードタグ（プール）
     let currentCustomerTags = []; 
+    let selectedEpisodeTags = []; // ★NEW: 選択されたエピソードタグ
     let currentBase64Image = null;
 
     // 属性タグのプリセット
@@ -362,16 +370,39 @@
       const container = document.getElementById('dynamicChips');
       container.innerHTML = '';
       activeTags.forEach((text, index) => {
+        const isSelected = selectedEpisodeTags.includes(text);
         const chip = document.createElement('div');
-        chip.className = 'chip';
-        chip.innerHTML = `${text} <span style="color:#CCC; margin-left:4px;" onclick="removeTag(event, ${index})">×</span>`;
-        chip.onclick = (e) => {
-          if (e.target.tagName === 'SPAN') return;
-          const ep = document.getElementById('episodeInput');
-          ep.value += (ep.value ? " " : "") + text;
+        // ★修正: 選択済みの場合は dimmed クラスを付与
+        chip.className = 'chip' + (isSelected ? ' dimmed' : '');
+        chip.innerHTML = `${text}`;
+        chip.onclick = () => {
+          if (!isSelected) {
+            selectedEpisodeTags.push(text);
+            renderSelectedEpisodeTags();
+            renderChips(); // プールの状態を更新
+          }
         };
         container.appendChild(chip);
       });
+    }
+
+    // ★NEW: 選択済みエピソードタグを描画
+    function renderSelectedEpisodeTags() {
+      const area = document.getElementById('selectedEpisodeTagsArea');
+      area.innerHTML = '';
+      selectedEpisodeTags.forEach((tag, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'selected-chip';
+        chip.innerHTML = `${tag} <span onclick="removeEpisodeTag(${index})" style="margin-left:4px; cursor:pointer;">×</span>`;
+        area.appendChild(chip);
+      });
+    }
+
+    // ★NEW: 選択済みエピソードタグを削除
+    function removeEpisodeTag(index) {
+      selectedEpisodeTags.splice(index, 1);
+      renderSelectedEpisodeTags();
+      renderChips(); // プールのグレーアウトを解除
     }
 
     function saveTagsToStorage() {
@@ -381,6 +412,7 @@
       localStorage.setItem(storageKey, JSON.stringify(activeTags));
     }
 
+    // プールへの新規タグ追加
     function addCustomTag() {
       const input = document.getElementById('customTagInput');
       if(input.value.trim() !== "") {
@@ -388,16 +420,10 @@
         input.value = "";
         renderChips();
         saveTagsToStorage();
+        document.getElementById('dynamicChips').scrollLeft = 0;
       }
     }
     
-    function removeTag(event, index) {
-      event.stopPropagation();
-      activeTags.splice(index, 1);
-      renderChips();
-      saveTagsToStorage();
-    }
-
     function updateChipsAndSave() {
       localStorage.setItem('businessType', document.getElementById('businessType').value);
       updateChips();
@@ -414,7 +440,8 @@
         if(data.success) {
           customerData = data.customers.map(c => ({
             ...c,
-            // シートの内容を強制的に文字列化して分割（エラー防止）
+            name: String(c.name || "名前なし"),
+            memo: String(c.memo || ""),
             tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : []
           }));
         } else {
@@ -422,7 +449,10 @@
         }
         renderCustomerList();
         renderQuickAccess();
-      } catch (e) { renderQuickAccess(); }
+      } catch (e) { 
+        alert("データ読み込みエラー: " + e.message); 
+        renderQuickAccess(); 
+      }
     }
 
     function renderQuickAccess() {
@@ -430,11 +460,12 @@
       area.innerHTML = "";
       customerData.slice(0, 10).forEach((c, index) => {
         const firstTag = c.tagsArray.length > 0 ? `<div class="story-badge">${c.tagsArray[0]}</div>` : '';
+        const firstChar = c.name ? String(c.name).charAt(0) : "👤";
         area.innerHTML += `
           <div class="story-item" onclick="selectCustomerByIndex(${index})">
             <div class="story-ring">
               ${firstTag}
-              <div class="story-inner">${c.name[0]}</div>
+              <div class="story-inner">${firstChar}</div>
             </div>
             <span class="story-name">${c.name}</span>
           </div>`;
@@ -449,7 +480,7 @@
       const area = document.getElementById('customerListArea');
       area.innerHTML = "";
       customerData.forEach((c, index) => {
-        if(c.name.includes(filterText)){
+        if(String(c.name).includes(filterText)){
           const tagHtml = c.tagsArray.length > 0 ? 
             `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + 
             c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') +
@@ -480,6 +511,11 @@
       document.getElementById('episodeInput').value = c.memo ? `[メモ: ${c.memo}]\n` : "";
       currentCustomerTags = c.tagsArray;
       renderAttributeTags();
+
+      // ★NEW: 顧客切り替え時に選択済みエピソードタグをリセット
+      selectedEpisodeTags = [];
+      renderSelectedEpisodeTags();
+      renderChips(); // プールのグレーアウトも解除
     }
 
     function renderAttributeTags() {
@@ -538,7 +574,11 @@
     function renderEditAttributeTags() {
       const area = document.getElementById('editAttributeTagsArea');
       area.innerHTML = '';
-      presetAttributeTags.forEach(tag => {
+      
+      // ★修正: プリセットタグと、カスタムで追加されたタグを統合して重複排除
+      const allTags = Array.from(new Set([...presetAttributeTags, ...tempSelectedAttributes]));
+
+      allTags.forEach(tag => {
         const isSelected = tempSelectedAttributes.includes(tag);
         const bg = isSelected ? '#DB2777' : '#FFF';
         const color = isSelected ? '#FFF' : '#DB2777';
@@ -554,6 +594,17 @@
         tempSelectedAttributes.push(tag);
       }
       renderEditAttributeTags();
+    }
+
+    // ★NEW: オリジナル属性タグの追加
+    function addCustomAttributeTag() {
+      const input = document.getElementById('customAttrInput');
+      const val = input.value.trim();
+      if(val && !tempSelectedAttributes.includes(val)) {
+        tempSelectedAttributes.push(val); // 選択済みに直接追加
+        input.value = '';
+        renderEditAttributeTags();
+      }
     }
     
     function closeEditModal() {
@@ -645,6 +696,7 @@
         customText: document.getElementById('customStyleText').value,
         industryPrompt: industryConfigs[type].prompt,
         customerTags: currentCustomerTags.join(', '), 
+        episodeTags: selectedEpisodeTags.join(', '), // ★追加：LLMへ送信
         image: currentBase64Image 
       };
 
@@ -658,7 +710,10 @@
           document.getElementById('nameInput').value = "";
           document.getElementById('episodeInput').value = "";
           currentCustomerTags = [];
+          selectedEpisodeTags = [];
           renderAttributeTags();
+          renderSelectedEpisodeTags();
+          renderChips();
           liff.closeWindow();
         }
       } catch (e) { alert("エラーだよ"); }
