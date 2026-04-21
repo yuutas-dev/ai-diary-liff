@@ -528,6 +528,11 @@
             c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') +
             `</div>` : '';
 
+          // ★テスト顧客の場合は編集ボタンを無効化（グレーアウト）する
+          const editButtonHtml = String(c.name).includes("テスト") 
+            ? `<button onclick="alert('デモ用のテスト顧客は編集できません🙇‍♂️')" style="background:#E5E7EB; color:#9CA3AF; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集不可</button>`
+            : `<button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集</button>`;
+
           area.innerHTML += `
             <div class="card" style="margin-bottom:10px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -538,7 +543,7 @@
                 </div>
                 <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
                   <button onclick="selectCustomerByIndex(${index})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">✏️ 日記作成</button>
-                  <button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集</button>
+                  ${editButtonHtml}
                 </div>
               </div>
             </div>`;
@@ -727,11 +732,9 @@
       const type = localStorage.getItem('businessType') || 'cabaret';
 
       if (!isPhoto && !name) return alert("名前を入れてね");
-      // 空欄でもOKな仕様にしたため、今日のエピソードの必須チェックは除外
 
       btn.innerText = "作成中...🚀"; btn.disabled = true;
 
-      // 過去メモと今日のエピソードを結合してシート保存用データを作成
       let actualPastMemo = (pastMemoText === "(顧客を選択するか、過去の記録がありません)" || pastMemoText === "(過去の記録はありません)") ? "" : pastMemoText;
       let newCombinedMemo = actualPastMemo;
       if (todayEpisode || selectedEpisodeTags.length > 0) {
@@ -743,14 +746,14 @@
         action: "generate",
         userId: userId,
         name: name,
-        episode: todayEpisode, // LLMへは今日の分だけ渡す（過去分は別途渡すか判断）
-        pastMemo: actualPastMemo, // LLM用
-        combinedMemoToSave: newCombinedMemo, // GAS保存用
+        episode: todayEpisode,
+        pastMemo: actualPastMemo, 
+        combinedMemoToSave: newCombinedMemo, 
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
         tension: document.getElementById('tensionSlider').value,
         emoji: document.getElementById('emojiSlider').value,
         customText: document.getElementById('customStyleText').value,
-        businessType: type, // Dify分岐用
+        businessType: type, 
         industryPrompt: industryConfigs[type].prompt,
         customerTags: currentCustomerTags.join(', '), 
         episodeTags: selectedEpisodeTags.join(', '), 
@@ -772,7 +775,7 @@
           renderAttributeTags();
           renderSelectedEpisodeTags();
           renderChips();
-          fetchCustomers(); // 新しいメモを再取得
+          fetchCustomers(); 
           liff.closeWindow();
         }
       } catch (e) { alert("エラーだよ"); }
