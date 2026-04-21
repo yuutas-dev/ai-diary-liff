@@ -303,10 +303,18 @@
 
     let liffReady = false;
     let userId = "test-user";
-    let customerData = []; // GASから取得したデータを保持
-    let activeTags = []; // 現在UIに表示するタグリスト
+    let customerData = []; 
+    let activeTags = []; 
 
-    // --- 初期化＆データ取得 ---
+    // シートからデータが取れなかった時のための初期ダミーデータ
+    const fallbackDummyData = [
+      { name: "ひろしさん", memo: "モエ白。犬好き。", lastVisit: "今日", tags: ["太客"] },
+      { name: "ケンジさん", memo: "仕事の愚痴。ビール党。", lastVisit: "昨日", tags: ["注意"] },
+      { name: "りょうさん", memo: "同伴希望。次回の約束あり。", lastVisit: "3日前", tags: ["店外狙"] },
+      { name: "たかしさん", memo: "新規客。大人しい。", lastVisit: "1週間前", tags: [] },
+      { name: "さとるさん", memo: "ワイン好き。", lastVisit: "1ヶ月前", tags: ["細客"] }
+    ];
+
     async function init() {
       try {
         await liff.init({ liffId: LIFF_ID });
@@ -317,7 +325,6 @@
         }
       } catch (e) { console.error(e); }
 
-      // 業態チェック
       const savedType = localStorage.getItem('businessType');
       if (!savedType) {
         document.getElementById('setupModal').style.display = 'flex';
@@ -326,7 +333,6 @@
         updateChips();
       }
 
-      // 顧客データの取得
       fetchCustomers();
     }
     init();
@@ -339,21 +345,30 @@
       document.getElementById('setupModal').style.display = 'none';
     }
 
-    // --- 顧客データの取得と描画 ---
+    // ★ 修正：シートの読み取りを POST に変更
     async function fetchCustomers() {
       try {
-        const res = await fetch(`${GAS_URL}?action=getCustomers&userId=${userId}`);
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ action: "getCustomers", userId: userId })
+        });
         const data = await res.json();
-        if (data.success) {
+        
+        if (data.success && data.customers.length > 0) {
           customerData = data.customers;
-          renderCustomerList();
-          renderQuickAccess();
+        } else {
+          customerData = fallbackDummyData; // シートが空ならダミーを表示
         }
       } catch (e) {
-        document.getElementById('customerListArea').innerHTML = "<p>読み込み失敗</p>";
+        console.error("Fetch Error:", e);
+        customerData = fallbackDummyData; // エラー時もダミーを表示
       }
+      renderCustomerList();
+      renderQuickAccess();
     }
 
+    // --- 顧客リスト描画 ---
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea');
       area.innerHTML = "";
@@ -381,21 +396,37 @@
       });
     }
 
+    // --- 横スライド（ストーリーズ風）描画 ---
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea');
       area.innerHTML = "";
-      // 上位5名をクイックアクセスに表示（ダミー含む）
-      customerData.slice(0, 5).forEach(c => {
+      
+      customerData.forEach(c => {
         const initial = c.name.charAt(0);
-        const tagHtml = c.tags[0] ? `<span style="position:absolute; top:-4px; left:-4px; background:#DB2777; color:#FFF; font-size:9px; font-weight:bold; padding:2px 4px; border-radius:6px; z-index:5;">${c.tags[0]}</span>` : '';
+        let tagHtml = '';
+        let ringStyle = 'background: var(--primary-gradient);';
+        
+        // タグによる色分け（ダミー）
+        if (c.tags.includes('注意')) {
+          tagHtml = `<span class="story-tag" style="background:#EF4444;">${c.tags[0]}</span>`;
+          ringStyle = 'background: #EF4444;';
+        } else if (c.tags.includes('店外狙')) {
+          tagHtml = `<span class="story-tag" style="background:#8B5CF6;">${c.tags[0]}</span>`;
+          ringStyle = 'background: #8B5CF6;';
+        } else if (c.tags.length > 0) {
+          tagHtml = `<span class="story-tag">${c.tags[0]}</span>`;
+        }
+
         area.innerHTML += `
           <div class="story-item" onclick="selectCustomer('${c.name}', '${c.memo}')">
             ${tagHtml}
-            <div class="story-ring"><div class="story-inner">${initial}</div></div>
+            <div class="story-ring" style="${ringStyle}"><div class="story-inner">${initial}</div></div>
             <span class="story-name">${c.name}</span>
           </div>
         `;
       });
+      // 右端の余白
+      area.innerHTML += `<div style="width:10px; flex-shrink:0;"></div>`;
     }
 
     function filterCustomerList() {
@@ -403,7 +434,6 @@
       renderCustomerList(text);
     }
 
-    // 検索サジェスト
     function suggestCustomer() {
       const text = document.getElementById('nameInput').value;
       const area = document.getElementById('resultArea');
@@ -432,9 +462,9 @@
       document.querySelector('.scroll-area').scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // --- タグ・UIロジック ---
+    // --- タグロジック ---
     const defaultChips = {
-      cabaret: ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'], // 風俗用によりリアルなものへ変更
+      cabaret: ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'], 
       fuzoku:  ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'],
       host:    ['🍾 オリシャン', '🎤 ラスソン', '🥂 同伴', '💸 エース']
     };
@@ -448,18 +478,10 @@
     function updateChips() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
-      
-      // モードに合わせて配列をセット
       activeTags = isPhoto ? [...photoChips] : [...(defaultChips[type] || defaultChips.cabaret)];
       
-      // 写メ日記時のプレースホルダー変更
       const epInput = document.getElementById('episodeInput');
-      if (isPhoto) {
-        epInput.placeholder = "日常のひとコマや、えちえちなアピールなどを入力してね！";
-      } else {
-        epInput.placeholder = "今日あったことや伝えたい話題を入力。音声入力も便利です！";
-      }
-
+      epInput.placeholder = isPhoto ? "日常のひとコマや、えちえちなアピールなどを入力してね！" : "今日あったことや伝えたい話題を入力。音声入力も便利です！";
       renderChips();
     }
 
@@ -469,7 +491,6 @@
       activeTags.forEach((text, index) => {
         const chip = document.createElement('div');
         chip.className = 'chip';
-        // タップで追加、長押しor×ボタンで削除可能にする
         chip.innerHTML = `${text} <span style="color:#CCC; margin-left:4px;" onclick="removeTag(event, ${index})">×</span>`;
         chip.onclick = (e) => {
           if (e.target.tagName === 'SPAN') return;
@@ -496,11 +517,9 @@
       renderChips();
     }
 
-    // --- スタイルモーダル ---
     function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
     function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
 
-    // --- その他機能 ---
     function startDictation() {
       if (window.SpeechRecognition || window.webkitSpeechRecognition) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -531,14 +550,13 @@
       });
     }
 
-    // --- GASへ送信 ---
+    // ★ 修正：AI生成リクエストも POST (action: generate) に変更
     async function generateDiary() {
       const btn = document.getElementById('submitBtn');
       const name = document.getElementById('nameInput').value;
       const episode = document.getElementById('episodeInput').value;
       const isPhoto = document.getElementById('mode-photo').checked;
 
-      // 写メ日記モード以外なら名前必須
       if (!isPhoto && !name) { alert("宛先を入力してください"); return; }
       if (!episode) { alert("エピソードを入力してください"); return; }
 
@@ -547,7 +565,7 @@
       try {
         const res = await fetch(GAS_URL, {
           method: "POST", headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ name: isPhoto ? "" : name, episode: episode, userId: userId })
+          body: JSON.stringify({ action: "generate", name: isPhoto ? "" : name, episode: episode, userId: userId })
         });
         const data = await res.json();
         if(data.success) {
