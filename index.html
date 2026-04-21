@@ -279,6 +279,15 @@
     let activeTags = []; // エピソードタグ用
     let currentCustomerTags = []; // 現在選択中の顧客の属性タグ
     let currentBase64Image = null;
+    const presetAttributeTags = [　// ★追加：属性タグのプリセット（自由に増やせます）
+      '太客', '細客', '新規', '臭い', 
+      'ゴルフ好き', '常連', '釣り好き', '痛客', 
+      'デブ', 'ハゲ', 'おじさん', '若者', 'イケメン', 
+      '金持ち', 'ケチ', 'お酒好き', '下戸', 
+      '既婚', '独身', '優しい', '短気', 
+      '寂しがり', 'M', 'S'
+    ];
+    let tempSelectedAttributes = []; // モーダル編集用の一時配列
 
     const industryConfigs = {
       cabaret: {
