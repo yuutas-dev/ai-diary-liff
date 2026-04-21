@@ -29,13 +29,14 @@
 
     input[type="radio"].ui-state { display: none; }
 
+    /* ==========================================
+       タブ＆モード切り替えロジック
+       ========================================== */
     .page { display: none; height: 100%; flex-direction: column; }
     #nav-create:checked ~ .app-layout .page-create { display: flex; }
-    #nav-style:checked ~ .app-layout .page-style { display: flex; }
     #nav-data:checked ~ .app-layout .page-data { display: flex; }
 
     #nav-create:checked ~ .app-layout .tab-create { color: var(--active-color); }
-    #nav-style:checked ~ .app-layout .tab-style { color: var(--active-color); }
     #nav-data:checked ~ .app-layout .tab-data { color: var(--active-color); }
 
     .mode-photo-ui, .mode-text-ui { display: none; }
@@ -74,7 +75,19 @@
     .card-desc { font-size: 14px; color: var(--text-sub); margin: 0; font-weight: bold; }
     .badge { position: absolute; right: 0; top: 2px; background: #FDF2F8; color: #DB2777; font-size: 13px; font-weight: bold; padding: 6px 14px; border-radius: 16px; border: 1px solid #FCE7F3; }
 
-    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; padding: 50px 20px; text-align: center; color: var(--text-sub); font-weight: bold; margin-bottom: 20px; font-size: 18px; }
+    /* 写真アップロードエリア */
+    .upload-area { 
+      border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; 
+      padding: 50px 20px; text-align: center; color: var(--text-sub); 
+      font-weight: bold; margin-bottom: 20px; font-size: 18px;
+      cursor: pointer; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      min-height: 220px; box-sizing: border-box; transition: 0.3s;
+    }
+    .upload-area.has-image { border: none; padding: 0; }
+    .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; display: none; }
+    .upload-content { position: relative; z-index: 10; }
+
     .label { display: block; font-size: 17px; font-weight: bold; margin-bottom: 12px; color: var(--text-main); }
     
     .input-field { width: 100%; box-sizing: border-box; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 20px; font-size: 18px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
@@ -87,6 +100,16 @@
     .chip:active { background: var(--primary-gradient); color: #FFF; border-color: transparent; transform: scale(0.95); }
 
     .result-box { width: 100%; box-sizing: border-box; margin-top: 16px; padding: 16px; background: #F5F3FF; border-radius: 12px; font-size: 14px; color: #6D28D9; display: none; border: 1px solid #EDE9FE; font-weight: bold; line-height: 1.5; }
+
+    /* ==========================================
+       スタイル設定パーツ（メイン画面へ統合）
+       ========================================== */
+    .style-selector { display: flex; gap: 10px; background: #FFF; border-radius: 16px; margin-bottom: 20px; }
+    .style-btn { flex: 1; text-align: center; padding: 16px 0; font-size: 16px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; }
+    .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 20px; border-radius: 12px; font-size: 15px; line-height: 1.7; color: #7A666B; font-weight: bold; margin-bottom: 10px; }
+    .slider-group { margin-top: 28px; }
+    .slider-header { display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px; }
+    input[type=range] { width: 100%; accent-color: #D946EF; margin-bottom: 28px; transform: scale(1.1); transform-origin: center; }
 
     /* ==========================================
        AI出力エリア
@@ -107,33 +130,24 @@
     .submit-btn:disabled { background: #E5E7EB; box-shadow: none; color: #9CA3AF; cursor: not-allowed; }
 
     /* ==========================================
-       その他のタブ用パーツ
+       タブ3用：顧客データ詳細
        ========================================== */
-    .style-selector { display: flex; gap: 10px; background: #FFF; border-radius: 16px; margin-bottom: 20px; }
-    .style-btn { flex: 1; text-align: center; padding: 16px 0; font-size: 16px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); transition: 0.2s; }
-    .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 20px; border-radius: 12px; font-size: 15px; line-height: 1.7; color: #7A666B; font-weight: bold; }
-    
-    .slider-group { margin-top: 28px; }
-    .slider-header { display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px; }
-    input[type=range] { width: 100%; accent-color: #D946EF; margin-bottom: 28px; transform: scale(1.1); transform-origin: center; }
-    
     details { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
     summary { font-weight: 900; font-size: 18px; outline: none; display: flex; justify-content: space-between; align-items: center; }
     summary::-webkit-details-marker { display: none; }
     .last-visit { font-size: 14px; color: var(--text-sub); background: var(--input-bg); padding: 8px 12px; border-radius: 12px; font-weight: bold; }
     .memo-content { margin-top: 16px; padding-top: 16px; border-top: 2px dashed var(--border-color); font-size: 16px; color: var(--text-main); line-height: 1.7; font-weight: 500; }
 
-    /* ボトムナビゲーション */
+    /* ボトムナビゲーション（2タブに整理） */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 16px 0 calc(env(safe-area-inset-bottom, 16px) + 10px); z-index: 1000; box-shadow: 0 -4px 15px rgba(0,0,0,0.03); }
-    .nav-item { text-align: center; color: #BDB2B5; font-size: 13px; font-weight: 900; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .nav-item { text-align: center; color: #BDB2B5; font-size: 13px; font-weight: 900; display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
     .nav-icon { font-size: 28px; }
   </style>
 </head>
 <body>
 
-  <!-- ナビゲーション切り替え用 -->
+  <!-- ナビゲーション切り替え用（2つに減らしました） -->
   <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
-  <input type="radio" name="nav" id="nav-style" class="ui-state">
   <input type="radio" name="nav" id="nav-data" class="ui-state">
 
   <!-- モード・スタイル切り替え用 -->
@@ -148,7 +162,9 @@
     <!-- メインコンテンツ領域 -->
     <main class="main-content">
       
-      <!-- タブ1：作成画面 -->
+      <!-- ==============================================
+           タブ1：作成画面（スタイル設定もここに統合）
+           ============================================== -->
       <div class="page page-create">
         <div class="header">
           <h1>AIお礼日記メーカー</h1>
@@ -160,6 +176,7 @@
           <label for="mode-photo" class="toggle-label toggle-photo">📸 写メ日記</label>
         </div>
 
+        <!-- 顧客名入力 -->
         <div class="card">
           <div class="card-header">
             <span class="icon">👤</span>
@@ -172,6 +189,7 @@
           <div id="resultArea" class="result-box"></div>
         </div>
 
+        <!-- 写真・エピソード入力 -->
         <div class="card">
           <div class="mode-photo-ui">
             <div class="card-header">
@@ -181,7 +199,16 @@
                 <p class="card-desc">日記に使いたい画像をアップロードしてね。</p>
               </div>
             </div>
-            <div class="upload-area">📸<br><br>タップして写真をアップロード<br><span style="font-size:14px; font-weight:normal; margin-top:8px; display:inline-block;">※顔出しなしでもOK！</span></div>
+            <!-- カメラロール連携のファイルインプット -->
+            <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
+            <label for="photoUpload" class="upload-area" id="uploadArea">
+              <div class="upload-content" id="uploadText">
+                📸<br><br>タップして写真をアップロード<br>
+                <span style="font-size:14px; font-weight:normal; margin-top:8px; display:inline-block;">※顔出しなしでもOK！</span>
+              </div>
+              <!-- プレビュー画像 -->
+              <img id="photoPreview">
+            </label>
           </div>
 
           <div class="card-header" style="margin-top: 10px;">
@@ -204,6 +231,37 @@
           </div>
         </div>
 
+        <!-- ★スタイル設定（メイン画面に統合） -->
+        <div class="card">
+          <div class="card-header">
+            <span class="icon">🎨</span>
+            <div class="card-title-group">
+              <h3 class="card-title">日記の雰囲気</h3>
+              <p class="card-desc">AIの口調を選択してね。</p>
+            </div>
+          </div>
+          
+          <div class="style-selector">
+            <label for="style-cute" class="style-btn btn-cute">かわいい系</label>
+            <label for="style-custom" class="style-btn btn-custom">カスタム</label>
+            <label for="style-neat" class="style-btn btn-neat">清楚系</label>
+          </div>
+
+          <div class="style-desc-cute style-desc-box">🎀 <b>かわいい系の特徴</b><br>可愛らしく、絵文字や顔文字を多用した親しみやすい文体で日記を生成します。</div>
+          <div class="style-desc-neat style-desc-box">💎 <b>清楚系の特徴</b><br>上品で丁寧な言葉遣い。絵文字は控えめで、落ち着いた大人っぽい文体で生成します。</div>
+          <div class="style-desc-custom">
+            <div class="style-desc-box" style="margin-bottom: 24px;">⚙️ <b>あなたの文体を学習させます</b><br>普段使っているLINEやブログの文章を貼り付けてください。AIがあなたの口調を完全にコピーします。</div>
+            <label class="label">📝 過去の文章（学習用）</label>
+            <textarea class="input-field" placeholder="今日は来てくれてありがとう！すごく楽しかったよ✨また来週待ってるね！" style="height: 140px;"></textarea>
+            <div class="slider-group">
+              <div class="slider-header"><span>テンション（落ち着く）</span><span>（アゲアゲ）</span></div>
+              <input type="range" min="1" max="5" value="3">
+              <div class="slider-header"><span>絵文字の量（少）</span><span>（多）</span></div>
+              <input type="range" min="1" max="5" value="4">
+            </div>
+          </div>
+        </div>
+
         <!-- AI出力エリア -->
         <div class="output-card" id="outputCard">
           <div class="output-header">
@@ -219,33 +277,9 @@
         <button class="submit-btn" id="submitBtn" onclick="sendToGAS()">✨ AIで日記を作成する</button>
       </div>
 
-      <!-- タブ2：スタイル設定画面 -->
-      <div class="page page-style">
-        <div class="header"><h1>スタイル設定</h1></div>
-        <div class="card" style="flex:1;">
-          <label class="label" style="font-size:18px;">🎨 日記の雰囲気を選択</label>
-          <div class="style-selector">
-            <label for="style-cute" class="style-btn btn-cute">かわいい系</label>
-            <label for="style-custom" class="style-btn btn-custom">カスタム</label>
-            <label for="style-neat" class="style-btn btn-neat">清楚系</label>
-          </div>
-          <div class="style-desc-cute style-desc-box">🎀 <b>かわいい系の特徴</b><br>可愛らしく、絵文字や顔文字を多用した親しみやすい文体で日記を生成します。フレンドリーな接客スタイルの方におすすめです。</div>
-          <div class="style-desc-neat style-desc-box">💎 <b>清楚系の特徴</b><br>上品で丁寧な言葉遣い。絵文字は控えめで、落ち着いた大人っぽい文体で生成します。高級店や落ち着いた雰囲気の方におすすめです。</div>
-          <div class="style-desc-custom">
-            <div class="style-desc-box" style="margin-bottom: 24px;">⚙️ <b>あなたの文体を学習させます</b><br>普段使っているLINEやブログの文章を貼り付けてください。AIがあなたの口調を完全にコピーします。</div>
-            <label class="label">📝 過去の文章（学習用）</label>
-            <textarea class="input-field" placeholder="今日は来てくれてありがとう！すごく楽しかったよ✨また来週待ってるね！" style="height: 140px;"></textarea>
-            <div class="slider-group">
-              <div class="slider-header"><span>テンション（落ち着く）</span><span>（アゲアゲ）</span></div>
-              <input type="range" min="1" max="5" value="3">
-              <div class="slider-header"><span>絵文字の量（少）</span><span>（多）</span></div>
-              <input type="range" min="1" max="5" value="4">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- タブ3：顧客データ画面 -->
+      <!-- ==============================================
+           タブ2：顧客データ画面（旧タブ3）
+           ============================================== -->
       <div class="page page-data">
         <div class="header"><h1>顧客カルテ</h1></div>
         <input type="text" class="input-field" placeholder="🔍 名前で検索..." style="margin-bottom: 24px; flex-shrink: 0;">
@@ -255,27 +289,23 @@
       </div>
     </main>
 
-    <!-- ボトムナビゲーション -->
+    <!-- ボトムナビゲーション（2つに整理） -->
     <nav class="bottom-nav">
       <label for="nav-create" class="nav-item tab-create"><span class="nav-icon">📝</span>作成</label>
-      <label for="nav-style" class="nav-item tab-style"><span class="nav-icon">✨</span>スタイル</label>
       <label for="nav-data" class="nav-item tab-data"><span class="nav-icon">📖</span>顧客</label>
     </nav>
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    // =====================
-    // 設定（必ず変更）
-    // =====================
     const LIFF_ID = "2009843865-hghVLuaS"; 
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyWcx1XN8MuLsscHjoi9DdItYm7jCsMdZvNgrohG0o51KlTEheIXVdrHbSmGeSS2FV2/exec"; 
 
     let liffReady = false;
     let searchTimeout = null;
     let lastQuery = "";
+    let uploadedImageBase64 = ""; // 写真データを保持する変数
 
-    // LIFF初期化
     async function init() {
       try {
         await liff.init({ liffId: LIFF_ID });
@@ -290,19 +320,37 @@
     }
     init();
 
-    // タグ追加
     function addTag(text) {
       const episode = document.getElementById("episodeInput");
       episode.value += (episode.value ? " " : "") + text;
       episode.focus();
     }
 
-    // 出力エリア展開
+    // 写真プレビュー機能
+    function previewPhoto(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        uploadedImageBase64 = e.target.result; // GASへ送る用に保持
+        
+        // UIの切り替え
+        document.getElementById('uploadText').style.display = 'none';
+        const preview = document.getElementById('photoPreview');
+        const uploadArea = document.getElementById('uploadArea');
+        
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        uploadArea.classList.add('has-image');
+      }
+      reader.readAsDataURL(file);
+    }
+
     function toggleExpand() {
       document.getElementById('outputTextWrapper').classList.toggle('expanded');
     }
 
-    // コピー機能
     function copyDiaryText(event) {
       event.stopPropagation();
       const text = document.getElementById('aiOutputText').innerText;
@@ -318,7 +366,6 @@
       }).catch(() => alert("コピーに失敗しました"));
     }
 
-    // 検索機能
     function searchCustomer() {
       clearTimeout(searchTimeout);
       const name = document.getElementById("nameInput").value;
@@ -339,7 +386,6 @@
       }, 500);
     }
 
-    // GASへ送信
     async function sendToGAS() {
       const name = document.getElementById("nameInput").value;
       const episode = document.getElementById("episodeInput").value;
@@ -359,15 +405,18 @@
       try {
         const res = await fetch(GAS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "text/plain" // CORSエラー回避の要
-          },
-          body: JSON.stringify({ name: name, episode: episode, userId: userId })
+          headers: { "Content-Type": "text/plain" },
+          // 選択されたスタイルや写真データ(Base64)も一緒にGASへ送れるように拡張しています
+          body: JSON.stringify({ 
+            name: name, 
+            episode: episode, 
+            userId: userId,
+            image: uploadedImageBase64 
+          })
         });
         
         const data = await res.json();
         if (data.success) {
-          // 本来はAIの返答を待つ処理が入りますが、今回はUIの挙動確認としてアラート
           alert("送信完了！LINEボットからの返信をお待ちください。");
           if (liffReady && liff.isInClient()) liff.closeWindow();
         } else {
