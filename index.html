@@ -5,186 +5,156 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>AIお礼日記メーカー</title>
   <style>
-    /* ==========================================
-       CSS Variables & Reset
-       ========================================== */
     :root {
       --primary-gradient: linear-gradient(135deg, #A855F7, #EC4899);
-      --bg-color: #F4F2F7;
-      --card-bg: #FFFFFF;
-      --text-main: #4B3E41;
-      --text-sub: #9E8E92;
-      --input-bg: #F8F4F6;
-      --border-color: #EFEAF0;
-      --active-color: #D946EF;
-      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-      --shadow-md: 0 6px 20px rgba(200, 180, 190, 0.2);
+      --bg-color: #F4F2F7; --card-bg: #FFFFFF; --text-main: #4B3E41; --text-sub: #9E8E92;
+      --input-bg: #F8F4F6; --border-color: #EFEAF0; --active-color: #D946EF;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04); --shadow-md: 0 6px 20px rgba(200, 180, 190, 0.2);
     }
-
     * { box-sizing: border-box; }
-    html, body {
-      width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; 
-      background-color: var(--bg-color); color: var(--text-main);
-      font-family: 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', 'Hiragino Sans', 'Helvetica Neue', Arial, sans-serif;
-      -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
-    }
-
+    html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: 'Hiragino Maru Gothic ProN', sans-serif; -webkit-tap-highlight-color: transparent; }
     input[type="radio"].ui-state { display: none; }
 
-    /* ==========================================
-       Navigation Logic (CSS Only)
-       ========================================== */
+    /* ナビゲーション */
     .page { display: none; flex-direction: column; padding-bottom: 20px; }
     #nav-create:checked ~ .app-container .page-create { display: flex; }
     #nav-data:checked ~ .app-container .page-data { display: flex; }
     #nav-settings:checked ~ .app-container .page-settings { display: flex; }
+    #nav-create:checked ~ .app-container .tab-create, #nav-data:checked ~ .app-container .tab-data, #nav-settings:checked ~ .app-container .tab-settings { color: var(--active-color); }
+    #nav-create:not(:checked) ~ .app-container .header-toggle, #nav-create:not(:checked) ~ .app-container .submit-area { display: none; }
 
-    #nav-create:checked ~ .app-container .tab-create { color: var(--active-color); }
-    #nav-data:checked ~ .app-container .tab-data { color: var(--active-color); }
-    #nav-settings:checked ~ .app-container .tab-settings { color: var(--active-color); }
-
-    #nav-create:not(:checked) ~ .app-container .header-toggle { display: none; }
-    #nav-create:not(:checked) ~ .app-container .submit-area { display: none; }
-
+    /* モード切替（写メ日記時のUI隠蔽） */
     .mode-photo-ui, .mode-text-ui { display: none; }
     #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
     #mode-text:checked ~ .app-container .mode-text-ui { display: block; }
     #mode-photo:checked ~ .app-container .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
     #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
-
-    .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
-    #style-cute:checked ~ .app-container .style-desc-cute { display: block; }
-    #style-custom:checked ~ .app-container .style-desc-custom { display: block; }
-    #style-neat:checked ~ .app-container .style-desc-neat { display: block; }
-    #style-cute:checked ~ .app-container .btn-cute { background: var(--primary-gradient); color: white; border-color: transparent; }
-    #style-custom:checked ~ .app-container .btn-custom { background: var(--primary-gradient); color: white; border-color: transparent; }
-    #style-neat:checked ~ .app-container .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
-
-    /* ==========================================
-       Global Layout
-       ========================================== */
-    .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
     
+    /* ★写メ日記モードの時は宛先カードを消す */
+    #mode-photo:checked ~ .app-container .customer-select-card { display: none; }
+
+    /* 基本レイアウト */
+    .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
     .header-area { padding: env(safe-area-inset-top, 20px) 16px 10px; background: rgba(244, 242, 247, 0.85); backdrop-filter: blur(12px); z-index: 100; flex-shrink: 0; }
     .app-title { text-align: center; font-size: 22px; font-weight: 900; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
     .toggle-container { display: flex; background: #EAE5ED; border-radius: 40px; padding: 4px; }
     .toggle-label { flex: 1; text-align: center; padding: 12px; font-size: 15px; font-weight: 900; color: var(--text-sub); border-radius: 34px; transition: 0.3s; cursor: pointer; }
 
     .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 160px); }
-
     .fixed-footer { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 200; display: flex; flex-direction: column; pointer-events: none; }
     .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
-    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; }
+    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; transition: 0.2s; }
     .submit-btn:disabled { background: #E5E7EB; box-shadow: none; color: #9CA3AF; cursor: not-allowed; }
-    
     .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
     .nav-icon { font-size: 26px; }
 
-    /* ==========================================
-       UI Components
-       ========================================== */
+    /* UIコンポーネント */
     .card { background: var(--card-bg); border-radius: 20px; padding: 22px 20px; margin-bottom: 20px; box-shadow: var(--shadow-md); }
     .label { font-weight: 900; font-size: 16px; margin-bottom: 12px; display: block; color: var(--text-main); }
-    
-    .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 18px; font-size: 16px; color: var(--text-main); font-family: inherit; }
+    .input-field { width: 100%; background: var(--input-bg); border: 2px solid transparent; border-radius: 16px; padding: 16px; font-size: 16px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
 
-    /* 👑 ストーリーズ風 クイックアクセス */
-    .stories-wrapper { position: relative; margin: 0 -20px 16px; /* カードのパディングを無視して端まで伸ばす */ }
-    /* 両端のフェードアウト効果 */
-    .stories-wrapper::before, .stories-wrapper::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30px; z-index: 10; pointer-events: none; }
-    .stories-wrapper::before { left: 0; background: linear-gradient(to right, var(--card-bg), transparent); }
-    .stories-wrapper::after { right: 0; background: linear-gradient(to left, var(--card-bg), transparent); }
-    
-    .stories-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 10px 20px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    /* サジェスト（検索結果） */
+    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 8px; padding: 8px; box-shadow: var(--shadow-sm); max-height: 150px; overflow-y: auto; }
+    .suggest-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; cursor: pointer; }
+    .suggest-item:last-child { border-bottom: none; }
+
+    /* クイックアクセス */
+    .stories-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none; }
     .stories-scroll::-webkit-scrollbar { display: none; }
-    
-    .story-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; position: relative; width: 66px; }
-    
-    /* タグはアバターの左上にめり込ませて固定 */
-    .story-tag { position: absolute; top: -6px; left: -4px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 900; padding: 3px 6px; border-radius: 8px; border: 2px solid #FFF; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    
-    /* インスタ風リング */
+    .story-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; width: 66px; position: relative; }
     .story-ring { width: 66px; height: 66px; border-radius: 50%; background: var(--primary-gradient); padding: 3px; }
     .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: var(--active-color); border: 2px solid #FFF; }
     .story-name { font-size: 11px; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
 
-    /* インフォメーションテキスト */
-    .info-text { background: #FDF4F8; color: #DB2777; font-size: 12px; font-weight: bold; padding: 12px; border-radius: 12px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; margin-top: 10px; border: 1px dashed #FBCFE8; }
-
-    /* Textarea & Mic */
+    /* テキストエリア＆マイク */
     .textarea-wrapper { position: relative; }
-    textarea.input-field { height: 160px; resize: none; padding-right: 50px; line-height: 1.6; }
-    .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; transition: 0.2s; }
-    .mic-btn:active { background: #FDF2F8; transform: scale(0.95); }
+    textarea.input-field { height: 140px; resize: none; padding-right: 50px; line-height: 1.6; }
+    .mic-btn { position: absolute; bottom: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #FFF; border: 1px solid #FBCFE8; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15); display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; color: #EC4899; }
 
-    .chip-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-    .chip { background: #FFF; border: 1px solid #F0E6EA; color: #9333EA; padding: 10px 18px; border-radius: 25px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: var(--shadow-sm); }
-    
-    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; margin-bottom: 20px; font-size: 16px; cursor: pointer; position: relative; overflow: hidden; }
+    /* タグ関連（追加可能） */
+    .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
+    .chip { background: #FFF; border: 1px solid #F0E6EA; color: #9333EA; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.1s; display: flex; align-items: center; gap: 4px; }
+    .chip:active { transform: scale(0.95); }
+    .add-tag-btn { background: var(--input-bg); border: 1px dashed var(--text-sub); color: var(--text-sub); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
+
+    /* 写メ日記アップロード */
+    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; margin-bottom: 10px; cursor: pointer; position: relative; overflow: hidden; }
     .upload-area.has-image { border: none; }
     .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
 
+    /* AI出力 */
     .output-card { background: #FFF; border: 2px solid #F472B6; border-radius: 20px; padding: 24px; margin-top: 20px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15); display: none; }
     .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color); }
     .output-text-wrapper { position: relative; max-height: 140px; overflow: hidden; cursor: pointer; transition: 0.4s; }
     .output-text-wrapper.expanded { max-height: 2000px; }
-    .output-text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; padding-bottom: 10px; font-weight: 500; }
+    .output-text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; padding-bottom: 10px; font-weight: bold; }
     .fade-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); pointer-events: none; transition: 0.3s; }
     .output-text-wrapper.expanded .fade-overlay { opacity: 0; }
 
-    .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
-    .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
-    .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #7A666B; font-weight: bold; }
-    .slider-group { margin-top: 24px; }
-    .slider-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px; }
-    input[type=range] { width: 100%; accent-color: #D946EF; margin-bottom: 24px; }
-
-    /* ==========================================
-       Customer & Settings Tab
-       ========================================== */
+    /* 顧客カルテ */
     .search-box { position: relative; margin-bottom: 24px; }
     .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; }
     .search-box .input-field { padding-left: 44px; }
-
-    .customer-card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
-    .customer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .customer-card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border-color); }
+    .customer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .customer-name { font-size: 18px; font-weight: 900; }
-    .last-visit { font-size: 12px; color: var(--text-sub); background: var(--input-bg); padding: 6px 12px; border-radius: 12px; font-weight: bold; }
-    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .c-tag { background: #FDF2F8; color: #DB2777; border: 1px solid #FBCFE8; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-    .customer-action { width: 100%; background: #FFF; border: 2px solid #FBCFE8; color: #EC4899; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 900; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; }
+    .customer-action { width: 100%; background: #FFF; border: 2px solid #FBCFE8; color: #EC4899; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 900; display: flex; justify-content: center; align-items: center; cursor: pointer; }
 
-    .settings-list { background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 24px; }
-    .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 16px; }
+    /* 設定・モーダル */
+    .settings-list { background: var(--card-bg); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+    .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 16px; cursor: pointer; }
     .settings-item:last-child { border-bottom: none; }
-    .settings-select { border: none; background: var(--input-bg); padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; color: var(--active-color); outline: none; }
-
-    /* ==========================================
-       Initial Setup Modal
-       ========================================== */
+    
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
-    .modal-content { background: #FFF; border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-    .modal-content h2 { margin: 0 0 10px; font-weight: 900; color: var(--text-main); }
-    .modal-content p { color: var(--text-sub); font-size: 14px; font-weight: bold; margin-bottom: 24px; }
+    .modal-content { background: #FFF; border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; text-align: left; }
+    
+    /* スタイル詳細設定UI */
+    .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+    .style-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
+    .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #7A666B; font-weight: bold; margin-bottom: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- 初回業態設定モーダル -->
+  <!-- ★ 初期設定（業態選択） -->
   <div id="setupModal" class="modal-overlay">
-    <div class="modal-content">
-      <h2>🎉 初期設定</h2>
-      <p>あなたに最適な日記を作るため、<br>現在の業態を教えてください。</p>
-      
+    <div class="modal-content" style="text-align: center;">
+      <h2 style="margin: 0 0 10px; font-weight: 900;">🎉 初期設定</h2>
+      <p style="color:var(--text-sub); font-size:14px; font-weight:bold; margin-bottom:24px;">あなたに最適な日記を作るため、<br>現在の業態を教えてください。</p>
       <select id="initialBusinessType" class="input-field" style="margin-bottom: 24px; font-weight:bold; text-align:center;">
         <option value="cabaret">キャバクラ・ラウンジ</option>
-        <option value="fuzoku">風俗・メンズエステ</option>
+        <option value="fuzoku">風俗・メンエス</option>
         <option value="host">ホストクラブ</option>
       </select>
-      
       <button onclick="saveInitialSetup()" style="width:100%; background:var(--primary-gradient); color:#FFF; border:none; padding:18px; border-radius:30px; font-weight:900; font-size:16px;">はじめる ✨</button>
+    </div>
+  </div>
+
+  <!-- ★ スタイル詳細設定モーダル -->
+  <div id="styleModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
+      
+      <div class="style-selector">
+        <label for="style-cute" class="style-btn btn-cute">かわいい</label>
+        <label for="style-custom" class="style-btn btn-custom">カスタム</label>
+        <label for="style-neat" class="style-btn btn-neat">清楚</label>
+      </div>
+      <div class="style-desc-cute style-desc-box">🎀 可愛らしく、絵文字を多用した親しみやすい文体。</div>
+      <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
+      <div class="style-desc-custom">
+        <div class="style-desc-box">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
+        <textarea class="input-field" placeholder="学習用の過去の文章をここにペースト..." style="height: 120px; margin-bottom:20px;"></textarea>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px;"><span>テンション（低）</span><span>（高）</span></div>
+        <input type="range" min="1" max="5" value="3" style="width:100%; margin-bottom:24px;">
+        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px;"><span>絵文字の量（少）</span><span>（多）</span></div>
+        <input type="range" min="1" max="5" value="4" style="width:100%; margin-bottom:24px;">
+      </div>
+      <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900; font-size:16px;">設定を保存して閉じる</button>
     </div>
   </div>
 
@@ -192,14 +162,14 @@
   <input type="radio" name="nav" id="nav-data" class="ui-state">
   <input type="radio" name="nav" id="nav-settings" class="ui-state">
 
-  <input type="radio" name="mode" id="mode-text" class="ui-state" checked>
-  <input type="radio" name="mode" id="mode-photo" class="ui-state">
+  <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
+  <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
+  
   <input type="radio" name="style" id="style-cute" class="ui-state" checked>
   <input type="radio" name="style" id="style-custom" class="ui-state">
   <input type="radio" name="style" id="style-neat" class="ui-state">
 
   <div class="app-container">
-    
     <header class="header-area">
       <div class="app-title">AIお礼日記メーカー</div>
       <div class="toggle-container header-toggle">
@@ -210,52 +180,23 @@
 
     <main class="scroll-area">
       
-      <!-- TAB 1: CREATE -->
+      <!-- ==================== 作成タブ ==================== -->
       <div class="page page-create">
         
-        <div class="card">
+        <!-- 宛先（写メ日記の時はCSSで非表示） -->
+        <div class="card customer-select-card">
           <span class="label">👤 誰に送る？</span>
-          
-          <!-- インスタストーリーズ風 UI -->
-          <div class="stories-wrapper">
-            <div class="stories-scroll">
-              
-              <div class="story-item" onclick="selectCustomer('ひろしさん', '')">
-                <span class="story-tag">太客</span>
-                <div class="story-ring"><div class="story-inner">ひ</div></div>
-                <span class="story-name">ひろし</span>
-              </div>
-
-              <div class="story-item" onclick="selectCustomer('ケンジさん', '')">
-                <div class="story-ring" style="background:#BDB2B5;"><div class="story-inner" style="color:#BDB2B5;">ケ</div></div>
-                <span class="story-name">ケンジ</span>
-              </div>
-
-              <div class="story-item" onclick="selectCustomer('たかしさん', '')">
-                <span class="story-tag" style="background:#EF4444;">注意</span>
-                <div class="story-ring"><div class="story-inner">た</div></div>
-                <span class="story-name">たかし</span>
-              </div>
-
-              <div class="story-item" onclick="selectCustomer('りょうさん', '')">
-                <span class="story-tag" style="background:#8B5CF6;">店外狙</span>
-                <div class="story-ring"><div class="story-inner">り</div></div>
-                <span class="story-name">りょう</span>
-              </div>
-              
-              <!-- 余白用（右端が切れないように） -->
-              <div style="width:10px; flex-shrink:0;"></div>
-            </div>
+          <div class="stories-scroll" id="quickAccessArea">
+            <!-- JSでダミーや顧客を展開 -->
           </div>
-          
-          <input type="text" id="nameInput" class="input-field" placeholder="名前を入力（例：ひろしさん）">
-          
-          <div class="info-text">
-            <span>💡</span>
-            <span>付与されたタグ（太客など）に合わせてAIが文章を自動調整します。手動での入力・変更も可能です。</span>
+          <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
+          <div id="resultArea" class="result-box"></div>
+          <div style="background:#FDF4F8; color:#DB2777; font-size:12px; font-weight:bold; padding:10px; border-radius:12px; margin-top:10px;">
+            💡 シートのタグやメモを読み込み、AIが相手に合わせて文章を自動調整します。
           </div>
         </div>
 
+        <!-- 写真（写メ日記のみ） -->
         <div class="card mode-photo-ui">
           <span class="label">📷 写真を選ぶ</span>
           <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
@@ -265,36 +206,24 @@
           </label>
         </div>
 
+        <!-- エピソード＆タグ -->
         <div class="card">
           <span class="label">📝 エピソード・キーワード</span>
           <div class="textarea-wrapper">
-            <textarea id="episodeInput" class="input-field" placeholder="今日あったことや、伝えたい話題を入力してね。右下のマイクで音声入力もできます！"></textarea>
+            <textarea id="episodeInput" class="input-field" placeholder="今日あったことや伝えたい話題を入力。音声入力も便利です！"></textarea>
             <div class="mic-btn" onclick="startDictation()">🎤</div>
           </div>
-          <div class="chip-container" id="dynamicChips"></div>
-        </div>
-
-        <div class="card">
-          <span class="label">🎨 AIの口調・スタイル</span>
-          <div class="style-selector">
-            <label for="style-cute" class="style-btn btn-cute">かわいい</label>
-            <label for="style-custom" class="style-btn btn-custom">カスタム</label>
-            <label for="style-neat" class="style-btn btn-neat">清楚</label>
+          
+          <div class="chip-container" id="dynamicChips">
+            <!-- JSでタグ生成 -->
           </div>
-          <div class="style-desc-cute style-desc-box">🎀 可愛らしく、絵文字を多用した親しみやすい文体。</div>
-          <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
-          <div class="style-desc-custom">
-            <div class="style-desc-box" style="margin-bottom: 20px;">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
-            <textarea class="input-field" placeholder="学習用の過去の文章をここにペースト..." style="height: 100px;"></textarea>
-            <div class="slider-group">
-              <div class="slider-header"><span>テンション（低）</span><span>（高）</span></div>
-              <input type="range" min="1" max="5" value="3">
-              <div class="slider-header"><span>絵文字の量（少）</span><span>（多）</span></div>
-              <input type="range" min="1" max="5" value="4">
-            </div>
+          <div style="margin-top: 8px;">
+            <input type="text" id="customTagInput" placeholder="＋オリジナルタグ追加" style="background:var(--input-bg); border:none; padding:8px 12px; border-radius:12px; font-size:13px; font-weight:bold; outline:none; width:150px;">
+            <button onclick="addCustomTag()" style="background:var(--active-color); color:#fff; border:none; padding:8px 12px; border-radius:12px; font-weight:bold;">追加</button>
           </div>
         </div>
 
+        <!-- 出力エリア -->
         <div class="output-card" id="outputCard">
           <div class="output-header">
             <span style="font-weight:900; color:var(--active-color); font-size:18px;">✨ 生成完了</span>
@@ -307,38 +236,48 @@
         </div>
       </div>
 
-      <!-- TAB 2: CUSTOMER DATA -->
+      <!-- ==================== 顧客タブ ==================== -->
       <div class="page page-data">
         <h2 style="margin:0 0 20px; font-size:24px; font-weight:900;">顧客カルテ</h2>
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" class="input-field" placeholder="名前で検索...">
+          <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()">
         </div>
-        <div class="customer-card">
-          <div class="customer-header"><span class="customer-name">田中 ひろしさん</span><span class="last-visit">最終: 4/18</span></div>
-          <div class="tag-row"><span class="c-tag">太客推測</span></div>
-          <div class="customer-action" onclick="selectCustomer('ひろしさん', '')">📝 この人の日記を書く</div>
+        <div id="customerListArea">
+          <p style="text-align:center; color:var(--text-sub); font-weight:bold;">読み込み中...</p>
         </div>
       </div>
 
-      <!-- TAB 3: SETTINGS -->
+      <!-- ==================== 設定タブ ==================== -->
       <div class="page page-settings">
         <h2 style="margin:0 0 20px; font-size:24px; font-weight:900;">設定</h2>
+        
+        <!-- ★ スタイル設定をここへ移動 -->
+        <div class="card" style="background: linear-gradient(135deg, #FDF4F8, #FFFFFF); border: 2px solid #FBCFE8; cursor: pointer;" onclick="openStyleModal()">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:18px; font-weight:900; color:#DB2777; display:block; margin-bottom:4px;">🎨 AIの口調・スタイル設定</span>
+              <span style="font-size:13px; color:var(--text-sub); font-weight:bold;">かわいい・清楚・オリジナル学習</span>
+            </div>
+            <span style="font-size:20px;">⚙️</span>
+          </div>
+        </div>
+
         <span class="label">アプリ基本設定</span>
         <div class="settings-list">
           <div class="settings-item">
-            <span>🏢 業態</span>
-            <select class="settings-select" id="businessType" onchange="updateChipsAndSave()">
+            <span>🏢 業態（タグ最適化）</span>
+            <select class="input-field" id="businessType" onchange="updateChipsAndSave()" style="width:auto; padding:8px;">
               <option value="cabaret">キャバクラ</option>
               <option value="fuzoku">風俗・メンエス</option>
               <option value="host">ホスト</option>
             </select>
           </div>
         </div>
+        
         <span class="label">アカウント・その他</span>
         <div class="settings-list">
           <div class="settings-item" style="color:var(--text-sub);">利用規約</div>
-          <div class="settings-item" style="color:var(--text-sub);">プライバシーポリシー</div>
         </div>
       </div>
 
@@ -359,18 +298,38 @@
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    // --- 初期ログイン・業態設定ロジック ---
-    window.onload = () => {
+    const LIFF_ID = "あなたのLIFF_ID"; 
+    const GAS_URL = "あなたのGAS_URL"; 
+
+    let liffReady = false;
+    let userId = "test-user";
+    let customerData = []; // GASから取得したデータを保持
+    let activeTags = []; // 現在UIに表示するタグリスト
+
+    // --- 初期化＆データ取得 ---
+    async function init() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+          liffReady = true;
+          const profile = await liff.getProfile();
+          userId = profile.userId;
+        }
+      } catch (e) { console.error(e); }
+
+      // 業態チェック
       const savedType = localStorage.getItem('businessType');
       if (!savedType) {
-        // 未設定ならモーダル表示
         document.getElementById('setupModal').style.display = 'flex';
       } else {
-        // 設定済みならセレクトボックスに反映してチップ更新
         document.getElementById('businessType').value = savedType;
         updateChips();
       }
-    };
+
+      // 顧客データの取得
+      fetchCustomers();
+    }
+    init();
 
     function saveInitialSetup() {
       const type = document.getElementById('initialBusinessType').value;
@@ -380,28 +339,140 @@
       document.getElementById('setupModal').style.display = 'none';
     }
 
+    // --- 顧客データの取得と描画 ---
+    async function fetchCustomers() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getCustomers&userId=${userId}`);
+        const data = await res.json();
+        if (data.success) {
+          customerData = data.customers;
+          renderCustomerList();
+          renderQuickAccess();
+        }
+      } catch (e) {
+        document.getElementById('customerListArea').innerHTML = "<p>読み込み失敗</p>";
+      }
+    }
+
+    function renderCustomerList(filterText = "") {
+      const area = document.getElementById('customerListArea');
+      area.innerHTML = "";
+      
+      const filtered = customerData.filter(c => c.name.includes(filterText));
+      if (filtered.length === 0) {
+        area.innerHTML = "<p style='text-align:center;'>見つかりません</p>"; return;
+      }
+
+      filtered.forEach(c => {
+        let tagsHtml = c.tags.map(t => `<span class="c-tag">${t}</span>`).join('');
+        area.innerHTML += `
+          <div class="card" style="padding:16px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span style="font-weight:900; font-size:18px;">${c.name}</span>
+              <span style="font-size:12px; color:gray;">最終: ${c.lastVisit}</span>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">${tagsHtml}</div>
+            <div style="font-size:14px; margin-bottom:12px; color:#555;">📝 ${c.memo}</div>
+            <div style="background:#FFF; border:2px solid #FBCFE8; color:#EC4899; padding:10px; border-radius:12px; font-weight:900; text-align:center; cursor:pointer;" onclick="selectCustomer('${c.name}', '${c.memo}')">
+              📝 この人の日記を書く
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function renderQuickAccess() {
+      const area = document.getElementById('quickAccessArea');
+      area.innerHTML = "";
+      // 上位5名をクイックアクセスに表示（ダミー含む）
+      customerData.slice(0, 5).forEach(c => {
+        const initial = c.name.charAt(0);
+        const tagHtml = c.tags[0] ? `<span style="position:absolute; top:-4px; left:-4px; background:#DB2777; color:#FFF; font-size:9px; font-weight:bold; padding:2px 4px; border-radius:6px; z-index:5;">${c.tags[0]}</span>` : '';
+        area.innerHTML += `
+          <div class="story-item" onclick="selectCustomer('${c.name}', '${c.memo}')">
+            ${tagHtml}
+            <div class="story-ring"><div class="story-inner">${initial}</div></div>
+            <span class="story-name">${c.name}</span>
+          </div>
+        `;
+      });
+    }
+
+    function filterCustomerList() {
+      const text = document.getElementById('customerSearch').value;
+      renderCustomerList(text);
+    }
+
+    // 検索サジェスト
+    function suggestCustomer() {
+      const text = document.getElementById('nameInput').value;
+      const area = document.getElementById('resultArea');
+      area.innerHTML = "";
+      if (!text) { area.style.display = "none"; return; }
+      
+      const filtered = customerData.filter(c => c.name.includes(text));
+      if (filtered.length > 0) {
+        area.style.display = "block";
+        filtered.forEach(c => {
+          const div = document.createElement('div');
+          div.className = "suggest-item";
+          div.innerText = `${c.name} (メモ: ${c.memo.substring(0,10)}...)`;
+          div.onclick = () => { selectCustomer(c.name, c.memo); area.style.display = "none"; };
+          area.appendChild(div);
+        });
+      } else {
+        area.style.display = "none";
+      }
+    }
+
+    function selectCustomer(name, memo) {
+      document.getElementById('nav-create').checked = true;
+      document.getElementById('nameInput').value = name;
+      if(memo) document.getElementById('episodeInput').value += `\n[顧客メモ: ${memo}]`;
+      document.querySelector('.scroll-area').scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    // --- タグ・UIロジック ---
+    const defaultChips = {
+      cabaret: ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'], // 風俗用によりリアルなものへ変更
+      fuzoku:  ['✨ 本指名', '🏩 ロング', '🥂 オプション', '💕 濃厚', '🥺 ドM'],
+      host:    ['🍾 オリシャン', '🎤 ラスソン', '🥂 同伴', '💸 エース']
+    };
+    const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装'];
+
     function updateChipsAndSave() {
-      const type = document.getElementById('businessType').value;
-      localStorage.setItem('businessType', type);
+      localStorage.setItem('businessType', document.getElementById('businessType').value);
       updateChips();
     }
 
-    // --- Dynamic Chips Logic ---
-    const chipData = {
-      cabaret: ['🍽️ 同伴', '🥂 アフター', '🍾 シャンパン', '🎁 プレゼント'],
-      fuzoku:  ['🏩 延長', '✨ 本指名', '🍸 オプション', '💕 ドリンク'],
-      host:    ['🍾 オリシャン', '🎤 ラスソン', '🥂 同伴', '💸 エース']
-    };
-
     function updateChips() {
-      const type = document.getElementById('businessType').value || 'cabaret';
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const isPhoto = document.getElementById('mode-photo').checked;
+      
+      // モードに合わせて配列をセット
+      activeTags = isPhoto ? [...photoChips] : [...(defaultChips[type] || defaultChips.cabaret)];
+      
+      // 写メ日記時のプレースホルダー変更
+      const epInput = document.getElementById('episodeInput');
+      if (isPhoto) {
+        epInput.placeholder = "日常のひとコマや、えちえちなアピールなどを入力してね！";
+      } else {
+        epInput.placeholder = "今日あったことや伝えたい話題を入力。音声入力も便利です！";
+      }
+
+      renderChips();
+    }
+
+    function renderChips() {
       const container = document.getElementById('dynamicChips');
       container.innerHTML = '';
-      chipData[type].forEach(text => {
+      activeTags.forEach((text, index) => {
         const chip = document.createElement('div');
         chip.className = 'chip';
-        chip.innerText = text;
-        chip.onclick = () => {
+        // タップで追加、長押しor×ボタンで削除可能にする
+        chip.innerHTML = `${text} <span style="color:#CCC; margin-left:4px;" onclick="removeTag(event, ${index})">×</span>`;
+        chip.onclick = (e) => {
+          if (e.target.tagName === 'SPAN') return;
           const ep = document.getElementById('episodeInput');
           ep.value += (ep.value ? " " : "") + text;
           ep.focus();
@@ -410,76 +481,84 @@
       });
     }
 
-    // --- その他のUIロジック ---
+    function addCustomTag() {
+      const input = document.getElementById('customTagInput');
+      if(input.value.trim() !== "") {
+        activeTags.push(input.value.trim());
+        input.value = "";
+        renderChips();
+      }
+    }
+    
+    function removeTag(event, index) {
+      event.stopPropagation();
+      activeTags.splice(index, 1);
+      renderChips();
+    }
+
+    // --- スタイルモーダル ---
+    function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
+    function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
+
+    // --- その他機能 ---
     function startDictation() {
       if (window.SpeechRecognition || window.webkitSpeechRecognition) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
-        recognition.lang = 'ja-JP';
-        recognition.start();
-        recognition.onresult = function(event) {
-          document.getElementById('episodeInput').value += (document.getElementById('episodeInput').value ? " " : "") + event.results[0][0].transcript;
-        };
-      } else {
-        alert("お使いのブラウザは音声入力に対応していません。");
-      }
+        recognition.lang = 'ja-JP'; recognition.start();
+        recognition.onresult = e => { document.getElementById('episodeInput').value += (document.getElementById('episodeInput').value ? " " : "") + e.results[0][0].transcript; };
+      } else { alert("非対応ブラウザです"); }
     }
 
     function previewPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = e => {
         document.getElementById('uploadText').style.display = 'none';
         const preview = document.getElementById('photoPreview');
-        preview.src = e.target.result;
-        preview.style.display = 'block';
+        preview.src = e.target.result; preview.style.display = 'block';
         document.getElementById('uploadArea').classList.add('has-image');
       }
       reader.readAsDataURL(file);
     }
 
-    function selectCustomer(name, contextData) {
-      document.getElementById('nav-create').checked = true;
-      document.getElementById('nameInput').value = name;
-      document.querySelector('.scroll-area').scrollTo({top: 0, behavior: 'smooth'});
-    }
-
     function copyOutput(event) {
       event.stopPropagation();
-      const text = document.getElementById('aiOutputText').innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = event.target;
-        btn.innerHTML = "✅ コピー完了";
-        btn.style.background = "#D1FAE5"; btn.style.color = "#059669"; btn.style.borderColor = "#A7F3D0";
-        setTimeout(() => {
-          btn.innerHTML = "📋 コピー";
-          btn.style.background = "#FDF4F8"; btn.style.color = "#DB2777"; btn.style.borderColor = "#FBCFE8";
-        }, 2000);
+      navigator.clipboard.writeText(document.getElementById('aiOutputText').innerText).then(() => {
+        const btn = event.target; btn.innerHTML = "✅ 完了";
+        setTimeout(() => { btn.innerHTML = "📋 コピー"; }, 2000);
       });
     }
 
-    function generateDiary() {
+    // --- GASへ送信 ---
+    async function generateDiary() {
       const btn = document.getElementById('submitBtn');
-      btn.innerText = "作成中...🚀";
-      btn.disabled = true;
-      
-      setTimeout(() => {
-        const outBox = document.getElementById('outputCard');
-        outBox.style.display = 'block';
-        document.getElementById('aiOutputText').innerText = "ひろしさん！今日は来てくれて本当にありがとう✨\n\nAIがタグ（太客）を考慮して、少し甘えたトーンで生成しました。次も待ってるね💖";
-        document.getElementById('outputTextWrapper').classList.add('expanded');
-        btn.innerText = "✨ AIで作成する";
-        btn.disabled = false;
-        
-        // 生成完了したら下までスクロール
-        setTimeout(() => {
-           document.querySelector('.scroll-area').scrollTo({
-               top: outBox.offsetTop,
-               behavior: 'smooth'
-           });
-        }, 100);
-      }, 1500);
+      const name = document.getElementById('nameInput').value;
+      const episode = document.getElementById('episodeInput').value;
+      const isPhoto = document.getElementById('mode-photo').checked;
+
+      // 写メ日記モード以外なら名前必須
+      if (!isPhoto && !name) { alert("宛先を入力してください"); return; }
+      if (!episode) { alert("エピソードを入力してください"); return; }
+
+      btn.innerText = "作成中...🚀"; btn.disabled = true;
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ name: isPhoto ? "" : name, episode: episode, userId: userId })
+        });
+        const data = await res.json();
+        if(data.success) {
+          alert("送信完了！LINEボットからの返信をお待ちください。");
+          if(liffReady && liff.isInClient()) liff.closeWindow();
+        } else { throw new Error(data.error); }
+      } catch (err) {
+        alert("通信エラー: " + err.message);
+      } finally {
+        btn.innerText = "✨ AIで作成する"; btn.disabled = false;
+      }
     }
   </script>
 </body>
