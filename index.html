@@ -69,9 +69,13 @@
     .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 0 40px 6px 0; scrollbar-width: none; align-items: center; }
     .tags-scroll-container::-webkit-scrollbar { display: none; }
 
-    /* メモブロックUI (編集用) */
-    .memo-block { background: #FDFDFD; border: 1px solid #EFEAF0; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; position: relative; transition: 0.3s; }
-    .memo-block.dimmed { opacity: 0.5; background: #FAF5F8; border-color: transparent; }
+    /* メモブロックUI (編集用) - フェードアウト対応 */
+    .memo-blocks-wrapper { position: relative; margin-bottom: 8px; }
+    .memo-blocks-wrapper::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 24px; background: linear-gradient(to bottom, #FFF, transparent); z-index: 10; pointer-events: none; border-radius: 12px; }
+    #editMemoBlocksArea { max-height: 240px; overflow-y: auto; padding-top: 12px; scrollbar-width: thin; scroll-behavior: smooth; }
+    
+    .memo-block { background: #FDFDFD; border: 1px solid #EFEAF0; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; position: relative; transition: 0.3s; }
+    .memo-block.dimmed { opacity: 0.4; background: #FAF5F8; border-color: transparent; }
     .memo-block.dimmed:focus-within { opacity: 1; background: #FFF; border: 1px solid #F472B6; box-shadow: var(--shadow-sm); }
     .memo-date { font-weight: bold; color: var(--active-color); border: none; background: transparent; font-size: 12px; margin-bottom: 2px; outline: none; font-family: inherit; width: 100%; }
     .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.5; color: var(--text-main); font-family: inherit; margin-top: 4px; }
@@ -85,9 +89,11 @@
     /* 送信・ナビ・FAB */
     .submit-area { background: linear-gradient(to bottom, rgba(244,242,247,0), var(--bg-color) 40%); padding: 30px 16px 16px; pointer-events: auto; }
     .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 20px; font-size: 18px; font-weight: 900; border-radius: 35px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4); cursor: pointer; }
-    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; }
+    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; z-index: 500; position: relative; }
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #BDB2B5; font-size: 11px; font-weight: 900; gap: 4px; flex: 1; cursor: pointer; }
-    .fab { position: absolute; bottom: 30px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; justify-content: center; align-items: center; font-size: 30px; font-weight: bold; box-shadow: 0 6px 16px rgba(236,72,153,0.4); cursor: pointer; z-index: 100; transition: 0.2s; }
+    
+    /* ★FAB: Fixed配置に変更 */
+    .fab { position: fixed; bottom: calc(env(safe-area-inset-bottom, 12px) + 90px); right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; justify-content: center; align-items: center; font-size: 30px; font-weight: bold; box-shadow: 0 6px 16px rgba(236,72,153,0.4); cursor: pointer; z-index: 1000; transition: 0.2s; }
     .fab:active { transform: scale(0.9); }
 
     /* モーダル・テキストエリア等 */
@@ -167,15 +173,17 @@
       <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
       <div style="display:flex; gap:8px; margin-bottom:16px;">
         <input type="text" id="customAttrInput" class="input-field" placeholder="オリジナルタグを入力..." style="padding:10px; font-size:13px;">
-        <button onclick="addCustomAttributeTag()" style="background:var(--active-color); color:#FFF; border:none; border-radius:12px; padding:0 15px; font-weight:bold; white-space:nowrap;">追加</button>
+        <button id="addAttrBtn" onclick="addCustomAttributeTag()" style="background:var(--active-color); color:#FFF; border:none; border-radius:12px; padding:0 15px; font-weight:bold; white-space:nowrap;">追加</button>
       </div>
 
       <span class="label">接客メモ（エピソード履歴）</span>
-      <div id="editMemoBlocksArea" style="margin-bottom: 8px;"></div>
-      <div class="add-memo-btn" onclick="addMemoBlock()">＋ 日付とエピソードを追加</div>
+      <div class="memo-blocks-wrapper">
+        <div id="editMemoBlocksArea"></div>
+      </div>
+      <div class="add-memo-btn" id="addMemoBtn" onclick="addMemoBlock()">＋ 日付とエピソードを追加</div>
       
       <div style="display:flex; gap:10px;">
-        <button onclick="closeEditModal()" style="flex:1; background:#EAE5ED; color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:900;">キャンセル</button>
+        <button onclick="closeEditModal()" style="flex:1; background:#EAE5ED; color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:900;" id="cancelBtn">キャンセル</button>
         <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:900;">保存する</button>
       </div>
     </div>
@@ -241,7 +249,7 @@
         <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:16px;">
         <div id="customerListArea"></div>
         
-        <!-- ★新規顧客作成FABボタン -->
+        <!-- FABボタン -->
         <div class="fab" onclick="openCreateModal()">＋</div>
       </div>
 
@@ -283,6 +291,7 @@
     let currentCustomerTags = []; 
     let selectedEpisodeTags = []; 
     let currentBase64Image = null;
+    let isDemoMode = false; // ★追加：デモ用の判定フラグ
 
     const presetAttributeTags = [
       '太客', '常連', '新規', '痛客', 'デブ', 'ハゲ', 'おじさん', '若者', 'イケメン', 
@@ -309,47 +318,34 @@
 
     function getTodayString() {
       const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
-    function getTodayFormatted() {
-      return getTodayString().replace(/-/g, '/');
-    }
+    function getTodayFormatted() { return getTodayString().replace(/-/g, '/'); }
 
     async function init() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
 
-      try {
-        await liff.init({ liffId: LIFF_ID });
-        if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId;
-      } catch (e) {}
+      try { await liff.init({ liffId: LIFF_ID }); if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; } catch (e) {}
 
       const savedType = localStorage.getItem('businessType');
       if (!savedType) document.getElementById('setupModal').style.display = 'flex';
       else document.getElementById('businessType').value = savedType;
       
-      updateChips(); 
-      fetchCustomers();
+      updateChips(); fetchCustomers();
     }
     window.onload = init;
 
     function saveInitialSetup() {
       const type = document.getElementById('initialBusinessType').value;
-      localStorage.setItem('businessType', type);
-      document.getElementById('businessType').value = type;
-      updateChips();
-      document.getElementById('setupModal').style.display = 'none';
+      localStorage.setItem('businessType', type); document.getElementById('businessType').value = type;
+      updateChips(); document.getElementById('setupModal').style.display = 'none';
     }
 
     function updateStyleUI(type) {
-      const cuteLabel = document.querySelector('.btn-cute');
-      const neatLabel = document.querySelector('.btn-neat');
-      const cuteDesc = document.querySelector('.style-desc-cute');
-      const neatDesc = document.querySelector('.style-desc-neat');
+      const cuteLabel = document.querySelector('.btn-cute'), neatLabel = document.querySelector('.btn-neat');
+      const cuteDesc = document.querySelector('.style-desc-cute'), neatDesc = document.querySelector('.style-desc-neat');
       const overviewText = document.getElementById('styleOverviewText');
 
       if (type === 'host') {
@@ -374,34 +370,27 @@
       
       if (savedTags) {
         let parsed = JSON.parse(savedTags);
-        if (parsed.length < masterTags.length) {
-          activeTags = masterTags; localStorage.setItem(storageKey, JSON.stringify(masterTags));
-        } else { activeTags = parsed; }
-      } else { activeTags = masterTags; }
+        if (parsed.length < masterTags.length) { activeTags = masterTags; localStorage.setItem(storageKey, JSON.stringify(masterTags)); }
+        else activeTags = parsed;
+      } else activeTags = masterTags;
       renderChips();
     }
 
     function renderChips() {
-      const container = document.getElementById('dynamicChips');
-      container.innerHTML = '';
+      const container = document.getElementById('dynamicChips'); container.innerHTML = '';
       activeTags.forEach(text => {
         const isSelected = selectedEpisodeTags.includes(text);
         const chip = document.createElement('div');
-        chip.className = 'chip' + (isSelected ? ' dimmed' : '');
-        chip.innerHTML = text;
-        chip.onclick = () => {
-          if (!isSelected) { selectedEpisodeTags.push(text); renderSelectedEpisodeTags(); renderChips(); }
-        };
+        chip.className = 'chip' + (isSelected ? ' dimmed' : ''); chip.innerHTML = text;
+        chip.onclick = () => { if (!isSelected) { selectedEpisodeTags.push(text); renderSelectedEpisodeTags(); renderChips(); } };
         container.appendChild(chip);
       });
     }
 
     function renderSelectedEpisodeTags() {
-      const area = document.getElementById('selectedEpisodeTags');
-      area.innerHTML = '';
+      const area = document.getElementById('selectedEpisodeTags'); area.innerHTML = '';
       selectedEpisodeTags.forEach((tag, index) => {
-        const chip = document.createElement('div');
-        chip.className = 'selected-chip';
+        const chip = document.createElement('div'); chip.className = 'selected-chip';
         chip.innerHTML = `${tag} <span onclick="removeEpisodeTag(${index})" style="margin-left:4px; cursor:pointer;">×</span>`;
         area.appendChild(chip);
       });
@@ -412,15 +401,12 @@
     function addCustomTag() {
       const input = document.getElementById('customTagInput');
       if(input.value.trim() !== "") {
-        activeTags.unshift(input.value.trim()); input.value = "";
-        renderChips();
+        activeTags.unshift(input.value.trim()); input.value = ""; renderChips();
         const type = localStorage.getItem('businessType') || 'cabaret';
         const isPhoto = document.getElementById('mode-photo').checked;
         localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
-        document.getElementById('dynamicChips').scrollTop = 0;
       }
     }
-    
     function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); updateChips(); }
 
     async function fetchCustomers() {
@@ -433,8 +419,7 @@
     }
 
     function renderQuickAccess() {
-      const area = document.getElementById('quickAccessArea');
-      area.innerHTML = "";
+      const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
       customerData.slice(0, 15).forEach((c, index) => {
         const firstTag = c.tagsArray.length > 0 ? `<div class="story-badge">${c.tagsArray[0]}</div>` : '';
         area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="story-ring">${firstTag}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
@@ -444,14 +429,14 @@
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
     function renderCustomerList(filterText = "") {
-      const area = document.getElementById('customerListArea');
-      area.innerHTML = "";
+      const area = document.getElementById('customerListArea'); area.innerHTML = "";
       customerData.forEach((c, index) => {
         if(String(c.name).includes(filterText)){
           const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
-          const editBtn = String(c.name).includes("テスト") 
-            ? `<button onclick="alert('デモ用のテスト顧客は編集できません🙇‍♂️')" style="background:#E5E7EB; color:#9CA3AF; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集不可</button>`
-            : `<button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">⚙️ 編集</button>`;
+          
+          // ★すべてのユーザーに編集ボタンを表示（デモユーザーは中で閲覧専用に切り替える）
+          const btnLabel = String(c.name).includes("テスト") ? '🔍 閲覧' : '⚙️ 編集';
+          const editBtn = `<button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px;">${btnLabel}</button>`;
 
           area.innerHTML += `
             <div class="card" style="margin-bottom:12px;">
@@ -473,35 +458,23 @@
 
     function selectCustomerByIndex(index) {
       const c = customerData[index];
-      document.getElementById('nav-create').checked = true;
-      document.getElementById('nameInput').value = c.name;
-      document.getElementById('pastMemoDisplay').innerText = c.memo || "(過去の記録はありません)";
-      document.getElementById('todayEpisodeInput').value = "";
-      currentCustomerTags = c.tagsArray;
-      renderAttributeTags();
-      selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips(); 
+      document.getElementById('nav-create').checked = true; document.getElementById('nameInput').value = c.name;
+      document.getElementById('pastMemoDisplay').innerText = c.memo || "(過去の記録はありません)"; document.getElementById('todayEpisodeInput').value = "";
+      currentCustomerTags = c.tagsArray; renderAttributeTags(); selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips(); 
     }
 
     function renderAttributeTags() {
-      const wrapper = document.getElementById('attributeTagsWrapper');
-      const area = document.getElementById('attributeTagsArea');
+      const wrapper = document.getElementById('attributeTagsWrapper'), area = document.getElementById('attributeTagsArea');
       area.innerHTML = currentCustomerTags.map(t => `<div class="attr-chip">#${t}</div>`).join('');
       wrapper.style.display = currentCustomerTags.length > 0 ? 'block' : 'none';
     }
 
     function suggestCustomer() {
-      const text = document.getElementById('nameInput').value;
-      const area = document.getElementById('resultArea');
-      area.innerHTML = "";
+      const text = document.getElementById('nameInput').value, area = document.getElementById('resultArea'); area.innerHTML = "";
       if (!text) { area.style.display = "none"; currentCustomerTags = []; renderAttributeTags(); document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; return; }
       let matchCount = 0;
       customerData.forEach((c, index) => {
-        if (c.name.includes(text)) {
-          matchCount++;
-          const div = document.createElement('div'); div.className = "suggest-item"; div.innerText = c.name;
-          div.onclick = () => { selectCustomerByIndex(index); area.style.display = "none"; };
-          area.appendChild(div);
-        }
+        if (c.name.includes(text)) { matchCount++; const div = document.createElement('div'); div.className = "suggest-item"; div.innerText = c.name; div.onclick = () => { selectCustomerByIndex(index); area.style.display = "none"; }; area.appendChild(div); }
       });
       area.style.display = matchCount > 0 ? "block" : "none";
     }
@@ -519,25 +492,27 @@
     function buildMemoFromBlocks() {
       const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block'));
       return blocks.map(block => {
-        const d = block.querySelector('.memo-date').value.replace(/-/g, '/');
-        const t = block.querySelector('.memo-text').value.trim();
-        if(!t && !d) return null;
-        return d ? `${d}: ${t}` : t;
+        const d = block.querySelector('.memo-date').value.replace(/-/g, '/'), t = block.querySelector('.memo-text').value.trim();
+        if(!t && !d) return null; return d ? `${d}: ${t}` : t;
       }).filter(text => text).join('\n---\n');
     }
 
     function addMemoBlock(date = getTodayString(), text = "") {
       const area = document.getElementById('editMemoBlocksArea');
-      const div = document.createElement('div');
-      div.className = 'memo-block';
-      div.innerHTML = `<input type="date" class="memo-date" value="${date}"><textarea class="memo-text" rows="2" placeholder="エピソードを入力..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>`;
+      const div = document.createElement('div'); div.className = 'memo-block';
+      const readOnlyAttr = isDemoMode ? 'readonly' : '';
+      const disabledAttr = isDemoMode ? 'disabled' : '';
+      
+      div.innerHTML = `<input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr}>
+                       <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>`;
       area.appendChild(div);
       updateDimmedBlocks();
       
-      // Auto-resize if text exists
-      if(text) {
-        setTimeout(() => { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; }, 10);
-      }
+      // ★ブロック追加時、スクロールを一番下（最新）に合わせる
+      setTimeout(() => { 
+        if(text) { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; }
+        area.scrollTop = area.scrollHeight; 
+      }, 50);
     }
 
     function updateDimmedBlocks() {
@@ -549,76 +524,90 @@
     
     // 新規作成 or 編集モーダルの開閉
     function openCreateModal() {
+      isDemoMode = false;
       document.getElementById('modalTitle').innerText = "新規顧客の登録";
       document.getElementById('isCreateMode').value = "true";
       document.getElementById('editCustomerName').value = "";
-      tempSelectedAttributes = [];
-      renderEditAttributeTags();
+      document.getElementById('editCustomerName').readOnly = false;
+      document.getElementById('customAttrInput').disabled = false;
+      document.getElementById('addAttrBtn').style.display = 'block';
+      document.getElementById('addMemoBtn').style.display = 'block';
+      document.getElementById('saveCustomerBtn').style.display = 'block';
+      document.getElementById('cancelBtn').innerText = "キャンセル";
+
+      tempSelectedAttributes = []; renderEditAttributeTags();
       document.getElementById('editMemoBlocksArea').innerHTML = '';
-      addMemoBlock(); // 最初から1つ空ブロックを用意
+      addMemoBlock(); 
       document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
     function openEditModal(index) {
       const c = customerData[index];
-      document.getElementById('modalTitle').innerText = "顧客情報の編集";
+      isDemoMode = String(c.name).includes("テスト"); // ★デモモード判定
+
+      document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】テスト顧客（閲覧のみ）" : "顧客情報の編集";
       document.getElementById('isCreateMode').value = "false";
       document.getElementById('editCustomerIndex').value = index;
       document.getElementById('editCustomerName').value = c.name;
       editingOriginalName = c.name; 
       
-      tempSelectedAttributes = [...c.tagsArray];
-      renderEditAttributeTags();
+      // デモ時のUI切り替え
+      document.getElementById('editCustomerName').readOnly = isDemoMode;
+      document.getElementById('customAttrInput').disabled = isDemoMode;
+      document.getElementById('addAttrBtn').style.display = isDemoMode ? 'none' : 'block';
+      document.getElementById('addMemoBtn').style.display = isDemoMode ? 'none' : 'block';
+      document.getElementById('saveCustomerBtn').style.display = isDemoMode ? 'none' : 'block';
+      document.getElementById('cancelBtn').innerText = isDemoMode ? "閉じる" : "キャンセル";
 
-      const area = document.getElementById('editMemoBlocksArea');
-      area.innerHTML = '';
+      tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
+
+      const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
       const blocks = parseMemoToBlocks(c.memo);
-      if(blocks.length === 0) addMemoBlock();
-      else blocks.forEach(b => addMemoBlock(b.date, b.text));
+      if(blocks.length === 0) addMemoBlock(); else blocks.forEach(b => addMemoBlock(b.date, b.text));
 
       document.getElementById('editCustomerModal').style.display = 'flex';
+      
+      // 開いた時に一番下までスクロールさせる
+      setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
     }
 
     function renderEditAttributeTags() {
-      const area = document.getElementById('editAttributeTagsArea');
-      area.innerHTML = '';
+      const area = document.getElementById('editAttributeTagsArea'); area.innerHTML = '';
       const allTags = Array.from(new Set([...presetAttributeTags, ...tempSelectedAttributes]));
       allTags.forEach(tag => {
         const isSelected = tempSelectedAttributes.includes(tag);
         const bg = isSelected ? '#DB2777' : '#FFF', color = isSelected ? '#FFF' : '#DB2777', border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
-        area.innerHTML += `<div onclick="toggleAttributeTag('${tag}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:900; cursor:pointer; user-select:none;">#${tag}</div>`;
+        area.innerHTML += `<div onclick="toggleAttributeTag('${tag}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:900; cursor:${isDemoMode ? 'default' : 'pointer'}; user-select:none;">#${tag}</div>`;
       });
     }
 
-    function toggleAttributeTag(tag) { tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); }
-    function addCustomAttributeTag() { const v = document.getElementById('customAttrInput').value.trim(); if(v && !tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } }
+    function toggleAttributeTag(tag) { 
+      if (isDemoMode) return; // デモモード時は変更不可
+      tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); 
+    }
+    
+    function addCustomAttributeTag() { 
+      const v = document.getElementById('customAttrInput').value.trim(); 
+      if(v && !tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } 
+    }
+    
     function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
 
     async function saveCustomerEdit() {
+      if (isDemoMode) return closeEditModal();
+
       const isCreate = document.getElementById('isCreateMode').value === "true";
       const newName = document.getElementById('editCustomerName').value.trim();
       const newMemo = buildMemoFromBlocks();
       const newTagsStr = tempSelectedAttributes.join(', ');
       
       if(!newName) return alert("名前は必須です");
-
-      const btn = document.getElementById('saveCustomerBtn');
-      btn.innerText = "保存中..."; btn.disabled = true;
+      const btn = document.getElementById('saveCustomerBtn'); btn.innerText = "保存中..."; btn.disabled = true;
 
       try {
-        const payload = {
-          action: isCreate ? "createCustomer" : "updateCustomer",
-          userId: userId,
-          oldName: editingOriginalName,
-          newName: newName,
-          newTags: newTagsStr, 
-          newMemo: newMemo
-        };
+        const payload = { action: isCreate ? "createCustomer" : "updateCustomer", userId: userId, oldName: editingOriginalName, newName: newName, newTags: newTagsStr, newMemo: newMemo };
         const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
-        if((await res.json()).success) {
-          fetchCustomers(); // リスト再取得
-          closeEditModal();
-        } else alert("保存に失敗しました。");
+        if((await res.json()).success) { fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
       } catch(e) { alert("エラーが発生しました。"); }
       btn.innerText = "保存する"; btn.disabled = false;
     }
@@ -636,10 +625,8 @@
 
     async function generateDiary() {
       const btn = document.getElementById('submitBtn');
-      const name = document.getElementById('nameInput').value;
-      const todayEpisode = document.getElementById('todayEpisodeInput').value;
-      const pastMemoText = document.getElementById('pastMemoDisplay').innerText;
-      const isPhoto = document.getElementById('mode-photo').checked;
+      const name = document.getElementById('nameInput').value, todayEpisode = document.getElementById('todayEpisodeInput').value;
+      const pastMemoText = document.getElementById('pastMemoDisplay').innerText, isPhoto = document.getElementById('mode-photo').checked;
       const type = localStorage.getItem('businessType') || 'cabaret';
 
       if (!isPhoto && !name) return alert("名前を入れてね");
@@ -647,8 +634,6 @@
 
       let actualPastMemo = (pastMemoText === "(顧客を選択するか、過去の記録がありません)" || pastMemoText === "(過去の記録はありません)") ? "" : pastMemoText;
       let newCombinedMemo = actualPastMemo;
-      
-      // ★自動で今日の日付を付与して結合
       if (todayEpisode || selectedEpisodeTags.length > 0) {
         let tagsStr = selectedEpisodeTags.length > 0 ? '(' + selectedEpisodeTags.join(',') + ')' : '';
         let todayText = `${getTodayFormatted()}: ${todayEpisode} ${tagsStr}`.trim();
@@ -656,9 +641,8 @@
       }
 
       const payload = {
-        action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, 
-        combinedMemoToSave: newCombinedMemo, style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
-        tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value,
+        action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, 
+        style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value,
         customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt,
         customerTags: currentCustomerTags.join(', '), episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image 
       };
