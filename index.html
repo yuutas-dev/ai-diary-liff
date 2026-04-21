@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AIお礼日記メーカー</title>
+
+  <style>
+    /* ==========================================
+       リセット＆ベース設定
+       ========================================== */
+    :root {
+      --primary-gradient: linear-gradient(135deg, #A855F7, #EC4899);
+      --bg-color: #F4F2F7;
+      --card-bg: #FFFFFF;
+      --text-main: #4B3E41;
+      --text-sub: #9E8E92;
+      --input-bg: #F8F4F6;
+      --border-color: #EFEAF0;
+      --active-color: #D946EF;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%; 
+      margin: 0;
+      padding: 0;
+      overflow: hidden; 
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', 'Hiragino Sans', 'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input[type="radio"].ui-state { display: none; }
+
+    /* ボトムナビゲーションの切り替え */
+    .page { display: none; height: 100%; flex-direction: column; }
+    #nav-create:checked ~ .app-layout .page-create { display: flex; }
+    #nav-style:checked ~ .app-layout .page-style { display: flex; }
+    #nav-data:checked ~ .app-layout .page-data { display: flex; }
+
+    #nav-create:checked ~ .app-layout .tab-create { color: var(--active-color); }
+    #nav-style:checked ~ .app-layout .tab-style { color: var(--active-color); }
+    #nav-data:checked ~ .app-layout .tab-data { color: var(--active-color); }
+
+    /* モード切替 */
+    .mode-photo-ui, .mode-text-ui { display: none; }
+    #mode-photo:checked ~ * .mode-photo-ui { display: block; }
+    #mode-text:checked ~ * .mode-text-ui { display: block; }
+    
+    #mode-photo:checked ~ * .toggle-photo { background: var(--card-bg); color: var(--active-color); box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+    #mode-text:checked ~ * .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+
+    /* スタイル選択 */
+    .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; }
+    #style-cute:checked ~ * .style-desc-cute { display: block; }
+    #style-custom:checked ~ * .style-desc-custom { display: block; }
+    #style-neat:checked ~ * .style-desc-neat { display: block; }
+
+    #style-cute:checked ~ * .btn-cute { background: var(--primary-gradient); color: white; border-color: transparent; }
+    #style-custom:checked ~ * .btn-custom { background: var(--primary-gradient); color: white; border-color: transparent; }
+    #style-neat:checked ~ * .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
+
+    /* ==========================================
+       アプリレイアウト（全画面）
+       ========================================== */
+    .app-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      /* ボトムナビゲーションが被らないように下部余白をさらに広く */
+      padding: env(safe-area-inset-top, 20px) 16px calc(env(safe-area-inset-bottom, 20px) + 110px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header { text-align: center; margin: 16px 0 28px; flex-shrink: 0; }
+    .header h1 { font-size: 28px; margin: 0; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+    .header p { font-size: 15px; margin: 8px 0 0; color: var(--text-sub); font-weight: bold; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 6px 20px rgba(200, 180, 190, 0.2);
+      flex-shrink: 0;
+    }
+
+    /* ==========================================
+       UIパーツ（文字・余白を特大に調整）
+       ========================================== */
+    .toggle-container {
+      display: flex;
+      background: #EAE5ED;
+      border-radius: 40px;
+      padding: 6px;
+      margin-bottom: 28px;
+      flex-shrink: 0;
+    }
+    .toggle-label {
+      flex: 1; text-align: center; padding: 16px; font-size: 17px; font-weight: bold;
+      color: var(--text-sub); border-radius: 34px; transition: 0.3s;
+    }
+
+    .card-header {
+      display: flex; align-items: flex-start; margin-bottom: 16px; position: relative;
+    }
+    .icon { font-size: 26px; margin-right: 14px; background: var(--input-bg); padding: 12px; border-radius: 16px; }
+    .card-title-group { flex: 1; padding-top: 4px; }
+    .card-title { font-size: 18px; font-weight: 900; margin: 0 0 6px; color: var(--text-main); }
+    .card-desc { font-size: 14px; color: var(--text-sub); margin: 0; font-weight: bold; }
+    .badge { position: absolute; right: 0; top: 2px; background: #FDF2F8; color: #DB2777; font-size: 13px; font-weight: bold; padding: 6px 14px; border-radius: 16px; border: 1px solid #FCE7F3; }
+
+    .upload-area {
+      border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px;
+      padding: 50px 20px; text-align: center; color: var(--text-sub);
+      font-weight: bold; margin-bottom: 20px; font-size: 18px;
+    }
+
+    .label { display: block; font-size: 17px; font-weight: bold; margin-bottom: 12px; color: var(--text-main); }
+    
+    .input-field {
+      width: 100%; box-sizing: border-box; background: var(--input-bg);
+      border: 2px solid transparent; border-radius: 16px; padding: 20px;
+      font-size: 18px; color: var(--text-main); font-family: inherit; transition: 0.2s;
+    }
+    textarea.input-field { height: 180px; resize: none; line-height: 1.6; }
+    .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; }
+    .input-field::placeholder { color: #C8B9BD; font-size: 16px; font-weight: bold; }
+
+    .tags, .chip-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    .chip {
+      background: #FFF; border: 1px solid #F0E6EA; color: #9333EA;
+      padding: 12px 20px; border-radius: 25px; font-size: 15px; font-weight: 800;
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .chip:active { background: var(--primary-gradient); color: #FFF; border-color: transparent; transform: scale(0.95); }
+
+    /* ==========================================
+       AI出力エリア（タップで展開）
+       ========================================== */
+    .output-card {
+      background: #FFF; border: 2px solid #F472B6; border-radius: 20px;
+      padding: 24px; margin-bottom: 24px; box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15);
+      flex-shrink: 0; display: block; 
+    }
+    .output-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);
+    }
+    .output-title { font-weight: 900; color: var(--active-color); font-size: 18px; }
+    .copy-btn {
+      background: #FDF4F8; color: #DB2777; border: 1px solid #FBCFE8;
+      padding: 10px 18px; border-radius: 20px; font-size: 15px; font-weight: bold;
+      cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;
+    }
+    .copy-btn:active { background: #FBCFE8; }
+    
+    .output-text-wrapper {
+      position: relative; max-height: 140px; overflow: hidden; cursor: pointer;
+      transition: max-height 0.4s ease; border-radius: 8px;
+    }
+    .output-text-wrapper.expanded { max-height: 2500px; }
+    .output-text { font-size: 17px; line-height: 1.8; color: var(--text-main); white-space: pre-wrap; padding-bottom: 10px; font-weight: 500; }
+    .fade-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 70px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+      pointer-events: none; transition: opacity 0.3s;
+    }
+    .output-text-wrapper.expanded .fade-overlay { opacity: 0; }
+
+    /* ==========================================
+       メイン送信ボタン
+       ========================================== */
+    .submit-btn {
+      width: 100%; background: var(--primary-gradient); color: #FFF;
+      border: none; padding: 24px; font-size: 20px; font-weight: 900;
+      border-radius: 35px; margin-top: auto; margin-bottom: 10px;
+      box-shadow: 0 8px 24px rgba(236, 72, 153, 0.35); flex-shrink: 0; letter-spacing: 1px;
+    }
+
+    /* ==========================================
+       その他のタブ用パーツ
+       ========================================== */
+    .style-selector { display: flex; gap: 10px; background: #FFF; border-radius: 16px; margin-bottom: 20px; }
+    .style-btn { flex: 1; text-align: center; padding: 16px 0; font-size: 16px; font-weight: 900; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid var(--border-color); transition: 0.2s; }
+    .style-desc-box { background: #FDF4F8; border-left: 5px solid #EC4899; padding: 20px; border-radius: 12px; font-size: 15px; line-height: 1.7; color: #7A666B; font-weight: bold; }
+    
+    .slider-group { margin-top: 28px; }
+    .slider-header { display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; color: var(--text-sub); margin-bottom: 12px; }
+    input[type=range] { width: 100%; accent-color: #D946EF; margin-bottom: 28px; transform: scale(1.1); transform-origin: center; }
+    
+    details { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+    summary { font-weight: 900; font-size: 18px; outline: none; display: flex; justify-content: space-between; align-items: center; }
+    summary::-webkit-details-marker { display: none; }
+    .last-visit { font-size: 14px; color: var(--text-sub); background: var(--input-bg); padding: 8px 12px; border-radius: 12px; font-weight: bold; }
+    .memo-content { margin-top: 16px; padding-top: 16px; border-top: 2px dashed var(--border-color); font-size: 16px; color: var(--text-main); line-height: 1.7; font-weight: 500; }
+
+    /* ボトムナビゲーション */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-around;
+      padding: 16px 0 calc(env(safe-area-inset-bottom, 16px) + 10px);
+      z-index: 1000; box-shadow: 0 -4px 15px rgba(0,0,0,0.03);
+    }
+    .nav-item { text-align: center; color: #BDB2B5; font-size: 13px; font-weight: 900; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .nav-icon { font-size: 28px; }
+  </style>
+</head>
+<body>
+
+  <!-- ナビゲーション切り替え用 -->
+  <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
+  <input type="radio" name="nav" id="nav-style" class="ui-state">
+  <input type="radio" name="nav" id="nav-data" class="ui-state">
+
+  <!-- モード・スタイル切り替え用 -->
+  <input type="radio" name="mode" id="mode-text" class="ui-state" checked>
+  <input type="radio" name="mode" id="mode-photo" class="ui-state">
+  <input type="radio" name="style" id="style-cute" class="ui-state" checked>
+  <input type="radio" name="style" id="style-custom" class="ui-state">
+  <input type="radio" name="style" id="style-neat" class="ui-state">
+
+  <div class="app-layout">
+    
+    <!-- メインコンテンツ領域 -->
+    <main class="main-content">
+      
+      <!-- ==============================================
+           タブ1：作成画面（メイン）
+           ============================================== -->
+      <div class="page page-create">
+        <div class="header">
+          <h1>AIお礼日記メーカー</h1>
+          <p>"最高の一通"を、秒速作成。</p>
+        </div>
+
+        <!-- モード切替トグル -->
+        <div class="toggle-container">
+          <label for="mode-text" class="toggle-label toggle-text">💌 お礼日記</label>
+          <label for="mode-photo" class="toggle-label toggle-photo">📸 写メ日記</label>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="icon">👤</span>
+            <div class="card-title-group">
+              <h3 class="card-title">お客様の名前</h3>
+              <p class="card-desc">お礼を送る相手の名前を入力してね。</p>
+            </div>
+          </div>
+          
+          <input type="text" id="nameInput" class="input-field" placeholder="例：ひろしさん、新規のお客様">
+        </div>
+
+        <div class="card">
+          <!-- 写メ日記モード -->
+          <div class="mode-photo-ui">
+            <div class="card-header">
+              <span class="icon">📷</span>
+              <div class="card-title-group">
+                <h3 class="card-title">写真を選ぶ</h3>
+                <p class="card-desc">日記に使いたい画像をアップロードしてね。</p>
+              </div>
+            </div>
+            <div class="upload-area">
+              📸<br><br>タップして写真をアップロード<br><span style="font-size:14px; font-weight:normal; margin-top:8px; display:inline-block;">※顔出しなしでもOK！</span>
+            </div>
+          </div>
+
+          <!-- 共通エリア（エピソード） -->
+          <div class="card-header" style="margin-top: 10px;">
+            <span class="icon">📝</span>
+            <div class="card-title-group">
+              <h3 class="card-title">エピソード・キーワード</h3>
+              <p class="card-desc">日記に含めたい話題を入力してね。</p>
+            </div>
+            <span class="badge">AI自動生成</span>
+          </div>
+          
+          <textarea id="episodeInput" class="input-field" placeholder="例：初めてシャンパン入れてくれた！優しくて話しやすかった。"></textarea>
+          
+          <div class="chip-container">
+            <div class="chip" onclick="addTag('#同伴')">🍽️ 同伴</div>
+            <div class="chip" onclick="addTag('#アフター')">🥂 アフター</div>
+            <div class="chip" onclick="addTag('#シャンパン')">🍾 シャンパン</div>
+            <div class="chip" onclick="addTag('プレゼント🎁')">🎁 プレゼント</div>
+            <div class="chip" onclick="addTag('ごちそうさま😋')">😋 ごちそうさま</div>
+          </div>
+        </div>
+
+        <!-- ==============================================
+             AI出力結果エリア
+             ============================================== -->
+        <div class="output-card" id="outputCard">
+          <div class="output-header">
+            <span class="output-title">✨ 生成された日記</span>
+            <button class="copy-btn" onclick="copyDiaryText(event)">📋 コピー</button>
+          </div>
+          <!-- タップで展開するラッパー -->
+          <div class="output-text-wrapper" id="outputTextWrapper" onclick="toggleExpand()">
+            <div class="output-text" id="aiOutputText">ひろしさん！今日は来てくれて本当にありがとう✨
+初めてシャンパンまで入れてくれて、すっごく嬉しかったよ🥂💕
+
+ひろしさんって、すごく優しくて話しやすいから、一緒にいる時間があっという間に感じちゃったな🥺
+もっと色んなお話したかったし、また近いうちに会えたらいいな…なんて思ってます🤫
+
+次は私がもっと楽しませるから、絶対また遊びに来てね！待ってるよー！💖</div>
+            <div class="fade-overlay"></div>
+          </div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="send()">✨ AIで日記を作成する</button>
+      </div>
+
+      <!-- ==============================================
+           タブ2：スタイル設定画面
+           ============================================== -->
+      <div class="page page-style">
+        <div class="header">
+          <h1>スタイル設定</h1>
+        </div>
+        
+        <div class="card" style="flex:1;">
+          <label class="label" style="font-size:18px;">🎨 日記の雰囲気を選択</label>
+          
+          <div class="style-selector">
+            <label for="style-cute" class="style-btn btn-cute">かわいい系</label>
+            <label for="style-custom" class="style-btn btn-custom">カスタム</label>
+            <label for="style-neat" class="style-btn btn-neat">清楚系</label>
+          </div>
+
+          <div class="style-desc-cute style-desc-box">
+            🎀 <b>かわいい系の特徴</b><br>
+            可愛らしく、絵文字や顔文字を多用した親しみやすい文体で日記を生成します。フレンドリーな接客スタイルの方におすすめです。
+          </div>
+
+          <div class="style-desc-neat style-desc-box">
+            💎 <b>清楚系の特徴</b><br>
+            上品で丁寧な言葉遣い。絵文字は控えめで、落ち着いた大人っぽい文体で生成します。高級店や落ち着いた雰囲気の方におすすめです。
+          </div>
+
+          <div class="style-desc-custom">
+            <div class="style-desc-box" style="margin-bottom: 24px;">
+              ⚙️ <b>あなたの文体を学習させます</b><br>
+              普段使っているLINEやブログの文章を貼り付けてください。AIがあなたの口調を完全にコピーします。
+            </div>
+            
+            <label class="label">📝 過去の文章（学習用）</label>
+            <textarea class="input-field" placeholder="今日は来てくれてありがとう！すごく楽しかったよ✨また来週待ってるね！" style="height: 140px;"></textarea>
+
+            <div class="slider-group">
+              <div class="slider-header"><span>テンション（落ち着く）</span><span>（アゲアゲ）</span></div>
+              <input type="range" min="1" max="5" value="3">
+              
+              <div class="slider-header"><span>絵文字の量（少）</span><span>（多）</span></div>
+              <input type="range" min="1" max="5" value="4">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==============================================
+           タブ3：顧客データ画面
+           ============================================== -->
+      <div class="page page-data">
+        <div class="header">
+          <h1>顧客カルテ</h1>
+        </div>
+
+        <input type="text" class="input-field" placeholder="🔍 名前で検索..." style="margin-bottom: 24px; flex-shrink: 0;">
+
+        <div style="flex:1;">
+          <details>
+            <summary>田中 ひろしさん <span class="last-visit">最終来店: 4/18</span></summary>
+            <div class="memo-content">
+              ・シャンパン（モエ白）<br>
+              ・犬が好きでトイプードルを飼っている<br>
+              ・次回は同伴の約束あり
+            </div>
+          </details>
+
+          <details>
+            <summary>佐藤 ケンジさん <span class="last-visit">最終来店: 4/15</span></summary>
+            <div class="memo-content">
+              ・ビール党<br>
+              ・仕事の愚痴が多いので聞き役に徹する
+            </div>
+          </details>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==============================================
+         ボトムナビゲーション
+         ============================================== -->
+    <nav class="bottom-nav">
+      <label for="nav-create" class="nav-item tab-create">
+        <span class="nav-icon">📝</span>作成
+      </label>
+      <label for="nav-style" class="nav-item tab-style">
+        <span class="nav-icon">✨</span>スタイル
+      </label>
+      <label for="nav-data" class="nav-item tab-data">
+        <span class="nav-icon">📖</span>顧客
+      </label>
+    </nav>
+
+  </div>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <script>
+    // =====================
+    // タグ挿入機能
+    // =====================
+    function addTag(text) {
+      const episode = document.getElementById("episodeInput");
+      episode.value += (episode.value ? " " : "") + text;
+      episode.focus();
+    }
+
+    // =====================
+    // 出力エリアの展開/折りたたみ
+    // =====================
+    function toggleExpand() {
+      const wrapper = document.getElementById('outputTextWrapper');
+      wrapper.classList.toggle('expanded');
+    }
+
+    // =====================
+    // コピー機能
+    // =====================
+    function copyDiaryText(event) {
+      // 親要素(wrapper)のクリックイベント(展開)を発動させない
+      event.stopPropagation();
+      
+      const text = document.getElementById('aiOutputText').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "✅ コピー完了";
+        btn.style.background = "#D1FAE5";
+        btn.style.color = "#059669";
+        btn.style.borderColor = "#A7F3D0";
+        
+        // 2秒後に元に戻す
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = "#FDF4F8";
+          btn.style.color = "#DB2777";
+          btn.style.borderColor = "#FBCFE8";
+        }, 2000);
+      }).catch(err => {
+        alert("コピーに失敗しました");
+      });
+    }
+
+    // GAS通信用のダミー関数（UIのみのためダミー）
+    function send() {
+      const btn = document.getElementById('submitBtn');
+      btn.innerText = 'データ送信中...🚀';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.innerText = '✨ AIで日記を作成する';
+        btn.disabled = false;
+        alert("※デザイン確認用のため通信は行いません");
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
