@@ -335,6 +335,31 @@
     ];
 
     async function init() {
+      // ===== 追加：URLの目印を読み取って画面を切り替える =====
+      const params = new URLSearchParams(window.location.search);
+      const targetPage = params.get('page');
+      const targetMode = params.get('mode');
+      const action = params.get('action');
+
+      // タブの切り替え
+      if (targetPage) {
+        const tabElement = document.getElementById('nav-' + targetPage);
+        if (tabElement) tabElement.checked = true;
+      }
+      
+      // モード（お礼/写メ）の切り替え
+      if (targetMode) {
+        const modeElement = document.getElementById('mode-' + targetMode);
+        if (modeElement) modeElement.checked = true;
+      }
+
+      // 特殊なアクション（文体管理モーダルを開く等）
+      if (action === 'style') {
+        openStyleModal();
+      } else if (action === 'clear') {
+        document.getElementById('nameInput').value = "";
+        document.getElementById('episodeInput').value = "";
+      }
       try {
         await liff.init({ liffId: LIFF_ID });
         if (liff.isLoggedIn()) {
