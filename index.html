@@ -484,7 +484,11 @@
 
     async function init() {
       renderTexts(); 
-
+      document.querySelectorAll('input[name="nav"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          document.querySelector('.scroll-area').scrollTop = 0;
+        });
+      });
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
