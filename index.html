@@ -15,7 +15,6 @@
     html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif; -webkit-tap-highlight-color: transparent; }
     input[type="radio"].ui-state { display: none; }
 
-    /* ★UPDATE: height: 100% を min-height に変更し、潰れを防止 */
     .page { display: none; flex-direction: column; padding-bottom: 20px; position: relative; min-height: 100%; }
     #nav-create:checked ~ .app-container .page-create { display: flex; }
     #nav-data:checked ~ .app-container .page-data { display: flex; }
@@ -40,9 +39,7 @@
     #style-cute:checked ~ .modal-overlay .btn-cute, #style-custom:checked ~ .modal-overlay .btn-custom, #style-neat:checked ~ .modal-overlay .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
     @keyframes fadeInTab { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ★UPDATE: flex-shrink: 0 を追加し、パネルが潰れるのを防ぐ */
     .card { background: var(--card-bg); border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-md); border: 2px solid transparent; transition: 0.3s; flex-shrink: 0; }
-    .card-alert { border: 2px solid #FCA5A5; background: #FEF2F2; }
     .card-vip { border: 2px solid #FCD34D; background: linear-gradient(to right, #FFF, #FEF3C7); }
     .label { font-weight: 800; font-size: 14px; margin-bottom: 10px; display: block; color: var(--text-main); }
     .input-field { width: 100%; background: var(--input-bg); border: 1.5px solid transparent; border-radius: 14px; padding: 14px; font-size: 15px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
@@ -53,10 +50,9 @@
     
     .filter-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px 0; margin-bottom: 12px; scrollbar-width: none; flex-shrink: 0; min-height: 48px; align-items: center; }
     .filter-container::-webkit-scrollbar { display: none; }
-    .filter-btn { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; flex-shrink: 0; height: fit-content; }
+    .filter-btn { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; flex-shrink: 0; height: fit-content; position: relative; }
     .filter-btn.active-filter { background: var(--primary-gradient); color: #FFF; border-color: transparent; }
-    .filter-btn-alert { color: #DC2626; border-color: #FECACA; background: #FEF2F2; }
-    .filter-btn-alert.active-filter { background: #DC2626; color: #FFF; border-color: transparent; }
+    #filter-btn-alert.active-filter { background: #EF4444; color: #FFF; border-color: transparent; }
 
     .view-toggle { background: var(--input-bg); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 800; color: var(--text-sub); cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
     
@@ -135,7 +131,6 @@
     .style-btn { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 800; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid transparent; cursor: pointer; transition: 0.2s; }
     .style-desc-box { background: #FDF2F8; border-left: 4px solid #EC4899; padding: 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: #831843; font-weight: 700; margin-bottom: 16px; }
 
-    /* ★UPDATE: flex-shrink: 0 を追加し、パネルが潰れるのを防ぐ */
     .settings-list { background: var(--card-bg); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-md); margin-bottom: 16px; flex-shrink: 0; }
     .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-weight: 800; font-size: 14px; }
     .settings-item:last-child { border-bottom: none; }
@@ -241,7 +236,7 @@
       <div style="margin-bottom: 24px;">
         <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🚨</span> 放置アラート（呼び戻し）</h3>
         <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
-          設定した日数以上来店がないお客様には<strong>「🚨◯日放置」</strong>と赤く表示され、リストの一番上に強制移動します。また、AIが自動で「会いたい」アピールを組み込みます。
+          設定した日数以上来店がないお客様には、名前の横に<strong>「🚨◯日放置」</strong>と表示されます。また「要連絡」タブを開くと対象者が一覧表示され、AIが自動で「会いたい」アピールを組み込みます。
         </p>
       </div>
 
@@ -328,9 +323,13 @@
         
         <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
         
+        <!-- ★UPDATE: タブの並び順変更と通知バッジ追加 -->
         <div class="filter-container">
+          <div class="filter-btn" id="filter-btn-alert" onclick="setListFilter('alert')">
+            ⚠️ 要連絡
+            <div id="alertBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#EF4444; color:#FFF; font-size:10px; font-weight:800; min-width:18px; height:18px; border-radius:10px; padding:0 4px; align-items:center; justify-content:center; border:2px solid #FFF; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+          </div>
           <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
-          <div class="filter-btn filter-btn-alert" id="filter-btn-alert" onclick="setListFilter('alert')">⚠️ 要連絡</div>
           <div class="filter-btn" id="filter-btn-vip" onclick="setListFilter('vip')">💎 一軍</div>
           <div class="filter-btn" id="filter-btn-new" onclick="setListFilter('new')">🔰 新規</div>
           <div class="filter-btn" id="filter-btn-second" onclick="setListFilter('second')">✌️ 2回目</div>
@@ -382,7 +381,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">2.0.4</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">2.1.0</span></div>
         </div>
       </div>
     </main>
@@ -491,7 +490,7 @@
         vip: parseInt(document.getElementById('alert-vip').value) || 14
       };
       localStorage.setItem('alertSettings', JSON.stringify(settings));
-      if (customerData.length > 0) { renderCustomerList(); renderQuickAccess(); } 
+      if (customerData.length > 0) { renderCustomerList(); renderQuickAccess(); updateAlertBadge(); } 
     }
 
     function updateStyleUI(type) {
@@ -543,14 +542,14 @@
       if(input.value.trim() !== "") { activeTags.unshift(input.value.trim()); input.value = ""; renderChips(); const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked; localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags)); }
     }
 
-    function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); }
+    function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); updateAlertBadge(); }
 
     async function fetchCustomers() {
       try {
         const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "getCustomers", userId: userId }) });
         const data = await res.json();
         customerData = data.success ? data.customers.map(c => ({ ...c, name: String(c.name || "名前なし"), memo: String(c.memo || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : [] })) : [];
-        renderCustomerList(); renderQuickAccess();
+        renderCustomerList(); renderQuickAccess(); updateAlertBadge();
       } catch (e) { alert("データ読み込みエラー"); renderQuickAccess(); }
     }
 
@@ -590,6 +589,25 @@
       return days >= alertSettings.regular;
     }
 
+    // ★NEW: 要連絡タブの通知バッジ更新
+    function updateAlertBadge() {
+        const currentType = localStorage.getItem('businessType') || 'cabaret';
+        const targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+        
+        const alertCount = customerData.filter(c => {
+            if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
+            return isAlertCustomer(c);
+        }).length;
+
+        const badge = document.getElementById('alertBadge');
+        if (alertCount > 0) {
+            badge.style.display = 'flex';
+            badge.innerText = alertCount;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
     function setListFilter(filterType) {
       if (currentListFilter === filterType && filterType !== 'all') {
         currentListFilter = 'all'; 
@@ -621,6 +639,7 @@
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
+    // ★UPDATE: クイックアクセスから強制ソートを外す
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -631,10 +650,6 @@
       });
 
       filtered.sort((a, b) => {
-        const alertA = isAlertCustomer(a.c), alertB = isAlertCustomer(b.c);
-        if (alertA && !alertB) return -1;
-        if (!alertA && alertB) return 1;
-
         const statsA = getCustomerStats(a.c), statsB = getCustomerStats(b.c);
         if (statsA.isVip && !statsB.isVip) return -1;
         if (!statsA.isVip && statsB.isVip) return 1;
@@ -642,13 +657,11 @@
       });
 
       filtered.slice(0, 15).forEach(item => {
-        const c = item.c, index = item.index, stats = getCustomerStats(c), isAlert = isAlertCustomer(c);
+        const c = item.c, index = item.index, stats = getCustomerStats(c);
         let topBadge = '';
         if (stats.isVip) topBadge = `<div class="story-badge" style="background:#F59E0B; border-color:#FFF; color:#FFF;">👑VIP</div>`;
         else if (c.tagsArray.length > 0) topBadge = `<div class="story-badge">${c.tagsArray[0]}</div>`;
         
-        if (isAlert) topBadge += '<div style="position:absolute; top:-2px; left:-2px; width:16px; height:16px; background:#EF4444; border:2.5px solid #FFF; border-radius:50%; z-index:6; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></div>';
-
         const ringClass = stats.isVip ? "story-ring story-ring-vip" : "story-ring";
         area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
       });
@@ -656,6 +669,7 @@
 
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
+    // ★UPDATE: 強制ソート・赤枠の廃止と、要連絡タブ専用ソート
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -682,11 +696,18 @@
       });
 
       displayList.sort((a, b) => {
-        const alertA = isAlertCustomer(a), alertB = isAlertCustomer(b);
-        if (alertA && !alertB) return -1;
-        if (!alertA && alertB) return 1;
-
         const statsA = getCustomerStats(a), statsB = getCustomerStats(b);
+        
+        // 要連絡タブの時だけ、VIP > 放置日数の特別なソート
+        if (currentListFilter === 'alert') {
+            if (statsA.isVip && !statsB.isVip) return -1;
+            if (!statsA.isVip && statsB.isVip) return 1;
+            const daysA = getDaysSinceLastVisit(a.memo) || 0;
+            const daysB = getDaysSinceLastVisit(b.memo) || 0;
+            if (daysA !== daysB) return daysB - daysA; // 日数が多い順
+        }
+
+        // 通常ソート
         if (statsA.isVip && !statsB.isVip) return -1;
         if (!statsA.isVip && statsB.isVip) return 1;
         return statsB.count - statsA.count;
@@ -705,6 +726,7 @@
         
         const sysBadgeHtml = sysBadge ? `<span style="background:#F3F4F6; color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #E5E7EB; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content;">${sysBadge}</span>` : '';
         
+        // 名前横のアラートバッジは残す
         const alertBadgeHtml = isAlert ? `<span style="background:#FEE2E2; color:#B91C1C; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:900; border:1px solid #FCA5A5; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content; box-shadow:0 1px 3px rgba(185,28,28,0.2);">🚨 ${days}日放置</span>` : '';
 
         const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
@@ -712,9 +734,9 @@
         const actionIcon1 = '✏️', actionText1 = '日記作成';
         const actionIcon2 = isDummy ? '🔍' : '⚙️', actionText2 = isDummy ? '閲覧' : '編集';
         
+        // 赤枠は廃止し、VIPの金枠のみ適用
         let cardClass = "card";
         if (stats.isVip) cardClass = "card card-vip";
-        else if (isAlert) cardClass = "card card-alert";
 
         area.innerHTML += `
           <div class="${cardClass}">
