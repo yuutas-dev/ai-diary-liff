@@ -240,7 +240,6 @@
   <div id="helpModal" class="modal-overlay">
     <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
       <h2 id="help-title" style="margin: 0 0 20px; font-weight: 900; text-align: center;"></h2>
-      <!-- ★NEW: ここにJavaScriptで文言が流し込まれます -->
       <div id="help-sections-container"></div>
       <button onclick="closeHelpModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 10px;">閉じる</button>
     </div>
@@ -378,7 +377,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.5.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.6.0</span></div>
         </div>
       </div>
     </main>
@@ -395,7 +394,6 @@
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    // ★NEW: テキスト一元管理オブジェクト（config.js として外部化可能）
     const AppTexts = {
       helpModal: {
         title: "📖 アプリの使い方と仕様",
@@ -455,18 +453,12 @@
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function getTodayFormatted() { return getTodayString().replace(/-/g, '/'); }
 
-    // ★NEW: テキスト流し込み関数
     function renderTexts() {
-      // 初期設定
       document.getElementById('setup-title').innerText = AppTexts.setupModal.title;
       document.getElementById('setup-desc').innerText = AppTexts.setupModal.desc;
-      
-      // スタイル設定
       document.getElementById('text-style-cute').innerText = AppTexts.styleModal.cute;
       document.getElementById('text-style-neat').innerText = AppTexts.styleModal.neat;
       document.getElementById('text-style-custom').innerText = AppTexts.styleModal.custom;
-
-      // ヘルプ
       document.getElementById('help-title').innerText = AppTexts.helpModal.title;
       const helpContainer = document.getElementById('help-sections-container');
       helpContainer.innerHTML = AppTexts.helpModal.sections.map(sec => `
@@ -482,7 +474,7 @@
     }
 
     async function init() {
-      renderTexts(); // ★アプリ起動時にテキストをセット
+      renderTexts(); 
 
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
@@ -551,7 +543,7 @@
     }
 
     function updateStyleUI(type) {
-      const cuteLabel = document.querySelector('.btn-cute'), neatLabel = document.querySelector('.btn-neat'), cuteDesc = document.querySelector('.style-desc-cute'), neatDesc = document.querySelector('.style-desc-neat'), overviewText = document.getElementById('styleOverviewText'), customTextArea = document.getElementById('customStyleText'); 
+      const cuteLabel = document.querySelector('.btn-cute'), neatLabel = document.querySelector('.btn-neat'), overviewText = document.getElementById('styleOverviewText'), customTextArea = document.getElementById('customStyleText'); 
       if (type === 'host') { cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)"; overviewText.innerText = "オラオラ・カスタム・子犬";
       } else { cuteLabel.innerText = "かわいい"; neatLabel.innerText = "清楚"; overviewText.innerText = "かわいい・カスタム・清楚"; }
       customTextArea.placeholder = stylePlaceholders[type];
@@ -579,7 +571,14 @@
       activeTags.forEach(text => {
         const isSelected = selectedEpisodeTags.includes(text), chip = document.createElement('div');
         chip.className = 'chip' + (isSelected ? ' dimmed' : ''); chip.innerHTML = text;
-        chip.onclick = () => { if (!isSelected) { selectedEpisodeTags.push(text); activeTags = [text, ...activeTags.filter(t => t !== text)]; renderSelectedEpisodeTags(); renderChips(); const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked; localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags)); } }; 
+        chip.onclick = () => { 
+          // ★NEW: 選択時は配列の並び替え(ソート)を行わず、見た目だけ変える
+          if (!isSelected) { 
+            selectedEpisodeTags.push(text); 
+            renderSelectedEpisodeTags(); 
+            renderChips(); 
+          } 
+        }; 
         container.appendChild(chip);
       });
     }
@@ -593,7 +592,18 @@
     }
 
     function removeEpisodeTag(index) { selectedEpisodeTags.splice(index, 1); renderSelectedEpisodeTags(); renderChips(); }
-    function addCustomTag() { const input = document.getElementById('customTagInput'); if(input.value.trim() !== "") { activeTags.unshift(input.value.trim()); input.value = ""; renderChips(); const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked; localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags)); } }
+    
+    function addCustomTag() { 
+      const input = document.getElementById('customTagInput'); 
+      if(input.value.trim() !== "") { 
+        activeTags.unshift(input.value.trim()); 
+        input.value = ""; 
+        renderChips(); 
+        const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked; 
+        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags)); 
+      } 
+    }
+    
     function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); updateAlertBadge(); }
 
     async function fetchCustomers() {
@@ -865,10 +875,24 @@
     function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
     function autoScrollTextarea() { const el = document.getElementById('todayEpisodeInput'); el.scrollTop = el.scrollHeight; }
 
+    // ★NEW: ソートと保存を実行する関数を切り出し
+    function sortAndSaveTags() {
+      if (selectedEpisodeTags.length > 0) {
+        // 選ばれたタグを前に持ってくる
+        activeTags = [...selectedEpisodeTags, ...activeTags.filter(t => !selectedEpisodeTags.includes(t))];
+        const type = localStorage.getItem('businessType') || 'cabaret';
+        const isPhoto = document.getElementById('mode-photo').checked;
+        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
+      }
+    }
+
     function generateDiary() {
       const name = document.getElementById('nameInput').value, todayEpisode = document.getElementById('todayEpisodeInput').value;
       const isPhoto = document.getElementById('mode-photo').checked, type = localStorage.getItem('businessType') || 'cabaret';
       if (!isPhoto && !name) return alert("名前を入れてね");
+
+      // ★NEW: 生成ボタンを押したタイミングで、選択したタグをソートして保存する
+      sortAndSaveTags();
 
       const snackbar = document.getElementById('snackbar');
       document.getElementById('snackbar-text').innerText = "🚀 AIが裏で執筆中...";
