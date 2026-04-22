@@ -102,8 +102,8 @@
     .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
     .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: #FFF; transition: 0.2s; }
 
-    .past-memo-box { background: var(--input-bg); border-radius: 14px; padding: 14px; font-size: 13px; color: var(--text-main); margin-bottom: 12px; max-height: 120px; overflow-y: auto; line-height: 1.6; }
-    #pastMemoDisplay { white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
+    .past-memo-box { background: var(--input-bg); border-radius: 14px; padding: 14px; font-size: 13px; color: var(--text-main); margin-bottom: 12px; max-height: 140px; overflow-y: auto; line-height: 1.6; }
+    #pastMemoDisplay { margin-top: 4px; }
     .past-memo-label { font-size: 11px; font-weight: 800; color: var(--text-sub); margin-bottom: 6px; display: block; }
 
     .submit-area { background: linear-gradient(to bottom, rgba(249,250,251,0), var(--bg-color) 30%); padding: 30px 16px 16px; pointer-events: auto; }
@@ -211,7 +211,7 @@
         </div>
       </div>
 
-      <span class="label">📝 接客メモ（エピソード履歴）</span>
+      <span class="label">📝 接客メモ（JSON構造管理）</span>
       <div class="memo-blocks-wrapper"><div id="editMemoBlocksArea"></div></div>
       <div class="add-memo-btn" id="addMemoBtn" onclick="addMemoBlock()">＋ 日付とエピソードを追加</div>
       
@@ -229,14 +229,21 @@
       <div style="margin-bottom: 24px;">
         <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>👑</span> 自動ランク付け</h3>
         <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
-          過去の接客メモの数をシステムが自動でカウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。
+          過去の接客エピソード数をシステムが自動カウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。
         </p>
       </div>
 
       <div style="margin-bottom: 24px;">
         <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🚨</span> 放置アラート（呼び戻し）</h3>
         <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
-          設定した日数以上来店がないお客様には、名前の横に<strong>「🚨◯日放置」</strong>と表示されます。また「要連絡」タブを開くと対象者が一覧表示され、AIが自動で「会いたい」アピールを組み込みます。
+          設定日数以上来店がないお客様には、名前横に<strong>「🚨◯日放置」</strong>と表示されます。「要連絡」タブを開くと対象者が優先表示され、AIが自動で「会いたい」感情タグを組み込みます。
+        </p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🧠</span> AIの感情タグ自動除外</h3>
+        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+          「寂しい」「会いたい」などの感情タグは、保存された後、<strong>次回のAI生成時には裏側で自動的に除外</strong>されます。これにより、過去の感情にAIが引っ張られて文章が重くなる（コンテキスト汚染）のを防ぎます。
         </p>
       </div>
 
@@ -299,7 +306,7 @@
             <div class="tags-scroll-container" id="attributeTagsArea"></div>
           </div>
           <div class="past-memo-box">
-            <span class="past-memo-label">📖 過去のメモ</span>
+            <span class="past-memo-label">📖 過去のメモ (事実とタグ)</span>
             <div id="pastMemoDisplay">(顧客を選択するか、過去の記録がありません)</div>
           </div>
           <div id="selectedEpisodeTags" class="selected-tags-box"></div>
@@ -323,7 +330,6 @@
         
         <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
         
-        <!-- ★UPDATE: タブの並び順変更と通知バッジ追加 -->
         <div class="filter-container">
           <div class="filter-btn" id="filter-btn-alert" onclick="setListFilter('alert')">
             ⚠️ 要連絡
@@ -381,7 +387,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">2.1.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.0.0 (JSON)</span></div>
         </div>
       </div>
     </main>
@@ -411,6 +417,13 @@
     let myCustomAttrs = []; 
     let currentListFilter = 'all'; 
     let isCompactMode = false;
+
+    // ★NEW: 感情・気分を表すタグのブラックリスト（LLMへの指示からコッソリ除外するもの）
+    const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
+
+    function isEmotionTag(tag) {
+      return EMOTION_TAG_KEYWORDS.some(keyword => tag.includes(keyword));
+    }
 
     const stylePlaceholders = {
       cabaret: "（例）昨日はお店来てくれて本当にありがとう🥺✨\n久しぶりに〇〇くんの顔見れて、めちゃくちゃ楽しかったよ💗\nお仕事忙しいのに時間作ってくれて嬉しかったな🥂\nまたお仕事落ち着いたら顔見せに来てね！待ってるね💕",
@@ -553,21 +566,33 @@
       } catch (e) { alert("データ読み込みエラー"); renderQuickAccess(); }
     }
 
+    // ★NEW: メモをJSON形式として安全にパースする
+    function parseMemoToJSON(memoStr) {
+      if (!memoStr) return [];
+      try {
+        const parsed = JSON.parse(memoStr);
+        if (Array.isArray(parsed)) return parsed;
+        return [];
+      } catch (e) {
+        return []; // 平文などの古い形式は無視して空配列を返す
+      }
+    }
+
     function getCustomerStats(c) {
-      const blocks = parseMemoToBlocks(c.memo);
-      const count = blocks.length === 0 ? 1 : blocks.length; 
+      const memos = parseMemoToJSON(c.memo);
+      const count = memos.length === 0 ? 1 : memos.length; 
       const vipKeywords = ['太客', 'エース', '一軍', 'VIP', '金持ち', '良客', '常連']; 
       const isVip = c.tagsArray.some(tag => vipKeywords.includes(tag));
       return { count, isVip };
     }
 
     function getDaysSinceLastVisit(memoStr) {
-      const blocks = parseMemoToBlocks(memoStr);
-      if (blocks.length === 0) return null;
+      const memos = parseMemoToJSON(memoStr);
+      if (memos.length === 0) return null;
       let latestTime = 0;
-      blocks.forEach(b => {
-          if(b.date) {
-              const d = new Date(b.date.replace(/-/g, '/'));
+      memos.forEach(m => {
+          if(m.date) {
+              const d = new Date(m.date.replace(/-/g, '/'));
               if(!isNaN(d) && d.getTime() > latestTime) latestTime = d.getTime();
           }
       });
@@ -589,7 +614,6 @@
       return days >= alertSettings.regular;
     }
 
-    // ★NEW: 要連絡タブの通知バッジ更新
     function updateAlertBadge() {
         const currentType = localStorage.getItem('businessType') || 'cabaret';
         const targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
@@ -639,7 +663,6 @@
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
-    // ★UPDATE: クイックアクセスから強制ソートを外す
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -669,7 +692,6 @@
 
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
-    // ★UPDATE: 強制ソート・赤枠の廃止と、要連絡タブ専用ソート
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -680,8 +702,10 @@
         if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
         
         const matchName = String(c.name).toLowerCase().includes(lowerFilter);
-        const matchMemo = String(c.memo).toLowerCase().includes(lowerFilter);
+        const memos = parseMemoToJSON(c.memo);
+        const matchMemo = memos.some(m => String(m.text).toLowerCase().includes(lowerFilter) || (m.tags && m.tags.some(t => t.toLowerCase().includes(lowerFilter))));
         const matchTags = c.tagsArray.some(t => t.toLowerCase().includes(lowerFilter));
+        
         if (filterText && !matchName && !matchMemo && !matchTags) return false;
         
         const stats = getCustomerStats(c);
@@ -698,16 +722,14 @@
       displayList.sort((a, b) => {
         const statsA = getCustomerStats(a), statsB = getCustomerStats(b);
         
-        // 要連絡タブの時だけ、VIP > 放置日数の特別なソート
         if (currentListFilter === 'alert') {
             if (statsA.isVip && !statsB.isVip) return -1;
             if (!statsA.isVip && statsB.isVip) return 1;
             const daysA = getDaysSinceLastVisit(a.memo) || 0;
             const daysB = getDaysSinceLastVisit(b.memo) || 0;
-            if (daysA !== daysB) return daysB - daysA; // 日数が多い順
+            if (daysA !== daysB) return daysB - daysA; 
         }
 
-        // 通常ソート
         if (statsA.isVip && !statsB.isVip) return -1;
         if (!statsA.isVip && statsB.isVip) return 1;
         return statsB.count - statsA.count;
@@ -726,7 +748,6 @@
         
         const sysBadgeHtml = sysBadge ? `<span style="background:#F3F4F6; color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #E5E7EB; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content;">${sysBadge}</span>` : '';
         
-        // 名前横のアラートバッジは残す
         const alertBadgeHtml = isAlert ? `<span style="background:#FEE2E2; color:#B91C1C; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:900; border:1px solid #FCA5A5; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content; box-shadow:0 1px 3px rgba(185,28,28,0.2);">🚨 ${days}日放置</span>` : '';
 
         const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
@@ -734,9 +755,16 @@
         const actionIcon1 = '✏️', actionText1 = '日記作成';
         const actionIcon2 = isDummy ? '🔍' : '⚙️', actionText2 = isDummy ? '閲覧' : '編集';
         
-        // 赤枠は廃止し、VIPの金枠のみ適用
         let cardClass = "card";
         if (stats.isVip) cardClass = "card card-vip";
+
+        // メモプレビューの生成
+        const memos = parseMemoToJSON(c.memo);
+        let previewMemo = "メモなし";
+        if (memos.length > 0) {
+           const lastM = memos[memos.length - 1];
+           previewMemo = lastM.text ? lastM.text.substring(0,40) + "..." : (lastM.tags && lastM.tags.length > 0 ? lastM.tags.join(', ') : "メモなし");
+        }
 
         area.innerHTML += `
           <div class="${cardClass}">
@@ -746,7 +774,7 @@
                   ${alertBadgeHtml}${sysBadgeHtml}
                   <b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b>
                 </div>
-                <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${c.memo ? c.memo.substring(0,40)+"..." : "メモなし"}</small>
+                <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${previewMemo}</small>
                 <div class="card-tags" style="margin-top:6px;">${tagHtml}</div>
               </div>
               <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
@@ -766,7 +794,25 @@
       const c = customerData[index], nameInput = document.getElementById('nameInput');
       if (nameInput.value === c.name) { resetInputForm(); return; }
       document.getElementById('nav-create').checked = true; nameInput.value = c.name;
-      document.getElementById('pastMemoDisplay').innerText = c.memo || "(過去の記録はありません)"; document.getElementById('todayEpisodeInput').value = "";
+      
+      // ★NEW: 過去メモをJSONから綺麗なUIへレンダリング
+      const memos = parseMemoToJSON(c.memo);
+      let pastMemoHtml = '';
+      if (memos.length === 0) {
+          pastMemoHtml = '(過去の記録はありません)';
+      } else {
+          memos.forEach(m => {
+              let tagsHtml = m.tags && m.tags.length > 0 ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">` + m.tags.map(t => `<span style="background:#F3F4F6; color:#4B5563; font-size:10px; padding:3px 8px; border-radius:12px; font-weight:800;">${t}</span>`).join('') + `</div>` : '';
+              pastMemoHtml += `<div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border-color);">
+                          <div style="font-size:11px; color:var(--active-color); font-weight:800; margin-bottom:4px;">${m.date}</div>
+                          <div style="font-size:13px;">${m.text}</div>
+                          ${tagsHtml}
+                       </div>`;
+          });
+      }
+      document.getElementById('pastMemoDisplay').innerHTML = pastMemoHtml;
+      
+      document.getElementById('todayEpisodeInput').value = "";
       currentCustomerTags = c.tagsArray; renderAttributeTags(); 
       selectedEpisodeTags = []; 
       
@@ -783,7 +829,7 @@
     }
 
     function resetInputForm() {
-      document.getElementById('nameInput').value = ""; document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)";
+      document.getElementById('nameInput').value = ""; document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
       document.getElementById('todayEpisodeInput').value = ""; currentCustomerTags = []; renderAttributeTags(); selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips();
       currentBase64Image = null; document.getElementById('photoPreview').style.display = 'none'; document.getElementById('uploadText').style.display = 'block';
     }
@@ -797,7 +843,12 @@
     function suggestCustomer() {
       const text = document.getElementById('nameInput').value, area = document.getElementById('resultArea'); area.innerHTML = "";
       const matchedCustomer = customerData.find(c => c.name === text);
-      if (!matchedCustomer) { document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; currentCustomerTags = []; renderAttributeTags(); } else { document.getElementById('pastMemoDisplay').innerText = matchedCustomer.memo || "(過去の記録はありません)"; currentCustomerTags = matchedCustomer.tagsArray; renderAttributeTags(); }
+      if (!matchedCustomer) { document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; currentCustomerTags = []; renderAttributeTags(); } 
+      else { 
+        // 検索からの自動選択時もJSONレンダリングを行う
+        const cIndex = customerData.indexOf(matchedCustomer);
+        selectCustomerByIndex(cIndex);
+      }
       if (!text) { area.style.display = "none"; return; }
       let matchCount = 0;
       customerData.forEach((c, index) => {
@@ -805,31 +856,30 @@
       }); area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    function parseMemoToBlocks(memoStr) {
-      if (!memoStr) return [];
-      return memoStr.split(/\n?---\n?/).map(block => {
-        const match = block.trim().match(/^(\d{4}\/\d{2}\/\d{2}):\s*([\s\S]*)$/);
-        if (match) return { date: match[1].replace(/\//g, '-'), text: match[2].trim() };
-        return { date: '', text: block.trim() };
-      }).filter(b => b.text || b.date);
-    }
-
-    function buildMemoFromBlocks() {
-      const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block'));
-      return blocks.map(block => {
-        const d = block.querySelector('.memo-date').value.replace(/-/g, '/'), t = block.querySelector('.memo-text').value.trim();
-        if(!t && !d) return null; return d ? `${d}: ${t}` : t;
-      }).filter(text => text).join('\n---\n');
-    }
-
-    function addMemoBlock(date = getTodayString(), text = "") {
+    // ★NEW: 編集モーダル用のブロック生成（タグの編集フィールドを追加）
+    function addMemoBlock(date = getTodayString(), text = "", tags = []) {
       const area = document.getElementById('editMemoBlocksArea');
       const div = document.createElement('div'); div.className = 'memo-block';
       const readOnlyAttr = isDemoMode ? 'readonly' : '', disabledAttr = isDemoMode ? 'disabled' : '';
       div.innerHTML = `<input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr}>
-                       <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>`;
+                       <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>
+                       <input type="text" class="memo-tags-input" placeholder="エピソードタグ (カンマ区切りで入力)" value="${tags.join(', ')}" style="width:100%; border:none; background:transparent; font-size:12px; color:var(--active-color); font-weight:bold; margin-top:8px; outline:none;" ${readOnlyAttr}>`;
       area.appendChild(div); updateDimmedBlocks();
       setTimeout(() => { if(text) { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; } area.scrollTop = area.scrollHeight; }, 50);
+    }
+
+    // ★NEW: ブロックからJSON文字列を生成
+    function buildMemoFromBlocks() {
+      const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block'));
+      const memos = blocks.map(block => {
+        const d = block.querySelector('.memo-date').value.replace(/-/g, '/');
+        const t = block.querySelector('.memo-text').value.trim();
+        const tagsStr = block.querySelector('.memo-tags-input').value;
+        const tags = tagsStr.split(',').map(tag => tag.trim()).filter(tag => tag);
+        if(!t && !d && tags.length === 0) return null;
+        return { date: d, text: t, tags: tags };
+      }).filter(m => m !== null);
+      return JSON.stringify(memos);
     }
 
     function updateDimmedBlocks() {
@@ -857,7 +907,12 @@
       document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
       tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
       const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
-      const blocks = parseMemoToBlocks(c.memo); if(blocks.length === 0) addMemoBlock(); else blocks.forEach(b => addMemoBlock(b.date, b.text));
+      
+      // ★NEW: JSONからブロックを生成
+      const memos = parseMemoToJSON(c.memo); 
+      if(memos.length === 0) addMemoBlock(); 
+      else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || []));
+      
       document.getElementById('editCustomerModal').style.display = 'flex'; setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
     }
 
@@ -902,7 +957,7 @@
 
     function generateDiary() {
       const name = document.getElementById('nameInput').value, todayEpisode = document.getElementById('todayEpisodeInput').value;
-      const pastMemoText = document.getElementById('pastMemoDisplay').innerText, isPhoto = document.getElementById('mode-photo').checked, type = localStorage.getItem('businessType') || 'cabaret';
+      const isPhoto = document.getElementById('mode-photo').checked, type = localStorage.getItem('businessType') || 'cabaret';
       if (!isPhoto && !name) return alert("名前を入れてね");
 
       const overlay = document.getElementById('loadingOverlay'), msg = document.getElementById('loadingMessage'), closeBtn = document.getElementById('loadingCloseBtn'), spinner = document.getElementById('loadingSpinner');
@@ -923,20 +978,35 @@
         return !forbiddenTags.some(forbidden => tag.includes(forbidden));
       });
 
-      let actualPastMemo = (pastMemoText === "(顧客を選択するか、過去の記録がありません)" || pastMemoText === "(過去の記録はありません)") ? "" : pastMemoText;
-      let newCombinedMemo = actualPastMemo;
+      // ★NEW: 過去のメモをLLM用にサニタイズ（感情タグを除外して文字列化）
+      const memos = parseMemoToJSON(targetCustomer ? targetCustomer.memo : "");
+      const filteredMemosStr = memos.map(m => {
+          const filteredTags = (m.tags || []).filter(tag => !isEmotionTag(tag));
+          const tagsStr = filteredTags.length > 0 ? `(タグ: ${filteredTags.join(', ')})` : '';
+          return `${m.date}: ${m.text} ${tagsStr}`.trim();
+      }).join('\n---\n');
+
+      // ★NEW: 今日のエピソードをJSONに追加して保存用の文字列を生成
+      let newCombinedMemo = "";
       if (todayEpisode || selectedEpisodeTags.length > 0) {
-        let tagsStr = selectedEpisodeTags.length > 0 ? '(' + selectedEpisodeTags.join(',') + ')' : '';
-        let todayText = `${getTodayFormatted()}: ${todayEpisode} ${tagsStr}`.trim();
-        newCombinedMemo = actualPastMemo ? actualPastMemo + "\n---\n" + todayText : todayText;
+          const newEpisodeObj = {
+              date: getTodayFormatted(),
+              text: todayEpisode,
+              tags: [...selectedEpisodeTags]
+          };
+          memos.push(newEpisodeObj);
       }
+      newCombinedMemo = JSON.stringify(memos);
 
       const payload = { 
-        action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, 
+        action: "generate", userId: userId, name: name, episode: todayEpisode, 
+        pastMemo: filteredMemosStr, // 感情抜きでLLMに送信
+        combinedMemoToSave: newCombinedMemo, // JSONとしてシートに保存
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, 
         customerTags: cleanedCustomerTags.join(', '), 
         customerRank: customerRank, 
-        episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" 
+        episodeTags: selectedEpisodeTags.join(', '), // 今日の感情はLLMに伝える
+        image: currentBase64Image, mode: isPhoto ? "photo" : "text" 
       };
       
       resetInputForm();
