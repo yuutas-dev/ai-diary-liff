@@ -136,7 +136,6 @@
     .textarea-wrapper { position: relative; }
     textarea.input-field { height: 90px; resize: none; padding-right: 80px; line-height: 1.5; }
     
-    /* ★NEW: クリアボタン用のCSSに変更（マイクボタンのスタイルをベースに調整） */
     .clear-btn { position: absolute; bottom: 12px; right: 12px; background: rgba(255,255,255,0.9); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: 800; cursor: pointer; color: var(--text-sub); display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); transition: 0.2s; }
     .clear-btn:active { transform: scale(0.95); }
 
@@ -167,7 +166,7 @@
   <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
   <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
   <input type="radio" name="style" id="style-cute" class="ui-state" checked onchange="saveStyleSettings()">
-  <input type="radio" name="style" id="style-custom" class="ui-state" checked onchange="saveStyleSettings()">
+  <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
   <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
 
   <!-- 初期設定モーダル -->
@@ -295,7 +294,6 @@
         </div>
 
         <div class="card">
-          <!-- ★NEW: クリアボタンの配置変更・シンプル化 -->
           <span class="label">📝 エピソード作成</span>
 
           <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 12px;">
@@ -309,7 +307,6 @@
           
           <div class="textarea-wrapper">
             <textarea id="todayEpisodeInput" class="input-field" placeholder="今日の出来事や特記事項を入力..." oninput="autoScrollTextarea()"></textarea>
-            <!-- ★NEW: マイクボタンがあった位置にクリアボタンを配置 -->
             <div class="clear-btn" onclick="clearEpisodeInput()">🧹 クリア</div>
           </div>
           
@@ -350,6 +347,11 @@
 
       <div class="page page-settings">
         <h2 style="margin:0 0 16px; font-weight:900;">設定・情報</h2>
+
+        <!-- ✂️ ここから移行用（終わったら削除してOK） ✂️ -->
+        <button onclick="migrateDataFromGAS()" style="width:100%; background:#10B981; color:#FFF; border:none; padding:16px; border-radius:16px; font-weight:800; margin-bottom:16px;">🚚 スプレッドシートからデータを移行する</button>
+        <!-- ✂️ ここまで ✂️ -->
+
         <div class="settings-list">
           <div class="settings-item" onclick="openStyleModal()"><span>🎨 AIスタイル・口調設定</span><span class="settings-val" id="styleOverviewText">かわいい・清楚・カスタム</span></div>
           <div class="settings-item">
@@ -386,7 +388,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.8.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.8.1</span></div>
         </div>
       </div>
     </main>
@@ -436,7 +438,7 @@
     };
 
     const LIFF_ID = "2009843865-hghVLuaS";
-    const GAS_URL = "/api";
+    const GAS_URL = "/api"; // Vercel APIに向けたパス
 
     let userId = "test-user";
     let customerData = [];
@@ -484,11 +486,7 @@
 
     async function init() {
       renderTexts(); 
-      document.querySelectorAll('input[name="nav"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-          document.querySelector('.scroll-area').scrollTop = 0;
-        });
-      });
+
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
@@ -501,6 +499,13 @@
             if (container && allTab) { container.scrollTo({ left: allTab.offsetLeft - 20, behavior: 'smooth' }); isFilterScrolled = true; }
           }, 50);
         }
+      });
+
+      // タブ切り替え時のスクロールリセット
+      document.querySelectorAll('input[name="nav"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          document.querySelector('.scroll-area').scrollTop = 0;
+        });
       });
 
       try { await liff.init({ liffId: LIFF_ID }); if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; } catch (e) {}
@@ -616,14 +621,13 @@
       } 
     }
 
-    // ★NEW: テキストとタグのみをクリアする関数に変更
     function clearEpisodeInput() {
       if (document.getElementById('todayEpisodeInput').value || selectedEpisodeTags.length > 0) {
         if (!confirm("入力中のエピソードとタグをクリアしますか？")) return;
       }
       document.getElementById('todayEpisodeInput').value = "";
       selectedEpisodeTags = [];
-      updateChips(); // activeTagsをストレージ状態に戻す
+      updateChips();
       renderSelectedEpisodeTags();
     }
     
@@ -992,6 +996,65 @@
            submitBtn.innerText = "✨ AIで作成する";
         });
     }
+
+    /* ✂️ ここから移行用（終わったら削除してOK） ✂️ */
+    async function migrateDataFromGAS() {
+      const confirmMove = confirm("スプレッドシートのデータを読み込んで、新しいデータベースにコピーしますか？");
+      if (!confirmMove) return;
+
+      const btn = document.querySelector('button[onclick="migrateDataFromGAS()"]');
+      btn.innerText = "🚚 移行中...（画面を閉じないでください）";
+      btn.disabled = true;
+
+      try {
+        const OLD_GAS_URL = "https://script.google.com/macros/s/AKfycbyWcx1XN8MuLsscHjoi9DdItYm7jCsMdZvNgrohG0o51KlTEheIXVdrHbSmGeSS2FV2/exec";
+        const res = await fetch(OLD_GAS_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain" }, 
+          body: JSON.stringify({ action: "getCustomers", userId: userId }) 
+        });
+        const data = await res.json();
+
+        if (!data.success || !data.customers) {
+          throw new Error("旧データの取得に失敗しました");
+        }
+
+        const oldCustomers = data.customers;
+        let successCount = 0;
+
+        for (const c of oldCustomers) {
+          const payload = {
+            action: "createCustomer",
+            userId: userId,
+            newName: String(c.name || "名前なし"),
+            newTags: c.tags ? String(c.tags) : "",
+            newMemo: c.memo ? String(c.memo) : "[]"
+          };
+
+          const saveRes = await fetch("/api", {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payload)
+          });
+          
+          const saveData = await saveRes.json();
+          if (saveData.success) successCount++;
+        }
+
+        alert(`✨ 移行完了！\n${oldCustomers.length}件中、${successCount}件の顧客データを新しいデータベースにコピーしました！`);
+        
+        fetchCustomers();
+        btn.innerText = "✅ 移行完了しました";
+
+      } catch (err) {
+        console.error(err);
+        alert("エラーが発生しました: " + err.message);
+        btn.innerText = "❌ エラーが発生しました";
+        btn.disabled = false;
+      }
+    }
+    /* ✂️ ここまで ✂️ */
+
   </script>
 </body>
 </html>
