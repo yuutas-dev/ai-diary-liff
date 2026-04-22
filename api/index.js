@@ -9,15 +9,22 @@ export default async function handler(req, res) {
     const action = data.action;
     const userId = data.userId || "test-user";
 
-    // Supabaseの接続準備
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    // Vercelの金庫から鍵を取り出す
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("【致命的エラー】Vercelの環境変数が読み込めていません！(SUPABASE_URL または SUPABASE_SERVICE_ROLE_KEY が空です)");
+    }
+
+    // Supabaseの接続準備（強力なマスターキーを使用）
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // 1. 顧客リスト取得
     if (action === 'getCustomers') {
       const { data: rows, error } = await supabase.from('customers').select('*');
-      if (error) throw error;
+      if (error) throw new Error("Supabase取得エラー: " + error.message);
       
-      // 自分のデータ or ダミーデータだけを抽出
       const customers = rows.filter(r => r.user_id === userId || (r.tags && r.tags.includes('ダミー'))).map(r => ({
         name: r.name,
         memo: typeof r.memo === 'string' ? r.memo : JSON.stringify(r.memo || []),
@@ -30,7 +37,16 @@ export default async function handler(req, res) {
     if (action === 'createCustomer') {
       const tagsArray = data.newTags ? data.newTags.split(',').map(t => t.trim()) : [];
       const memoJson = data.newMemo ? JSON.parse(data.newMemo) : [];
-      await supabase.from('customers').insert({ user_id: userId, name: data.newName, memo: memoJson, tags: tagsArray });
+      
+      // ★ エラーをしっかり検知する
+      const { error } = await supabase.from('customers').insert({ 
+        user_id: userId, 
+        name: data.newName, 
+        memo: memoJson, 
+        tags: tagsArray 
+      });
+      
+      if (error) throw new Error("Supabase保存エラー: " + error.message);
       return res.status(200).json({ success: true });
     }
 
@@ -38,10 +54,13 @@ export default async function handler(req, res) {
     if (action === 'updateCustomer') {
       const tagsArray = data.newTags ? data.newTags.split(',').map(t => t.trim()) : [];
       const memoJson = data.newMemo ? JSON.parse(data.newMemo) : [];
-      await supabase.from('customers')
+      
+      const { error } = await supabase.from('customers')
         .update({ name: data.newName, memo: memoJson, tags: tagsArray, updated_at: new Date() })
         .eq('user_id', userId)
         .eq('name', data.oldName);
+        
+      if (error) throw new Error("Supabase更新エラー: " + error.message);
       return res.status(200).json({ success: true });
     }
 
@@ -50,15 +69,16 @@ export default async function handler(req, res) {
       // 接客メモの更新
       if (data.combinedMemoToSave) {
         const memoJson = JSON.parse(data.combinedMemoToSave);
-        await supabase.from('customers')
+        const { error } = await supabase.from('customers')
           .update({ memo: memoJson, updated_at: new Date() })
           .eq('user_id', userId)
           .eq('name', data.name);
+        
+        if (error) throw new Error("Supabaseメモ更新エラー: " + error.message);
       }
 
-      // テスト環境の場合はスキップ
       if (userId === "test-user") {
-        return res.status(200).json({ success: true, generatedText: "※テスト環境のためAI生成はスキップされました。\nエピソード: " + data.episode });
+        return res.status(200).json({ success: true, generatedText: "※テスト環境のためAI生成はスキップされました。\n\n【送ろうとしたエピソード】\n" + data.episode });
       }
 
       // 写真がある場合はDifyへアップロード
@@ -119,7 +139,8 @@ export default async function handler(req, res) {
     }
 
   } catch (err) {
-    console.error(err);
+    console.error("バックエンド処理エラー:", err);
+    // 失敗した場合は確実に 500 エラーを返す
     return res.status(500).json({ success: false, error: err.message });
   }
 }
