@@ -1,145 +1,1060 @@
-import { createClient } from '@supabase/supabase-js';
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AIお礼日記メーカー</title>
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #A855F7, #EC4899);
+      --bg-color: #F9FAFB; --card-bg: #FFFFFF; --text-main: #1F2937; --text-sub: #6B7280;
+      --input-bg: #F3F4F6; --border-color: #E5E7EB; --active-color: #D946EF;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.03); --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif; -webkit-tap-highlight-color: transparent; }
+    input[type="radio"].ui-state { display: none; }
 
-export default async function handler(req, res) {
-  // POSTリクエスト以外は弾く
-  if (req.method !== 'POST') return res.status(200).send('OK');
+    .page { display: none; flex-direction: column; padding-bottom: 20px; position: relative; min-height: 100%; }
+    #nav-create:checked ~ .app-container .page-create { display: flex; }
+    #nav-data:checked ~ .app-container .page-data { display: flex; }
+    #nav-settings:checked ~ .app-container .page-settings { display: flex; }
+    #nav-create:checked ~ .app-container .tab-create, #nav-data:checked ~ .app-container .tab-data, #nav-settings:checked ~ .app-container .tab-settings { color: var(--active-color); }
+    #nav-create:not(:checked) ~ .app-container .header-toggle, #nav-create:not(:checked) ~ .app-container .submit-area { display: none; }
 
-  try {
-    const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const action = data.action;
-    const userId = data.userId || "test-user";
+    .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
+    .header-area { padding: env(safe-area-inset-top, 20px) 16px 10px; background: rgba(249, 250, 251, 0.85); backdrop-filter: blur(12px); z-index: 100; flex-shrink: 0; }
+    .app-title { text-align: center; font-size: 20px; font-weight: 800; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; letter-spacing: 0.5px; }
+    .toggle-container { display: flex; background: var(--input-bg); border-radius: 40px; padding: 4px; }
+    .toggle-label { flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 700; color: var(--text-sub); border-radius: 34px; transition: 0.3s; cursor: pointer; }
+    .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 160px); }
+    
+    .mode-photo-ui { display: none; }
+    #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
+    #mode-photo:checked ~ .app-container .toggle-photo, #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
+    
+    #mode-photo:checked ~ .app-container .card-customer-select { opacity: 0.4; pointer-events: none; filter: grayscale(80%); }
 
-    // ★NEW: コピペ時の「見えない空白・改行」を強制削除（.trim()）する
-    // さらに、環境変数が空だった場合は教えてもらったURLを直接使う！
-    const supabaseUrl = (process.env.SUPABASE_URL || "https://fdlfwtlzphntfontwcfa.supabase.co").trim();
-    const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+    .style-content-wrapper { min-height: 310px; position: relative; }
+    .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; animation: fadeInTab 0.3s ease-out forwards; }
+    #style-cute:checked ~ .modal-overlay .style-desc-cute, #style-custom:checked ~ .modal-overlay .style-desc-custom, #style-neat:checked ~ .modal-overlay .style-desc-neat { display: block; }
+    #style-cute:checked ~ .modal-overlay .btn-cute, #style-custom:checked ~ .modal-overlay .btn-custom, #style-neat:checked ~ .modal-overlay .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
+    @keyframes fadeInTab { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    // ログ調査用（裏側にだけ出力されます）
-    console.log("👀 接続チェック URL: [" + supabaseUrl + "]");
-    console.log("👀 接続チェック 鍵の文字数: " + supabaseKey.length);
+    .card { background: var(--card-bg); border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-md); border: 2px solid transparent; transition: 0.3s; flex-shrink: 0; }
+    .card-vip { border: 2px solid #FCD34D; background: linear-gradient(to right, #FFF, #FEF3C7); }
+    .label { font-weight: 800; font-size: 14px; margin-bottom: 10px; display: block; color: var(--text-main); }
+    .input-field { width: 100%; background: var(--input-bg); border: 1.5px solid transparent; border-radius: 14px; padding: 14px; font-size: 15px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
+    .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; box-shadow: 0 0 0 3px rgba(244,114,182,0.1); }
+    ::placeholder { color: #9CA3AF; }
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("【致命的エラー】Vercelの環境変数が読み込めていません！(URLまたは鍵が空です)");
+    .story-ring-vip { background: linear-gradient(135deg, #F59E0B, #FBBF24) !important; }
+    
+    .filter-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px 0; margin-bottom: 12px; scrollbar-width: none; flex-shrink: 0; min-height: 48px; align-items: center; scroll-behavior: smooth; }
+    .filter-container::-webkit-scrollbar { display: none; }
+    .filter-btn { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; flex-shrink: 0; height: fit-content; position: relative; }
+    .filter-btn.active-filter { background: var(--primary-gradient); color: #FFF; border-color: transparent; }
+    #filter-btn-alert.active-filter { background: #EF4444; color: #FFF; border-color: transparent; }
+
+    .view-toggle { background: var(--input-bg); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 800; color: var(--text-sub); cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
+    
+    .compact-view .card { padding: 12px 14px; margin-bottom: 10px; }
+    .compact-view .card-inner { align-items: center !important; }
+    .compact-view .card-memo { display: none !important; }
+    .compact-view .card-tags { margin-top: 6px; }
+    .compact-view .card-actions { flex-direction: row !important; gap: 8px !important; }
+    .compact-view .action-btn { width: 36px; height: 36px; padding: 0 !important; border-radius: 50% !important; }
+    .compact-view .action-icon { font-size: 16px !important; }
+    .compact-view .action-text { display: none !important; }
+
+    .skeleton { background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
+    .fade-scroll-wrapper::after { content: ""; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(to right, transparent, var(--card-bg)); pointer-events: none; }
+    .stories-scroll { display: flex; gap: 14px; overflow-x: auto; padding: 6px 40px 10px 0; scrollbar-width: none; }
+    .stories-scroll::-webkit-scrollbar { display: none; }
+    .story-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; width: 62px; position: relative; }
+    .story-ring { width: 62px; height: 62px; border-radius: 50%; background: var(--primary-gradient); padding: 2.5px; position: relative; }
+    .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: var(--active-color); border: 2px solid #FFF; }
+    .story-name { font-size: 11px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
+    .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 1.5px solid #FFF; z-index: 5; }
+
+    .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 24px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
+    .selected-chip { background: var(--primary-gradient); color: #FFF; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 4px; animation: pop 0.2s ease-out; }
+    @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .episode-tags-container { display: flex; flex-wrap: wrap; gap: 8px; max-height: 180px; overflow-y: auto; padding: 4px 0; align-content: flex-start; margin-top: 12px; }
+    .chip { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-main); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+    .chip.dimmed { opacity: 0.4; background: var(--input-bg); border-color: transparent; pointer-events: none; }
+    .attr-chip { background: #FDF2F8; border: 1px solid #FBCFE8; color: #DB2777; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+    .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 0 40px 6px 0; scrollbar-width: none; align-items: center; }
+    .tags-scroll-container::-webkit-scrollbar { display: none; }
+
+    .accordion-header { background: #FDF2F8; color: #DB2777; padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 12px; }
+    .accordion-content { display: none; margin-bottom: 16px; animation: fadeInTab 0.2s ease-out forwards; }
+    .accordion-content.open { display: block; }
+
+    .memo-blocks-wrapper { position: relative; margin-bottom: 8px; }
+    .memo-blocks-wrapper::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 24px; background: linear-gradient(to bottom, #FFF, transparent); z-index: 10; pointer-events: none; border-radius: 12px; }
+    #editMemoBlocksArea { max-height: 300px; overflow-y: auto; padding-top: 12px; scrollbar-width: thin; scroll-behavior: smooth; }
+    .memo-block { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 12px; margin-bottom: 10px; position: relative; transition: 0.3s; }
+    .memo-block.dimmed { opacity: 0.5; background: #FFF; border-color: transparent; }
+    .memo-block.dimmed:focus-within { opacity: 1; background: var(--bg-color); border: 1px solid #F472B6; }
+    .memo-date { font-weight: 800; color: var(--active-color); border: none; background: transparent; font-size: 12px; margin-bottom: 4px; outline: none; font-family: inherit; width: 100%; }
+    .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
+    
+    .memo-tag-dropdown { animation: fadeInTab 0.2s ease-out; }
+
+    .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: #FFF; transition: 0.2s; }
+
+    .past-memo-box { background: var(--input-bg); border-radius: 14px; padding: 14px; font-size: 13px; color: var(--text-main); margin-bottom: 12px; max-height: 140px; overflow-y: auto; line-height: 1.6; }
+    #pastMemoDisplay { margin-top: 4px; }
+    .past-memo-label { font-size: 11px; font-weight: 800; color: var(--text-sub); margin-bottom: 6px; display: block; }
+
+    .submit-area { background: linear-gradient(to bottom, rgba(249,250,251,0), var(--bg-color) 30%); padding: 30px 16px 16px; pointer-events: auto; }
+    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 35px; box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); cursor: pointer; transition: 0.3s; }
+    .submit-btn:disabled { background: #9CA3AF; box-shadow: none; cursor: not-allowed; }
+
+    .bottom-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid var(--border-color); pointer-events: auto; z-index: 500; position: relative; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #9CA3AF; font-size: 10px; font-weight: 800; gap: 6px; flex: 1; cursor: pointer; }
+    .fab { position: fixed; bottom: calc(env(safe-area-inset-bottom, 12px) + 90px); right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; justify-content: center; align-items: center; font-size: 30px; font-weight: bold; box-shadow: 0 6px 16px rgba(236,72,153,0.4); cursor: pointer; z-index: 1000; transition: 0.2s; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+    .modal-content { background: #FFF; border-radius: 28px; padding: 24px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+
+    .snackbar { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: rgba(17, 24, 39, 0.9); backdrop-filter: blur(8px); color: #FFF; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 12px; z-index: 9000; transition: bottom 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: none; white-space: nowrap; }
+    .snackbar.show { bottom: calc(env(safe-area-inset-bottom, 12px) + 85px); } 
+    .snackbar-spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.3); border-top: 2.5px solid #F472B6; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .half-modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; }
+    .half-modal-backdrop.show { opacity: 1; visibility: visible; }
+    .half-modal { position: fixed; bottom: -100%; left: 0; width: 100%; background: #FFF; border-radius: 28px 28px 0 0; padding: 20px 20px calc(env(safe-area-inset-bottom, 20px) + 20px); z-index: 10001; transition: bottom 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+    .half-modal.open { bottom: 0; }
+    .half-modal-handle { width: 40px; height: 5px; background: #E5E7EB; border-radius: 10px; margin: 0 auto 20px auto; }
+
+    .textarea-wrapper { position: relative; }
+    textarea.input-field { height: 90px; resize: none; padding-right: 80px; line-height: 1.5; }
+    
+    .clear-btn { position: absolute; bottom: 12px; right: 12px; background: rgba(255,255,255,0.9); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: 800; cursor: pointer; color: var(--text-sub); display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); transition: 0.2s; }
+    .clear-btn:active { transform: scale(0.95); }
+
+    .upload-area { border: 2px dashed #D1C5D4; background: #FAF8FB; border-radius: 16px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; cursor: pointer; position: relative; overflow: hidden; }
+    .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 16px; margin-top: 8px; padding: 4px; box-shadow: var(--shadow-md); max-height: 150px; overflow-y: auto; position: absolute; width: 100%; z-index: 50; }
+    .suggest-item { padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: 800; cursor: pointer; }
+    .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+    .style-btn { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 800; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid transparent; cursor: pointer; transition: 0.2s; }
+    .style-desc-box { background: #FDF2F8; border-left: 4px solid #EC4899; padding: 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: #831843; font-weight: 700; margin-bottom: 16px; }
+
+    .settings-list { background: var(--card-bg); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-md); margin-bottom: 16px; flex-shrink: 0; }
+    .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-weight: 800; font-size: 14px; }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-val { color: var(--text-sub); font-size: 13px; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <div id="snackbar" class="snackbar">
+    <div class="snackbar-spinner"></div>
+    <span id="snackbar-text">🚀 AIが裏で執筆中...</span>
+  </div>
+
+  <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
+  <input type="radio" name="nav" id="nav-data" class="ui-state">
+  <input type="radio" name="nav" id="nav-settings" class="ui-state">
+  <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
+  <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
+  <input type="radio" name="style" id="style-cute" class="ui-state" checked onchange="saveStyleSettings()">
+  <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
+  <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
+
+  <!-- 初期設定モーダル -->
+  <div id="setupModal" class="modal-overlay">
+    <div class="modal-content" style="text-align: center;">
+      <h2 id="setup-title" style="margin: 0 0 10px; font-weight: 900;"></h2>
+      <p id="setup-desc" style="color:var(--text-sub); font-size:14px; font-weight:700; margin-bottom:24px;"></p>
+      <select id="initialBusinessType" class="input-field" style="margin-bottom: 24px; font-weight:800; text-align:center;">
+        <option value="cabaret">キャバクラ・ラウンジ</option>
+        <option value="fuzoku">風俗・メンエス</option>
+        <option value="host">ホストクラブ</option>
+      </select>
+      <button onclick="saveInitialSetup()" style="width:100%; background:var(--primary-gradient); color:#FFF; border:none; padding:18px; border-radius:30px; font-weight:800; font-size:16px;">はじめる ✨</button>
+    </div>
+  </div>
+
+  <!-- スタイル設定モーダル -->
+  <div id="styleModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
+      <div class="style-selector">
+        <label for="style-cute" class="style-btn btn-cute">かわいい</label>
+        <label for="style-custom" class="style-btn btn-custom">カスタム</label>
+        <label for="style-neat" class="style-btn btn-neat">清楚</label>
+      </div>
+      <div class="style-content-wrapper">
+        <div id="text-style-cute" class="style-desc-cute style-desc-box"></div>
+        <div id="text-style-neat" class="style-desc-neat style-desc-box"></div>
+        <div class="style-desc-custom">
+          <div id="text-style-custom" class="style-desc-box" style="margin-bottom:12px;"></div>
+          <textarea id="customStyleText" class="input-field" style="height: 120px; margin-bottom:16px; font-size: 13px;" onchange="saveStyleSettings()"></textarea>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;"><span>テンション（低）</span><span>（高）</span></div>
+          <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;" onchange="saveStyleSettings()">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;"><span>絵文字の量（少）</span><span>（多）</span></div>
+          <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:10px;" onchange="saveStyleSettings()">
+        </div>
+      </div>
+      <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">設定を保存して閉じる</button>
+    </div>
+  </div>
+
+  <div id="editCustomerModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;" id="modalTitle">顧客情報の編集</h2>
+      <input type="hidden" id="editCustomerIndex">
+      <input type="hidden" id="isCreateMode" value="false">
+      
+      <span class="label">名前</span>
+      <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
+      
+      <div class="accordion-header" onclick="toggleTagAccordion()">
+        <span>🏷️ 属性タグ（設定・追加）</span><span id="tagAccordionIcon">▼</span>
+      </div>
+      <div class="accordion-content" id="tagAccordionContent">
+        <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="customAttrInput" class="input-field" placeholder="オリジナルタグを入力..." style="padding:10px; font-size:13px;">
+          <button id="addAttrBtn" onclick="addCustomAttributeTag()" style="background:var(--active-color); color:#FFF; border:none; border-radius:12px; padding:0 15px; font-weight:bold; white-space:nowrap;">追加</button>
+        </div>
+      </div>
+
+      <span class="label">📝 接客メモ</span>
+      <div class="memo-blocks-wrapper"><div id="editMemoBlocksArea"></div></div>
+      <div class="add-memo-btn" id="addMemoBtn" onclick="addMemoBlock()">＋ 日付とエピソードを追加</div>
+      
+      <div style="display:flex; gap:10px;">
+        <button onclick="closeEditModal()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800;" id="cancelBtn">キャンセル</button>
+        <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ヘルプ（必読）モーダル -->
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+      <h2 id="help-title" style="margin: 0 0 20px; font-weight: 900; text-align: center;"></h2>
+      <div id="help-sections-container"></div>
+      <button onclick="closeHelpModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 10px;">閉じる</button>
+    </div>
+  </div>
+
+  <div id="resultModalBackdrop" class="half-modal-backdrop" onclick="closeResultModal()"></div>
+  <div id="resultHalfModal" class="half-modal">
+    <div class="half-modal-handle"></div>
+    <h2 style="margin: 0 0 16px; font-weight: 900; text-align: center; display:flex; align-items:center; justify-content:center; gap:8px;"><span>✨</span> 完成しました！</h2>
+    <textarea id="finalResultText" class="input-field" style="height: 240px; margin-bottom: 16px; font-size: 14px; line-height: 1.6;" placeholder="生成された文章がここに表示されます。自由に手直しできます。"></textarea>
+    <div style="display:flex; gap:10px;">
+      <button onclick="copyResultText()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; gap:6px;">📋 コピー</button>
+      <button onclick="sendToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; gap:6px;">💬 LINEへ送信</button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <header class="header-area">
+      <div class="app-title">AIお礼日記メーカー</div>
+      <div class="toggle-container header-toggle">
+        <label for="mode-text" class="toggle-label toggle-text">💌 お礼日記</label>
+        <label for="mode-photo" class="toggle-label toggle-photo">📸 写メ日記</label>
+      </div>
+    </header>
+
+    <main class="scroll-area">
+      <div class="page page-create">
+        <div class="card card-customer-select">
+          <span class="label">👤 誰に送る？</span>
+          <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea">
+            <div class="story-item">
+              <div class="skeleton" style="width: 62px; height: 62px; border-radius: 50%; flex-shrink: 0;"></div>
+              <div class="skeleton" style="width: 40px; height: 10px; border-radius: 4px; margin-top: 4px;"></div>
+            </div>
+          </div></div>
+          <div style="position: relative;">
+            <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
+            <div id="resultArea" class="result-box"></div>
+          </div>
+        </div>
+
+        <div class="card mode-photo-ui">
+          <span class="label">📷 写真を選ぶ</span>
+          <input type="file" id="photoUpload" accept="image/*" style="display:none;" onchange="previewPhoto(event)">
+          <label for="photoUpload" id="uploadArea" class="upload-area">
+            <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
+            <img id="photoPreview">
+          </label>
+        </div>
+
+        <div class="card">
+          <span class="label">📝 エピソード作成</span>
+
+          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 12px;">
+            <div class="tags-scroll-container" id="attributeTagsArea"></div>
+          </div>
+          <div class="past-memo-box">
+            <span class="past-memo-label">📖 過去のメモ</span>
+            <div id="pastMemoDisplay">(顧客を選択するか、過去の記録がありません)</div>
+          </div>
+          <div id="selectedEpisodeTags" class="selected-tags-box"></div>
+          
+          <div class="textarea-wrapper">
+            <textarea id="todayEpisodeInput" class="input-field" placeholder="今日の出来事や特記事項を入力..." oninput="autoScrollTextarea()"></textarea>
+            <div class="clear-btn" onclick="clearEpisodeInput()">🧹 クリア</div>
+          </div>
+          
+          <div class="episode-tags-container" id="dynamicChips"></div>
+          <div style="margin-top: 16px; display: flex; gap: 8px;">
+            <input type="text" id="customTagInput" placeholder="＋オリジナルタグ追加" class="input-field" style="padding:10px; font-size:13px; flex:1;">
+            <button onclick="addCustomTag()" style="background:var(--active-color); color:#fff; border:none; padding:0 16px; border-radius:12px; font-weight:800;">追加</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="page page-data">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2 style="margin:0; font-weight:900;">顧客カルテ</h2>
+          <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
+        </div>
+        
+        <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
+        
+        <div class="filter-container">
+          <div class="filter-btn" id="filter-btn-alert" onclick="setListFilter('alert')">
+            ⚠️ 要連絡
+            <div id="alertBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#EF4444; color:#FFF; font-size:10px; font-weight:800; min-width:18px; height:18px; border-radius:10px; padding:0 4px; align-items:center; justify-content:center; border:2px solid #FFF; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+          </div>
+          <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
+          <div class="filter-btn" id="filter-btn-vip" onclick="setListFilter('vip')">💎 一軍</div>
+          <div class="filter-btn" id="filter-btn-new" onclick="setListFilter('new')">🔰 新規</div>
+          <div class="filter-btn" id="filter-btn-second" onclick="setListFilter('second')">✌️ 2回目</div>
+          <div class="filter-btn" id="filter-btn-regular" onclick="setListFilter('regular')">👑 常連</div>
+        </div>
+
+        <div id="customerListArea">
+          <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
+          <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
+        </div>
+        <div class="fab" onclick="openCreateModal()">＋</div>
+      </div>
+
+      <div class="page page-settings">
+        <h2 style="margin:0 0 16px; font-weight:900;">設定・情報</h2>
+
+        <!-- ✂️ ここから移行用（終わったら削除してOK） ✂️ -->
+        <button onclick="migrateDataFromGAS()" style="width:100%; background:#10B981; color:#FFF; border:none; padding:16px; border-radius:16px; font-weight:800; margin-bottom:16px;">🚚 スプレッドシートからデータを移行する</button>
+        <!-- ✂️ ここまで ✂️ -->
+
+        <div class="settings-list">
+          <div class="settings-item" onclick="openStyleModal()"><span>🎨 AIスタイル・口調設定</span><span class="settings-val" id="styleOverviewText">かわいい・清楚・カスタム</span></div>
+          <div class="settings-item">
+            <span>🏢 業態設定</span>
+            <select class="input-field" id="businessType" onchange="updateChipsAndSave()" style="width:140px; padding:6px; font-weight:800; text-align:right; border:none; background:transparent;">
+              <option value="cabaret">キャバクラ</option>
+              <option value="fuzoku">風俗・メンエス</option>
+              <option value="host">ホスト</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="card" style="padding: 16px 20px;">
+          <div style="color: #DC2626; font-weight: 800; font-size: 14px; margin-bottom: 16px; display:flex; align-items:center; gap:6px;">🚨 放置アラート設定（日数）</div>
+          <div style="display: flex; gap: 12px;">
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">🔰 新規</div>
+              <input type="number" id="alert-new" class="input-field" style="padding: 10px 0; text-align: center; font-size: 16px; border-radius: 12px; width: 100%; box-sizing: border-box;" value="7" onchange="saveAlertSettings()">
+            </div>
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">👑 常連</div>
+              <input type="number" id="alert-regular" class="input-field" style="padding: 10px 0; text-align: center; font-size: 16px; border-radius: 12px; width: 100%; box-sizing: border-box;" value="30" onchange="saveAlertSettings()">
+            </div>
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">💎 VIP</div>
+              <input type="number" id="alert-vip" class="input-field" style="padding: 10px 0; text-align: center; font-size: 16px; border-radius: 12px; width: 100%; box-sizing: border-box;" value="14" onchange="saveAlertSettings()">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-list">
+          <div class="settings-item" onclick="openHelpModal()"><span>📖 アプリの使い方と仕様（必読）</span><span style="color:var(--border-color);">▶</span></div>
+        </div>
+        <div class="settings-list">
+          <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
+          <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.8.1</span></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="fixed-footer">
+      <div class="submit-area"><button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button></div>
+      <nav class="bottom-nav">
+        <label for="nav-create" class="nav-item tab-create"><span style="font-size:18px;">📝</span>作成</label>
+        <label for="nav-data" class="nav-item tab-data"><span style="font-size:18px;">📖</span>顧客</label>
+        <label for="nav-settings" class="nav-item tab-settings"><span style="font-size:18px;">⚙️</span>設定</label>
+      </nav>
+    </footer>
+  </div>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    const AppTexts = {
+      helpModal: {
+        title: "📖 アプリの使い方と仕様",
+        sections: [
+          {
+            icon: "👑",
+            title: "自動ランク付け",
+            content: "過去の接客エピソード数をシステムが自動カウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。"
+          },
+          {
+            icon: "🚨",
+            title: "放置アラート（呼び戻し）",
+            content: "設定日数以上来店がないお客様には、名前横に<strong>「🚨◯日放置」</strong>と表示されます。「要連絡」タブを開くと対象者が優先表示され、AIが自動で「会いたい」感情タグを組み込みます。"
+          },
+          {
+            icon: "💎",
+            title: "VIP（一軍）の特別扱い",
+            content: "顧客のタグに<strong>「太客」「エース」「VIP」</strong>等を設定すると、AIが「VIP客」と認識し、リストで常に金枠で最上位に表示されます。"
+          }
+        ]
+      },
+      styleModal: {
+        cute: "🎀 可愛らしく、絵文字を多用した親しみやすい文体。",
+        neat: "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。",
+        custom: "⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。"
+      },
+      setupModal: {
+        title: "🎉 初期設定",
+        desc: "現在の業態を教えてください。"
+      }
+    };
+
+    const LIFF_ID = "2009843865-hghVLuaS";
+    const GAS_URL = "/api"; // Vercel APIに向けたパス
+
+    let userId = "test-user";
+    let customerData = [];
+    let activeTags = []; 
+    let currentCustomerTags = []; 
+    let selectedEpisodeTags = []; 
+    let currentBase64Image = null;
+    let isDemoMode = false;
+    let myCustomAttrs = []; 
+    let currentListFilter = 'all'; 
+    let isCompactMode = false;
+    let isFilterScrolled = false;
+
+    const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
+    function isEmotionTag(tag) { return EMOTION_TAG_KEYWORDS.some(keyword => tag.includes(keyword)); }
+
+    const stylePlaceholders = { cabaret: "（例）昨日はお店来てくれて本当にありがとう🥺✨\n久しぶりに〇〇くんの顔見れて、めちゃくちゃ楽しかったよ💗", fuzoku: "（例）今日は指名してくれてありがとう🧸💓\n〇〇さんと一緒にいる時間、すごく落ち着くし癒されちゃった🛁✨", host: "（例）今日はお店来てくれてありがとな🍾✨\n最近会えてなかったから、〇〇の顔見れて普通にテンション上がったわ😎" };
+    const industryAttributeTags = { cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'], fuzoku: ['M気質', 'S気質', '常連', '新規', 'キモい', '優しい', '痛客', '匂いキツめ', 'マナー良', '本番要求', 'おじさん', '若者', 'イケメン', 'デブ', 'ハゲ'], host: ['太客', '細客', 'エース', '痛客', '常連', '新規', 'メンヘラ', '金持ち', 'ケチ', '酒癖悪い', 'マナー良', '独身', '既婚', '若者', 'おばさん'] };
+    let tempSelectedAttributes = [];
+    const industryConfigs = { cabaret: { prompt: "", tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '📱 LINE嬉しい', '💤 おやすみ'] }, fuzoku: { prompt: "", tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長', '🌹 夢心地'] }, host: { prompt: "", tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '🤐 誰にも内緒', '🖤 独占'] } };
+    const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯', '🤳 自撮り', '🛏️ 寝起き', '🏠 お家', '🛍️ お買い物'];
+
+    function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+    function getTodayFormatted() { return getTodayString().replace(/-/g, '/'); }
+
+    function renderTexts() {
+      document.getElementById('setup-title').innerText = AppTexts.setupModal.title;
+      document.getElementById('setup-desc').innerText = AppTexts.setupModal.desc;
+      document.getElementById('text-style-cute').innerText = AppTexts.styleModal.cute;
+      document.getElementById('text-style-neat').innerText = AppTexts.styleModal.neat;
+      document.getElementById('text-style-custom').innerText = AppTexts.styleModal.custom;
+      document.getElementById('help-title').innerText = AppTexts.helpModal.title;
+      const helpContainer = document.getElementById('help-sections-container');
+      helpContainer.innerHTML = AppTexts.helpModal.sections.map(sec => `
+        <div style="margin-bottom: 24px;">
+          <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+            <span>${sec.icon}</span> ${sec.title}
+          </h3>
+          <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+            ${sec.content}
+          </p>
+        </div>
+      `).join('');
     }
 
-    // Supabaseの接続準備
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    async function init() {
+      renderTexts(); 
 
-    // 1. 顧客リスト取得
-    if (action === 'getCustomers') {
-      const { data: rows, error } = await supabase.from('customers').select('*');
-      if (error) throw new Error("Supabase取得エラー: " + error.message);
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
+      if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
       
-      const customers = rows.filter(r => r.user_id === userId || (r.tags && r.tags.includes('ダミー'))).map(r => ({
-        name: r.name,
-        memo: typeof r.memo === 'string' ? r.memo : JSON.stringify(r.memo || []),
-        tags: Array.isArray(r.tags) ? r.tags.join(', ') : (r.tags || "")
-      }));
-      return res.status(200).json({ success: true, customers });
-    }
-
-    // 2. 新規顧客作成
-    if (action === 'createCustomer') {
-      const tagsArray = data.newTags ? data.newTags.split(',').map(t => t.trim()) : [];
-      const memoJson = data.newMemo ? JSON.parse(data.newMemo) : [];
-      
-      const { error } = await supabase.from('customers').insert({ 
-        user_id: userId, 
-        name: data.newName, 
-        memo: memoJson, 
-        tags: tagsArray 
+      document.getElementById('nav-data').addEventListener('change', (e) => {
+        if (e.target.checked && !isFilterScrolled) {
+          setTimeout(() => {
+            const container = document.querySelector('.filter-container');
+            const allTab = document.getElementById('filter-btn-all');
+            if (container && allTab) { container.scrollTo({ left: allTab.offsetLeft - 20, behavior: 'smooth' }); isFilterScrolled = true; }
+          }, 50);
+        }
       });
-      
-      if (error) throw new Error("Supabase保存エラー: " + error.message);
-      return res.status(200).json({ success: true });
-    }
 
-    // 3. 顧客情報の更新
-    if (action === 'updateCustomer') {
-      const tagsArray = data.newTags ? data.newTags.split(',').map(t => t.trim()) : [];
-      const memoJson = data.newMemo ? JSON.parse(data.newMemo) : [];
-      
-      const { error } = await supabase.from('customers')
-        .update({ name: data.newName, memo: memoJson, tags: tagsArray, updated_at: new Date() })
-        .eq('user_id', userId)
-        .eq('name', data.oldName);
-        
-      if (error) throw new Error("Supabase更新エラー: " + error.message);
-      return res.status(200).json({ success: true });
-    }
-
-    // 4. AI日記生成
-    if (action === 'generate') {
-      if (data.combinedMemoToSave) {
-        const memoJson = JSON.parse(data.combinedMemoToSave);
-        const { error } = await supabase.from('customers')
-          .update({ memo: memoJson, updated_at: new Date() })
-          .eq('user_id', userId)
-          .eq('name', data.name);
-        
-        if (error) throw new Error("Supabaseメモ更新エラー: " + error.message);
-      }
-
-      if (userId === "test-user") {
-        return res.status(200).json({ success: true, generatedText: "※テスト環境のためAI生成はスキップされました。\n\n【送ろうとしたエピソード】\n" + data.episode });
-      }
-
-      let uploadFileId = null;
-      if (data.mode === "photo" && data.image) {
-        const base64Data = data.image.replace(/^data:image\/\w+;base64,/, "");
-        const buffer = Buffer.from(base64Data, 'base64');
-        const blob = new Blob([buffer], { type: 'image/jpeg' });
-        
-        const formData = new FormData();
-        formData.append('file', blob, 'image.jpg');
-        formData.append('user', userId);
-
-        const uploadRes = await fetch("https://api.dify.ai/v1/files/upload", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${process.env.DIFY_API_KEY}` },
-          body: formData
+      // タブ切り替え時のスクロールリセット
+      document.querySelectorAll('input[name="nav"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          document.querySelector('.scroll-area').scrollTop = 0;
         });
-        const uploadJson = await uploadRes.json();
-        if (uploadJson.id) uploadFileId = uploadJson.id;
-      }
-
-      const difyPayload = {
-        inputs: { 
-          name: data.name || "", episode: data.episode || "", pastMemo: data.pastMemo || "",
-          customerTags: data.customerTags || "", customerRank: data.customerRank || "新規",
-          episodeTags: data.episodeTags || "", style: data.style || "cute", tension: data.tension || "3",
-          emoji: data.emoji || "4", custom_text: data.customText || "", businessType: data.businessType || "",
-          industryPrompt: data.industryPrompt || "", mode: data.mode || "text"
-        },
-        response_mode: "blocking",
-        user: userId
-      };
-
-      if (uploadFileId) {
-        difyPayload.files = [{ type: "image", transfer_method: "local_file", upload_file_id: uploadFileId }];
-        difyPayload.inputs.image_file = { type: "image", transfer_method: "local_file", upload_file_id: uploadFileId };
-      }
-
-      const difyRes = await fetch(process.env.DIFY_API_URL, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${process.env.DIFY_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify(difyPayload)
       });
+
+      try { await liff.init({ liffId: LIFF_ID }); if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; } catch (e) {}
+      if (localStorage.getItem('myCustomAttrs')) myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
+      const savedType = localStorage.getItem('businessType');
+      if (!savedType) { document.getElementById('setupModal').style.display = 'flex'; } else { document.getElementById('businessType').value = savedType; }
+      if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
       
-      const difyData = await difyRes.json();
-      const aiText = difyData.data?.outputs?.text || difyData.data?.outputs?.answer || difyData.answer || "生成されましたがテキストが空です。";
+      loadStyleSettings(); loadAlertSettings(); updateChips(); fetchCustomers();
 
-      await fetch("https://api.line.me/v2/bot/message/push", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.LINE_ACCESS_TOKEN}` },
-        body: JSON.stringify({ to: userId, messages: [{ type: "text", text: aiText }] })
-      });
+      if (document.getElementById('nav-data').checked && !isFilterScrolled) {
+        setTimeout(() => {
+          const container = document.querySelector('.filter-container');
+          const allTab = document.getElementById('filter-btn-all');
+          if (container && allTab) { container.scrollTo({ left: allTab.offsetLeft - 20, behavior: 'smooth' }); isFilterScrolled = true; }
+        }, 300); 
+      }
+    }
+    window.onload = init;
 
-      return res.status(200).json({ success: true, generatedText: aiText });
+    function saveInitialSetup() {
+      const type = document.getElementById('initialBusinessType').value;
+      localStorage.setItem('businessType', type); document.getElementById('businessType').value = type;
+      loadStyleSettings(true); updateChips(); document.getElementById('setupModal').style.display = 'none';
     }
 
-  } catch (err) {
-    console.error("バックエンド処理エラー:", err);
-    return res.status(500).json({ success: false, error: err.message });
-  }
-}
+    function loadStyleSettings(isInit = false) {
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const defaults = { cabaret: { tension: 4, emoji: 5 }, fuzoku: { tension: 3, emoji: 4 }, host: { tension: 3, emoji: 2 } };
+      if (isInit) { document.getElementById('tensionSlider').value = defaults[type].tension; document.getElementById('emojiSlider').value = defaults[type].emoji; saveStyleSettings();
+      } else {
+        document.getElementById('tensionSlider').value = localStorage.getItem('tensionSlider') || defaults[type].tension;
+        document.getElementById('emojiSlider').value = localStorage.getItem('emojiSlider') || defaults[type].emoji;
+        document.getElementById('customStyleText').value = localStorage.getItem('customStyleText') || "";
+        const savedStyle = localStorage.getItem('selectedStyle'); if (savedStyle) document.getElementById(`style-${savedStyle}`).checked = true;
+      }
+    }
+    function saveStyleSettings() {
+      localStorage.setItem('tensionSlider', document.getElementById('tensionSlider').value);
+      localStorage.setItem('emojiSlider', document.getElementById('emojiSlider').value);
+      localStorage.setItem('customStyleText', document.getElementById('customStyleText').value);
+      localStorage.setItem('selectedStyle', document.querySelector('input[name="style"]:checked').id.replace('style-', ''));
+    }
+
+    function loadAlertSettings() {
+      const settings = JSON.parse(localStorage.getItem('alertSettings')) || { new: 7, regular: 30, vip: 14 };
+      document.getElementById('alert-new').value = settings.new; document.getElementById('alert-regular').value = settings.regular; document.getElementById('alert-vip').value = settings.vip;
+    }
+    function saveAlertSettings() {
+      const settings = { new: parseInt(document.getElementById('alert-new').value) || 7, regular: parseInt(document.getElementById('alert-regular').value) || 30, vip: parseInt(document.getElementById('alert-vip').value) || 14 };
+      localStorage.setItem('alertSettings', JSON.stringify(settings));
+      if (customerData.length > 0) { renderCustomerList(); renderQuickAccess(); updateAlertBadge(); } 
+    }
+
+    function updateStyleUI(type) {
+      const cuteLabel = document.querySelector('.btn-cute'), neatLabel = document.querySelector('.btn-neat'), overviewText = document.getElementById('styleOverviewText'), customTextArea = document.getElementById('customStyleText'); 
+      if (type === 'host') { cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)"; overviewText.innerText = "オラオラ・カスタム・子犬";
+      } else { cuteLabel.innerText = "かわいい"; neatLabel.innerText = "清楚"; overviewText.innerText = "かわいい・カスタム・清楚"; }
+      customTextArea.placeholder = stylePlaceholders[type];
+    }
+
+    function updateChips() {
+      const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked, storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
+      updateStyleUI(type);
+      const masterTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags], savedTags = localStorage.getItem(storageKey);
+      if (savedTags) { let parsed = JSON.parse(savedTags); if (parsed.length < masterTags.length) { activeTags = masterTags; localStorage.setItem(storageKey, JSON.stringify(masterTags)); } else activeTags = parsed; } else activeTags = masterTags;
+      renderChips();
+
+      if (isPhoto) {
+        document.getElementById('nameInput').value = "";
+        document.getElementById('pastMemoDisplay').innerHTML = "(写メ日記モードでは顧客情報は使用しません)";
+        currentCustomerTags = [];
+        renderAttributeTags();
+      } else {
+        document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
+      }
+    }
+
+    function renderChips() {
+      const container = document.getElementById('dynamicChips'); container.innerHTML = '';
+      activeTags.forEach(text => {
+        const isSelected = selectedEpisodeTags.includes(text), chip = document.createElement('div');
+        chip.className = 'chip' + (isSelected ? ' dimmed' : ''); chip.innerHTML = text;
+        chip.onclick = () => { 
+          if (!isSelected) { 
+            selectedEpisodeTags.push(text); 
+            renderSelectedEpisodeTags(); 
+            renderChips(); 
+          } 
+        }; 
+        container.appendChild(chip);
+      });
+    }
+
+    function renderSelectedEpisodeTags() {
+      const area = document.getElementById('selectedEpisodeTags'); area.innerHTML = '';
+      selectedEpisodeTags.forEach((tag, index) => {
+        const chip = document.createElement('div'); chip.className = 'selected-chip';
+        chip.innerHTML = `${tag} <span onclick="removeEpisodeTag(${index})" style="margin-left:4px; cursor:pointer;">×</span>`; area.appendChild(chip);
+      });
+    }
+
+    function removeEpisodeTag(index) { selectedEpisodeTags.splice(index, 1); renderSelectedEpisodeTags(); renderChips(); }
+    
+    function addCustomTag() { 
+      const input = document.getElementById('customTagInput'); 
+      if(input.value.trim() !== "") { 
+        activeTags.unshift(input.value.trim()); 
+        input.value = ""; 
+        renderChips(); 
+        const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked; 
+        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags)); 
+      } 
+    }
+
+    function clearEpisodeInput() {
+      if (document.getElementById('todayEpisodeInput').value || selectedEpisodeTags.length > 0) {
+        if (!confirm("入力中のエピソードとタグをクリアしますか？")) return;
+      }
+      document.getElementById('todayEpisodeInput').value = "";
+      selectedEpisodeTags = [];
+      updateChips();
+      renderSelectedEpisodeTags();
+    }
+    
+    function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); updateAlertBadge(); }
+
+    async function fetchCustomers() {
+      try {
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "getCustomers", userId: userId }) });
+        const data = await res.json();
+        customerData = data.success ? data.customers.map(c => ({ ...c, name: String(c.name || "名前なし"), memo: String(c.memo || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : [] })) : [];
+        renderCustomerList(); renderQuickAccess(); updateAlertBadge();
+      } catch (e) { alert("データ読み込みエラー"); }
+    }
+
+    function parseMemoToJSON(memoStr) {
+      if (!memoStr) return [];
+      try { const parsed = JSON.parse(memoStr); if (Array.isArray(parsed)) return parsed; return []; } catch (e) {
+        return memoStr.split(/\n?---\n?/).map(block => {
+          const match = block.trim().match(/^(\d{4}\/\d{2}\/\d{2}):\s*([\s\S]*)$/);
+          if (match) return { date: match[1].replace(/\//g, '-'), text: match[2].trim(), tags: [] };
+          return { date: '', text: block.trim(), tags: [] };
+        }).filter(b => b.text || b.date);
+      }
+    }
+
+    function getCustomerStats(c) {
+      const memos = parseMemoToJSON(c.memo), count = memos.length === 0 ? 1 : memos.length, vipKeywords = ['太客', 'エース', '一軍', 'VIP', '金持ち', '良客', '常連'], isVip = c.tagsArray.some(tag => vipKeywords.includes(tag));
+      return { count, isVip };
+    }
+
+    function getDaysSinceLastVisit(memoStr) {
+      const memos = parseMemoToJSON(memoStr); if (memos.length === 0) return null;
+      let latestTime = 0; memos.forEach(m => { if(m.date) { const d = new Date(m.date.replace(/-/g, '/')); if(!isNaN(d) && d.getTime() > latestTime) latestTime = d.getTime(); } });
+      if(latestTime === 0) return null;
+      const today = new Date(); today.setHours(0,0,0,0); const lastDate = new Date(latestTime); lastDate.setHours(0,0,0,0);
+      const diffTime = today - lastDate; return diffTime < 0 ? 0 : Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function isAlertCustomer(c) {
+      const stats = getCustomerStats(c), days = getDaysSinceLastVisit(c.memo); if (days === null) return false;
+      const alertSettings = JSON.parse(localStorage.getItem('alertSettings')) || { new: 7, regular: 30, vip: 14 };
+      if (stats.isVip) return days >= alertSettings.vip; if (stats.count <= 2) return days >= alertSettings.new; return days >= alertSettings.regular;
+    }
+
+    function updateAlertBadge() {
+        const currentType = localStorage.getItem('businessType') || 'cabaret', targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+        const alertCount = customerData.filter(c => { if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false; return isAlertCustomer(c); }).length;
+        const badge = document.getElementById('alertBadge');
+        if (alertCount > 0) { badge.style.display = 'flex'; badge.innerText = alertCount; } else { badge.style.display = 'none'; }
+    }
+
+    function setListFilter(filterType) {
+      if (currentListFilter === filterType && filterType !== 'all') { currentListFilter = 'all'; } else { currentListFilter = filterType; }
+      const filters = ['all', 'alert', 'vip', 'new', 'second', 'regular'];
+      filters.forEach(f => {
+        const el = document.getElementById(`filter-btn-${f}`);
+        if(el) { 
+            if (currentListFilter === f) { el.classList.add('active-filter'); const container = document.querySelector('.filter-container'); if (container && isFilterScrolled) { const scrollPos = el.offsetLeft - (container.offsetWidth / 2) + (el.offsetWidth / 2); container.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' }); } } else { el.classList.remove('active-filter'); }
+        }
+      });
+      filterCustomerList();
+    }
+
+    function toggleCompactMode(forceState = null) {
+      if (forceState !== null) isCompactMode = forceState; else isCompactMode = !isCompactMode;
+      localStorage.setItem('isCompactMode', isCompactMode);
+      const listArea = document.getElementById('customerListArea'), viewIcon = document.getElementById('viewIcon');
+      if(isCompactMode) { listArea.classList.add('compact-view'); viewIcon.innerText = '📋 コンパクト'; } else { listArea.classList.remove('compact-view'); viewIcon.innerText = '🗂️ 詳細表示'; }
+    }
+
+    function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
+    function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
+
+    function openResultModal(text) {
+      document.getElementById('finalResultText').value = text;
+      document.getElementById('resultModalBackdrop').classList.add('show');
+      setTimeout(() => { document.getElementById('resultHalfModal').classList.add('open'); }, 10);
+    }
+
+    function closeResultModal() {
+      document.getElementById('resultHalfModal').classList.remove('open');
+      setTimeout(() => { document.getElementById('resultModalBackdrop').classList.remove('show'); }, 300);
+    }
+
+    function copyResultText() {
+      const text = document.getElementById('finalResultText').value;
+      navigator.clipboard.writeText(text).then(() => { alert("コピーしました！"); }).catch(err => { alert("コピーに失敗しました: " + err); });
+    }
+
+    function sendToLine() {
+      const text = document.getElementById('finalResultText').value;
+      if (liff.isLoggedIn() && liff.isInClient()) {
+        liff.sendMessages([{ type: 'text', text: text }]).then(() => { liff.closeWindow(); }).catch(err => alert("LINE送信エラー: " + err));
+      } else { const url = "https://line.me/R/msg/text/?" + encodeURIComponent(text); window.open(url, '_blank'); }
+    }
+
+    function renderQuickAccess() {
+      const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
+      const currentType = localStorage.getItem('businessType') || 'cabaret', targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+      let filtered = customerData.map((c, i) => ({c, index: i})).filter(item => { if (item.c.tagsArray.includes('ダミー') && !item.c.tagsArray.includes(targetDummyTag)) return false; return true; });
+      filtered.sort((a, b) => { const statsA = getCustomerStats(a.c), statsB = getCustomerStats(b.c); if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; return statsB.count - statsA.count; });
+      filtered.slice(0, 15).forEach(item => {
+        const c = item.c, index = item.index, stats = getCustomerStats(c);
+        let topBadge = ''; if (stats.isVip) topBadge = `<div class="story-badge" style="background:#F59E0B; border-color:#FFF; color:#FFF;">👑VIP</div>`; else if (c.tagsArray.length > 0) topBadge = `<div class="story-badge">${c.tagsArray[0]}</div>`;
+        const ringClass = stats.isVip ? "story-ring story-ring-vip" : "story-ring";
+        area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
+      });
+    }
+
+    function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
+
+    function renderCustomerList(filterText = "") {
+      const area = document.getElementById('customerListArea'); area.innerHTML = "";
+      const currentType = localStorage.getItem('businessType') || 'cabaret', targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+      const lowerFilter = filterText.toLowerCase();
+
+      let displayList = customerData.filter(c => {
+        if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
+        const matchName = String(c.name).toLowerCase().includes(lowerFilter), memos = parseMemoToJSON(c.memo), matchMemo = memos.some(m => String(m.text).toLowerCase().includes(lowerFilter) || (m.tags && m.tags.some(t => t.toLowerCase().includes(lowerFilter)))), matchTags = c.tagsArray.some(t => t.toLowerCase().includes(lowerFilter));
+        if (filterText && !matchName && !matchMemo && !matchTags) return false;
+        const stats = getCustomerStats(c), isAlert = isAlertCustomer(c);
+        if (currentListFilter === 'alert' && !isAlert) return false; if (currentListFilter === 'new' && stats.count !== 1) return false; if (currentListFilter === 'second' && stats.count !== 2) return false; if (currentListFilter === 'regular' && stats.count < 3) return false; if (currentListFilter === 'vip' && !stats.isVip) return false;
+        return true;
+      });
+
+      displayList.sort((a, b) => {
+        const statsA = getCustomerStats(a), statsB = getCustomerStats(b);
+        if (currentListFilter === 'alert') { if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; const daysA = getDaysSinceLastVisit(a.memo) || 0, daysB = getDaysSinceLastVisit(b.memo) || 0; if (daysA !== daysB) return daysB - daysA; }
+        if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; return statsB.count - statsA.count;
+      });
+
+      displayList.forEach(c => {
+        const index = customerData.indexOf(c), stats = getCustomerStats(c), isAlert = isAlertCustomer(c), days = getDaysSinceLastVisit(c.memo);
+        let sysBadge = ''; if (stats.count === 1) sysBadge = '🔰 新規'; else if (stats.count === 2) sysBadge = '✌️ 2回目'; else if (stats.count >= 3) sysBadge = '👑 常連';
+        const sysBadgeHtml = sysBadge ? `<span style="background:#F3F4F6; color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #E5E7EB; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content;">${sysBadge}</span>` : '';
+        const alertBadgeHtml = isAlert ? `<span style="background:#FEE2E2; color:#B91C1C; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:900; border:1px solid #FCA5A5; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content; box-shadow:0 1px 3px rgba(185,28,28,0.2);">🚨 ${days}日放置</span>` : '';
+        const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
+        const isDummy = c.tagsArray.includes("ダミー"), actionIcon1 = '✏️', actionText1 = '日記作成', actionIcon2 = isDummy ? '🔍' : '⚙️', actionText2 = isDummy ? '閲覧' : '編集';
+        let cardClass = "card"; if (stats.isVip) cardClass = "card card-vip";
+        const memos = parseMemoToJSON(c.memo); let previewMemo = "メモなし"; if (memos.length > 0) { const lastM = memos[memos.length - 1]; previewMemo = lastM.text ? lastM.text.substring(0,40) + "..." : (lastM.tags && lastM.tags.length > 0 ? lastM.tags.join(', ') : "メモなし"); }
+
+        area.innerHTML += `
+          <div class="${cardClass}">
+            <div class="card-inner" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="flex:1; margin-right:10px; overflow:hidden;">
+                <div style="display:flex; align-items:flex-start;">${alertBadgeHtml}${sysBadgeHtml}<b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b></div>
+                <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${previewMemo}</small>
+                <div class="card-tags" style="margin-top:6px;">${tagHtml}</div>
+              </div>
+              <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+                <button class="action-btn" onclick="selectCustomerByIndex(${index})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s;"><span class="action-icon" style="font-size:14px;">${actionIcon1}</span><span class="action-text">${actionText1}</span></button>
+                <button class="action-btn" onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s;"><span class="action-icon" style="font-size:14px;">${actionIcon2}</span><span class="action-text">${actionText2}</span></button>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+
+    function selectCustomerByIndex(index) {
+      const c = customerData[index], nameInput = document.getElementById('nameInput');
+      
+      if (nameInput.value === c.name) { 
+        nameInput.value = ""; 
+        document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
+        currentCustomerTags = []; 
+        renderAttributeTags();
+        return; 
+      }
+      
+      document.getElementById('nav-create').checked = true; nameInput.value = c.name;
+      const memos = parseMemoToJSON(c.memo); let pastMemoHtml = '';
+      if (memos.length === 0) { pastMemoHtml = '(過去の記録はありません)'; } else {
+          memos.forEach(m => {
+              let tagsHtml = m.tags && m.tags.length > 0 ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">` + m.tags.map(t => `<span style="background:#F3F4F6; color:#4B5563; font-size:10px; padding:3px 8px; border-radius:12px; font-weight:800;">${t}</span>`).join('') + `</div>` : '';
+              pastMemoHtml += `<div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border-color);"><div style="font-size:11px; color:var(--active-color); font-weight:800; margin-bottom:4px;">${m.date}</div><div style="font-size:13px;">${m.text}</div>${tagsHtml}</div>`;
+          });
+      }
+      document.getElementById('pastMemoDisplay').innerHTML = pastMemoHtml;
+      
+      currentCustomerTags = c.tagsArray; renderAttributeTags(); 
+      
+      if (isAlertCustomer(c)) { const type = localStorage.getItem('businessType') || 'cabaret', autoTag = (type === 'fuzoku') ? '🥺 寂しい' : '🥺 会いたい'; if (!selectedEpisodeTags.includes(autoTag)) { selectedEpisodeTags.push(autoTag); activeTags = activeTags.filter(t => t !== autoTag); } }
+      renderSelectedEpisodeTags(); renderChips(); 
+    }
+
+    function resetInputForm() {
+      document.getElementById('nameInput').value = ""; document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
+      document.getElementById('todayEpisodeInput').value = ""; currentCustomerTags = []; renderAttributeTags(); selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips();
+      currentBase64Image = null; document.getElementById('photoPreview').style.display = 'none'; document.getElementById('uploadText').style.display = 'block';
+    }
+
+    function renderAttributeTags() {
+      const wrapper = document.getElementById('attributeTagsWrapper'), area = document.getElementById('attributeTagsArea');
+      area.innerHTML = currentCustomerTags.map(t => `<div class="attr-chip">#${t}</div>`).join('');
+      wrapper.style.display = currentCustomerTags.length > 0 ? 'block' : 'none';
+    }
+
+    function suggestCustomer() {
+      const text = document.getElementById('nameInput').value, area = document.getElementById('resultArea'); area.innerHTML = "";
+      const matchedCustomer = customerData.find(c => c.name === text);
+      if (!matchedCustomer) { document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; currentCustomerTags = []; renderAttributeTags(); } else { const cIndex = customerData.indexOf(matchedCustomer); selectCustomerByIndex(cIndex); }
+      if (!text) { area.style.display = "none"; return; } let matchCount = 0;
+      customerData.forEach((c, index) => { if (c.name.includes(text) && c.name !== text) { matchCount++; const div = document.createElement('div'); div.className = "suggest-item"; div.innerText = c.name; div.onclick = () => { selectCustomerByIndex(index); area.style.display = "none"; }; area.appendChild(div); } });
+      area.style.display = matchCount > 0 ? "block" : "none";
+    }
+
+    function addMemoBlock(date = getTodayString(), text = "", tags = []) {
+      const area = document.getElementById('editMemoBlocksArea'), blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9), div = document.createElement('div'); div.className = 'memo-block'; div.id = blockId; div.dataset.tags = JSON.stringify(tags);
+      const readOnlyAttr = isDemoMode ? 'readonly' : '', disabledAttr = isDemoMode ? 'disabled' : '';
+      div.innerHTML = `
+        <input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr}>
+        <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>
+        <div class="memo-tags-area" style="margin-top:8px; position:relative;">
+          <div class="memo-selected-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;"></div>
+          ${isDemoMode ? '' : `<button type="button" class="memo-add-tag-btn" onclick="toggleMemoTagDropdown('${blockId}')" style="background:#FDF2F8; border:1.5px dashed #FBCFE8; color:#DB2777; font-size:11px; padding:6px 12px; border-radius:14px; font-weight:800; cursor:pointer; transition:0.2s;">＋ エピソードタグを追加</button>`}
+          <div class="memo-tag-dropdown" style="display:none; background:#FFF; border:1.5px solid var(--border-color); border-radius:16px; padding:12px; margin-top:10px; box-shadow: var(--shadow-md); position: relative;">
+            <div style="position:absolute; top:-6px; left:20px; width:10px; height:10px; background:#FFF; border-top:1.5px solid var(--border-color); border-left:1.5px solid var(--border-color); transform:rotate(45deg);"></div>
+            <div class="memo-tag-dropdown-content" style="display:flex; flex-wrap:wrap; gap:6px; max-height: 120px; overflow-y: auto;"></div>
+            <div style="text-align:right; margin-top:8px;"><button type="button" onclick="toggleMemoTagDropdown('${blockId}')" style="background:var(--input-bg); color:var(--text-main); border:none; padding:4px 10px; border-radius:10px; font-size:10px; font-weight:800; cursor:pointer;">閉じる</button></div>
+          </div>
+        </div>`;
+      area.appendChild(div); renderMemoTags(blockId); updateDimmedBlocks(); setTimeout(() => { if(text) { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; } area.scrollTop = area.scrollHeight; }, 50);
+    }
+
+    function renderMemoTags(blockId) { const block = document.getElementById(blockId); if(!block) return; const tags = JSON.parse(block.dataset.tags || "[]"), selectedArea = block.querySelector('.memo-selected-tags'); selectedArea.innerHTML = tags.map((t, index) => `<span style="background:var(--primary-gradient); color:#FFF; font-size:11px; padding:4px 10px; border-radius:14px; font-weight:800; display:flex; align-items:center; gap:4px; box-shadow:var(--shadow-sm);">${t} <span onclick="removeMemoTag('${blockId}', ${index})" style="cursor:pointer; margin-left:2px;">×</span></span>`).join(''); }
+    function removeMemoTag(blockId, index) { if(isDemoMode) return; const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); tags.splice(index, 1); block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); const dropdown = block.querySelector('.memo-tag-dropdown'); if (dropdown.style.display !== 'none') renderMemoTagDropdownContent(blockId); }
+    function toggleMemoTagDropdown(blockId) { const block = document.getElementById(blockId), dropdown = block.querySelector('.memo-tag-dropdown'); if (dropdown.style.display === 'none') { renderMemoTagDropdownContent(blockId); dropdown.style.display = 'block'; } else { dropdown.style.display = 'none'; } }
+    function renderMemoTagDropdownContent(blockId) { const block = document.getElementById(blockId), tags = JSON.parse(block.dataset.tags || "[]"), content = block.querySelector('.memo-tag-dropdown-content'); content.innerHTML = activeTags.map(t => { const isSelected = tags.includes(t), bg = isSelected ? 'var(--input-bg)' : '#FFF', color = isSelected ? 'var(--text-sub)' : 'var(--text-main)', border = isSelected ? 'transparent' : 'var(--border-color)', opacity = isSelected ? '0.5' : '1'; return `<div onclick="toggleMemoTag('${blockId}', '${t}')" style="background:${bg}; color:${color}; border:1.5px solid ${border}; padding:6px 12px; border-radius:16px; font-size:12px; font-weight:700; cursor:pointer; opacity:${opacity}; transition:0.2s;">${t}</div>`; }).join(''); }
+    function toggleMemoTag(blockId, tag) { const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); if (tags.includes(tag)) { tags = tags.filter(t => t !== tag); } else { tags.push(tag); } block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); renderMemoTagDropdownContent(blockId); }
+    function buildMemoFromBlocks() { const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block')); return JSON.stringify(blocks.map(block => { const d = block.querySelector('.memo-date').value.replace(/-/g, '/'), t = block.querySelector('.memo-text').value.trim(), tags = JSON.parse(block.dataset.tags || "[]"); if(!t && !d && tags.length === 0) return null; return { date: d, text: t, tags: tags }; }).filter(m => m !== null)); }
+    function updateDimmedBlocks() { const blocks = document.querySelectorAll('#editMemoBlocksArea .memo-block'); blocks.forEach((b, i) => { b.className = (i === blocks.length - 1) ? 'memo-block' : 'memo-block dimmed'; }); }
+    function toggleTagAccordion() { const content = document.getElementById('tagAccordionContent'), icon = document.getElementById('tagAccordionIcon'); content.classList.toggle('open'); icon.innerText = content.classList.contains('open') ? '▲' : '▼'; }
+
+    let editingOriginalName = "";
+    
+    function openCreateModal() {
+      isDemoMode = false; document.getElementById('modalTitle').innerText = "新規顧客の登録"; document.getElementById('isCreateMode').value = "true"; document.getElementById('editCustomerName').value = ""; document.getElementById('editCustomerName').readOnly = false; document.getElementById('customAttrInput').disabled = false; document.getElementById('addAttrBtn').style.display = 'block'; document.getElementById('addMemoBtn').style.display = 'block'; document.getElementById('saveCustomerBtn').style.display = 'block'; document.getElementById('cancelBtn').innerText = "キャンセル";
+      document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
+      tempSelectedAttributes = []; renderEditAttributeTags(); document.getElementById('editMemoBlocksArea').innerHTML = ''; addMemoBlock(); document.getElementById('editCustomerModal').style.display = 'flex';
+    }
+
+    function openEditModal(index) {
+      const c = customerData[index]; isDemoMode = c.tagsArray.includes("ダミー"); 
+      document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】ダミー（閲覧）" : "顧客情報の編集"; document.getElementById('isCreateMode').value = "false"; document.getElementById('editCustomerIndex').value = index; document.getElementById('editCustomerName').value = c.name; editingOriginalName = c.name; 
+      document.getElementById('editCustomerName').readOnly = isDemoMode; document.getElementById('customAttrInput').disabled = isDemoMode; document.getElementById('addAttrBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('addMemoBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('saveCustomerBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('cancelBtn').innerText = isDemoMode ? "閉じる" : "キャンセル";
+      document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
+      tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
+      const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
+      const memos = parseMemoToJSON(c.memo); if(memos.length === 0) addMemoBlock(); else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || []));
+      document.getElementById('editCustomerModal').style.display = 'flex'; setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
+    }
+
+    function renderEditAttributeTags() {
+      const area = document.getElementById('editAttributeTagsArea'); area.innerHTML = '';
+      const type = localStorage.getItem('businessType') || 'cabaret', currentPresets = industryAttributeTags[type] || industryAttributeTags['cabaret'];
+      const allTags = Array.from(new Set([...myCustomAttrs, ...currentPresets, ...tempSelectedAttributes]));
+      allTags.forEach(tag => {
+        const isSelected = tempSelectedAttributes.includes(tag), bg = isSelected ? '#DB2777' : '#FDF2F8', color = isSelected ? '#FFF' : '#DB2777', border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
+        area.innerHTML += `<div onclick="toggleAttributeTag('${tag}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:${isDemoMode ? 'default' : 'pointer'}; user-select:none;">#${tag}</div>`;
+      });
+    }
+
+    function toggleAttributeTag(tag) { if (isDemoMode) return; tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); }
+    function addCustomAttributeTag() { const v = document.getElementById('customAttrInput').value.trim(); if(v) { if(!myCustomAttrs.includes(v)) { myCustomAttrs.unshift(v); localStorage.setItem('myCustomAttrs', JSON.stringify(myCustomAttrs)); } if(!tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); } document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } }
+    function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
+
+    async function saveCustomerEdit() {
+      if (isDemoMode) return closeEditModal();
+      const isCreate = document.getElementById('isCreateMode').value === "true", newName = document.getElementById('editCustomerName').value.trim(), newMemo = buildMemoFromBlocks(), newTagsStr = tempSelectedAttributes.join(', ');
+      if(!newName) return alert("名前は必須です");
+      const btn = document.getElementById('saveCustomerBtn'); btn.innerText = "保存中..."; btn.disabled = true;
+      try {
+        const payload = { action: isCreate ? "createCustomer" : "updateCustomer", userId: userId, oldName: editingOriginalName, newName: newName, newTags: newTagsStr, newMemo: newMemo };
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+        if((await res.json()).success) { fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
+      } catch(e) { alert("エラーが発生しました。"); }
+      btn.innerText = "保存する"; btn.disabled = false;
+    }
+
+    function previewPhoto(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { currentBase64Image = e.target.result; document.getElementById('photoPreview').src = e.target.result; document.getElementById('photoPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; }; reader.readAsDataURL(file); }
+    function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
+    function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
+    function autoScrollTextarea() { const el = document.getElementById('todayEpisodeInput'); el.scrollTop = el.scrollHeight; }
+
+    function sortAndSaveTags() {
+      if (selectedEpisodeTags.length > 0) {
+        activeTags = [...selectedEpisodeTags, ...activeTags.filter(t => !selectedEpisodeTags.includes(t))];
+        const type = localStorage.getItem('businessType') || 'cabaret';
+        const isPhoto = document.getElementById('mode-photo').checked;
+        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
+      }
+    }
+
+    function resetAllForNext() {
+      document.getElementById('nameInput').value = ""; 
+      document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
+      currentCustomerTags = []; 
+      renderAttributeTags(); 
+      
+      document.getElementById('todayEpisodeInput').value = ""; 
+      selectedEpisodeTags = []; 
+      currentBase64Image = null; 
+      document.getElementById('photoPreview').style.display = 'none'; 
+      document.getElementById('uploadText').style.display = 'block';
+      
+      updateChips(); 
+      renderSelectedEpisodeTags();
+    }
+
+    function generateDiary() {
+      const name = document.getElementById('nameInput').value, todayEpisode = document.getElementById('todayEpisodeInput').value;
+      const isPhoto = document.getElementById('mode-photo').checked, type = localStorage.getItem('businessType') || 'cabaret';
+      if (!isPhoto && !name) return alert("名前を入れてね");
+
+      sortAndSaveTags();
+
+      const snackbar = document.getElementById('snackbar');
+      document.getElementById('snackbar-text').innerText = "🚀 AIが裏で執筆中...";
+      snackbar.classList.add('show');
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "執筆中...";
+
+      const targetCustomer = customerData.find(c => c.name === name);
+      let customerRank = '新規'; 
+      if (targetCustomer) {
+        const stats = getCustomerStats(targetCustomer);
+        if (stats.isVip) customerRank = 'VIP'; else if (stats.count === 1) customerRank = '新規'; else if (stats.count === 2) customerRank = '2回目'; else customerRank = '常連';
+      }
+
+      const forbiddenTags = ['新規', '初回', '初回来店', '初めて', '一見', '常連', 'リピーター', '2回目', '二回目', '3回目', '三回目', '1回目', '一回目'];
+      const cleanedCustomerTags = currentCustomerTags.filter(tag => !forbiddenTags.some(forbidden => tag.includes(forbidden)));
+
+      const memos = parseMemoToJSON(targetCustomer ? targetCustomer.memo : "");
+      const filteredMemosStr = memos.map(m => {
+          const filteredTags = (m.tags || []).filter(tag => !isEmotionTag(tag)), tagsStr = filteredTags.length > 0 ? `(タグ: ${filteredTags.join(', ')})` : ''; return `${m.date}: ${m.text} ${tagsStr}`.trim();
+      }).join('\n---\n');
+
+      let newCombinedMemo = "";
+      if (todayEpisode || selectedEpisodeTags.length > 0) { const newEpisodeObj = { date: getTodayFormatted(), text: todayEpisode, tags: [...selectedEpisodeTags] }; memos.push(newEpisodeObj); }
+      newCombinedMemo = JSON.stringify(memos);
+
+      const payload = { action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: filteredMemosStr, combinedMemoToSave: newCombinedMemo, style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, customerTags: cleanedCustomerTags.join(', '), customerRank: customerRank, episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" };
+      
+      resetAllForNext();
+
+      fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(data => { 
+           snackbar.classList.remove('show');
+           submitBtn.disabled = false;
+           submitBtn.innerText = "✨ AIで作成する";
+
+           if(data.success) { 
+              fetchCustomers(); 
+              const resultText = data.generatedText || "（GAS側で generatedText を返す設定にしてください）\n\n送信内容:\n" + payload.episode;
+              openResultModal(resultText);
+           } else { alert("エラーが発生しました"); }
+        })
+        .catch(e => { 
+           console.error("GASエラー", e); 
+           document.getElementById('snackbar-text').innerText = "❌ 通信エラーが発生しました"; 
+           setTimeout(() => { snackbar.classList.remove('show'); }, 3000);
+           submitBtn.disabled = false;
+           submitBtn.innerText = "✨ AIで作成する";
+        });
+    }
+
+    /* ✂️ ここから移行用（終わったら削除してOK） ✂️ */
+    async function migrateDataFromGAS() {
+      const confirmMove = confirm("スプレッドシートのデータを読み込んで、新しいデータベースにコピーしますか？");
+      if (!confirmMove) return;
+
+      const btn = document.querySelector('button[onclick="migrateDataFromGAS()"]');
+      btn.innerText = "🚚 移行中...（画面を閉じないでください）";
+      btn.disabled = true;
+
+      try {
+        const OLD_GAS_URL = "https://script.google.com/macros/s/AKfycbyWcx1XN8MuLsscHjoi9DdItYm7jCsMdZvNgrohG0o51KlTEheIXVdrHbSmGeSS2FV2/exec";
+        const res = await fetch(OLD_GAS_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain" }, 
+          body: JSON.stringify({ action: "getCustomers", userId: userId }) 
+        });
+        const data = await res.json();
+
+        if (!data.success || !data.customers) {
+          throw new Error("旧データの取得に失敗しました");
+        }
+
+        const oldCustomers = data.customers;
+        let successCount = 0;
+
+        for (const c of oldCustomers) {
+          const payload = {
+            action: "createCustomer",
+            userId: userId,
+            newName: String(c.name || "名前なし"),
+            newTags: c.tags ? String(c.tags) : "",
+            newMemo: c.memo ? String(c.memo) : "[]"
+          };
+
+          const saveRes = await fetch("/api", {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payload)
+          });
+          
+          const saveData = await saveRes.json();
+          if (saveData.success) successCount++;
+        }
+
+        alert(`✨ 移行完了！\n${oldCustomers.length}件中、${successCount}件の顧客データを新しいデータベースにコピーしました！`);
+        
+        fetchCustomers();
+        btn.innerText = "✅ 移行完了しました";
+
+      } catch (err) {
+        console.error(err);
+        alert("エラーが発生しました: " + err.message);
+        btn.innerText = "❌ エラーが発生しました";
+        btn.disabled = false;
+      }
+    }
+    /* ✂️ ここまで ✂️ */
+
+  </script>
+</body>
+</html>
