@@ -241,13 +241,6 @@
       </div>
 
       <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🧠</span> AIの感情タグ自動除外</h3>
-        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
-          「寂しい」「会いたい」などの感情タグは、保存された後、<strong>次回のAI生成時には裏側で自動的に除外</strong>されます。これにより、過去の感情にAIが引っ張られて文章が重くなる（コンテキスト汚染）のを防ぎます。
-        </p>
-      </div>
-
-      <div style="margin-bottom: 24px;">
         <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>💎</span> VIP（一軍）の特別扱い</h3>
         <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
           顧客のタグに<strong>「太客」「エース」「VIP」</strong>等を設定すると、AIが「VIP客」と認識し、リストで常に金枠で最上位に表示されます。
@@ -387,7 +380,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.0.0 (JSON)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.0.1</span></div>
         </div>
       </div>
     </main>
@@ -418,7 +411,6 @@
     let currentListFilter = 'all'; 
     let isCompactMode = false;
 
-    // ★NEW: 感情・気分を表すタグのブラックリスト（LLMへの指示からコッソリ除外するもの）
     const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
 
     function isEmotionTag(tag) {
@@ -566,7 +558,6 @@
       } catch (e) { alert("データ読み込みエラー"); renderQuickAccess(); }
     }
 
-    // ★NEW: メモをJSON形式として安全にパースする
     function parseMemoToJSON(memoStr) {
       if (!memoStr) return [];
       try {
@@ -574,7 +565,12 @@
         if (Array.isArray(parsed)) return parsed;
         return [];
       } catch (e) {
-        return []; // 平文などの古い形式は無視して空配列を返す
+        const oldBlocks = memoStr.split(/\n?---\n?/).map(block => {
+          const match = block.trim().match(/^(\d{4}\/\d{2}\/\d{2}):\s*([\s\S]*)$/);
+          if (match) return { date: match[1].replace(/\//g, '-'), text: match[2].trim(), tags: [] };
+          return { date: '', text: block.trim(), tags: [] };
+        }).filter(b => b.text || b.date);
+        return oldBlocks;
       }
     }
 
@@ -758,7 +754,6 @@
         let cardClass = "card";
         if (stats.isVip) cardClass = "card card-vip";
 
-        // メモプレビューの生成
         const memos = parseMemoToJSON(c.memo);
         let previewMemo = "メモなし";
         if (memos.length > 0) {
@@ -795,7 +790,6 @@
       if (nameInput.value === c.name) { resetInputForm(); return; }
       document.getElementById('nav-create').checked = true; nameInput.value = c.name;
       
-      // ★NEW: 過去メモをJSONから綺麗なUIへレンダリング
       const memos = parseMemoToJSON(c.memo);
       let pastMemoHtml = '';
       if (memos.length === 0) {
@@ -845,7 +839,6 @@
       const matchedCustomer = customerData.find(c => c.name === text);
       if (!matchedCustomer) { document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; currentCustomerTags = []; renderAttributeTags(); } 
       else { 
-        // 検索からの自動選択時もJSONレンダリングを行う
         const cIndex = customerData.indexOf(matchedCustomer);
         selectCustomerByIndex(cIndex);
       }
@@ -856,7 +849,6 @@
       }); area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    // ★NEW: 編集モーダル用のブロック生成（タグの編集フィールドを追加）
     function addMemoBlock(date = getTodayString(), text = "", tags = []) {
       const area = document.getElementById('editMemoBlocksArea');
       const div = document.createElement('div'); div.className = 'memo-block';
@@ -868,7 +860,6 @@
       setTimeout(() => { if(text) { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; } area.scrollTop = area.scrollHeight; }, 50);
     }
 
-    // ★NEW: ブロックからJSON文字列を生成
     function buildMemoFromBlocks() {
       const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block'));
       const memos = blocks.map(block => {
@@ -908,7 +899,6 @@
       tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
       const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
       
-      // ★NEW: JSONからブロックを生成
       const memos = parseMemoToJSON(c.memo); 
       if(memos.length === 0) addMemoBlock(); 
       else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || []));
@@ -978,7 +968,6 @@
         return !forbiddenTags.some(forbidden => tag.includes(forbidden));
       });
 
-      // ★NEW: 過去のメモをLLM用にサニタイズ（感情タグを除外して文字列化）
       const memos = parseMemoToJSON(targetCustomer ? targetCustomer.memo : "");
       const filteredMemosStr = memos.map(m => {
           const filteredTags = (m.tags || []).filter(tag => !isEmotionTag(tag));
@@ -986,7 +975,6 @@
           return `${m.date}: ${m.text} ${tagsStr}`.trim();
       }).join('\n---\n');
 
-      // ★NEW: 今日のエピソードをJSONに追加して保存用の文字列を生成
       let newCombinedMemo = "";
       if (todayEpisode || selectedEpisodeTags.length > 0) {
           const newEpisodeObj = {
@@ -1000,12 +988,12 @@
 
       const payload = { 
         action: "generate", userId: userId, name: name, episode: todayEpisode, 
-        pastMemo: filteredMemosStr, // 感情抜きでLLMに送信
-        combinedMemoToSave: newCombinedMemo, // JSONとしてシートに保存
+        pastMemo: filteredMemosStr, 
+        combinedMemoToSave: newCombinedMemo, 
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, 
         customerTags: cleanedCustomerTags.join(', '), 
         customerRank: customerRank, 
-        episodeTags: selectedEpisodeTags.join(', '), // 今日の感情はLLMに伝える
+        episodeTags: selectedEpisodeTags.join(', '),
         image: currentBase64Image, mode: isPhoto ? "photo" : "text" 
       };
       
