@@ -226,6 +226,35 @@
     </div>
   </div>
 
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">📖 アプリの使い方と仕様</h2>
+      
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>👑</span> 自動ランク付け</h3>
+        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+          過去の接客エピソード数をシステムが自動カウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。
+        </p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🚨</span> 放置アラート（呼び戻し）</h3>
+        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+          設定日数以上来店がないお客様には、名前横に<strong>「🚨◯日放置」</strong>と表示されます。「要連絡」タブを開くと対象者が優先表示され、AIが自動で「会いたい」感情タグを組み込みます。
+        </p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>💎</span> VIP（一軍）の特別扱い</h3>
+        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+          顧客のタグに<strong>「太客」「エース」「VIP」</strong>等を設定すると、AIが「VIP客」と認識し、リストで常に金枠で最上位に表示されます。
+        </p>
+      </div>
+
+      <button onclick="closeHelpModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 10px;">閉じる</button>
+    </div>
+  </div>
+
   <div class="app-container">
     <header class="header-area">
       <div class="app-title">AIお礼日記メーカー</div>
@@ -355,7 +384,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.1.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.1.1</span></div>
         </div>
       </div>
     </main>
@@ -631,6 +660,7 @@
       }
     }
 
+    // ★復活させました！
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
@@ -824,15 +854,12 @@
       }); area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    // ★NEW: テキスト入力ではなく、タップで開く可愛い吹き出し式のタグUI
     function addMemoBlock(date = getTodayString(), text = "", tags = []) {
       const area = document.getElementById('editMemoBlocksArea');
-      // ブロックごとに一意のIDを付与
       const blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9);
       const div = document.createElement('div'); 
       div.className = 'memo-block';
       div.id = blockId;
-      // ブロックのDOMに現在のタグ配列を保存しておく
       div.dataset.tags = JSON.stringify(tags);
       
       const readOnlyAttr = isDemoMode ? 'readonly' : '', disabledAttr = isDemoMode ? 'disabled' : '';
@@ -842,13 +869,8 @@
         <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>
         
         <div class="memo-tags-area" style="margin-top:8px; position:relative;">
-          <!-- 選択されたタグが並ぶ場所 -->
           <div class="memo-selected-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;"></div>
-          
-          <!-- ＋ タグを追加ボタン -->
           ${isDemoMode ? '' : `<button type="button" class="memo-add-tag-btn" onclick="toggleMemoTagDropdown('${blockId}')" style="background:#FDF2F8; border:1.5px dashed #FBCFE8; color:#DB2777; font-size:11px; padding:6px 12px; border-radius:14px; font-weight:800; cursor:pointer; transition:0.2s;">＋ エピソードタグを追加</button>`}
-          
-          <!-- 可愛い吹き出し（ポップオーバー） -->
           <div class="memo-tag-dropdown" style="display:none; background:#FFF; border:1.5px solid var(--border-color); border-radius:16px; padding:12px; margin-top:10px; box-shadow: var(--shadow-md); position: relative;">
             <div style="position:absolute; top:-6px; left:20px; width:10px; height:10px; background:#FFF; border-top:1.5px solid var(--border-color); border-left:1.5px solid var(--border-color); transform:rotate(45deg);"></div>
             <div class="memo-tag-dropdown-content" style="display:flex; flex-wrap:wrap; gap:6px; max-height: 120px; overflow-y: auto;"></div>
@@ -859,12 +881,11 @@
         </div>
       `;
       area.appendChild(div);
-      renderMemoTags(blockId); // 初回のタグバッジを描画
+      renderMemoTags(blockId);
       updateDimmedBlocks();
       setTimeout(() => { if(text) { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; } area.scrollTop = area.scrollHeight; }, 50);
     }
 
-    // ★NEW: 選択済みタグの描画
     function renderMemoTags(blockId) {
       const block = document.getElementById(blockId);
       if(!block) return;
@@ -875,7 +896,6 @@
       ).join('');
     }
 
-    // ★NEW: 選択済みタグの削除
     function removeMemoTag(blockId, index) {
       if(isDemoMode) return;
       const block = document.getElementById(blockId);
@@ -888,7 +908,6 @@
       if (dropdown.style.display !== 'none') renderMemoTagDropdownContent(blockId);
     }
 
-    // ★NEW: 吹き出しの開閉
     function toggleMemoTagDropdown(blockId) {
       const block = document.getElementById(blockId);
       const dropdown = block.querySelector('.memo-tag-dropdown');
@@ -901,7 +920,6 @@
       }
     }
 
-    // ★NEW: 吹き出しの中身（タグリスト）の描画
     function renderMemoTagDropdownContent(blockId) {
       const block = document.getElementById(blockId);
       const tags = JSON.parse(block.dataset.tags || "[]");
@@ -917,27 +935,25 @@
       }).join('');
     }
 
-    // ★NEW: 吹き出し内でタグをタップした時の処理
     function toggleMemoTag(blockId, tag) {
       const block = document.getElementById(blockId);
       let tags = JSON.parse(block.dataset.tags || "[]");
       if (tags.includes(tag)) {
-        tags = tags.filter(t => t !== tag); // すでにあれば消す
+        tags = tags.filter(t => t !== tag);
       } else {
-        tags.push(tag); // なければ追加
+        tags.push(tag);
       }
       block.dataset.tags = JSON.stringify(tags);
       renderMemoTags(blockId);
-      renderMemoTagDropdownContent(blockId); // 吹き出しの中身も更新（選択状態にするため）
+      renderMemoTagDropdownContent(blockId);
     }
 
-    // ★UPDATE: ブロックからJSONを生成する際に dataset.tags を読み取る
     function buildMemoFromBlocks() {
       const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block'));
       const memos = blocks.map(block => {
         const d = block.querySelector('.memo-date').value.replace(/-/g, '/');
         const t = block.querySelector('.memo-text').value.trim();
-        const tags = JSON.parse(block.dataset.tags || "[]"); // 隠しデータから取得
+        const tags = JSON.parse(block.dataset.tags || "[]");
         if(!t && !d && tags.length === 0) return null;
         return { date: d, text: t, tags: tags };
       }).filter(m => m !== null);
