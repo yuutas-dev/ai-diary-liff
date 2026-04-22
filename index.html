@@ -123,6 +123,13 @@
     .loading-text { font-size: 18px; font-weight: 800; line-height: 1.6; white-space: pre-wrap; margin-bottom: 30px; }
     .close-overlay-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 14px 30px; border-radius: 30px; font-weight: 800; font-size: 15px; display: none; cursor: pointer; }
 
+    /* ハーフモーダルのCSS */
+    .half-modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; }
+    .half-modal-backdrop.show { opacity: 1; visibility: visible; }
+    .half-modal { position: fixed; bottom: -100%; left: 0; width: 100%; background: #FFF; border-radius: 28px 28px 0 0; padding: 20px 20px calc(env(safe-area-inset-bottom, 20px) + 20px); z-index: 10001; transition: bottom 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+    .half-modal.open { bottom: 0; }
+    .half-modal-handle { width: 40px; height: 5px; background: #E5E7EB; border-radius: 10px; margin: 0 auto 20px auto; }
+
     .textarea-wrapper { position: relative; }
     textarea.input-field { height: 90px; resize: none; padding-right: 50px; line-height: 1.5; }
     .mic-btn { position: absolute; bottom: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; background: #FFF; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; color: #EC4899; }
@@ -251,6 +258,17 @@
       </div>
 
       <button onclick="closeHelpModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 10px;">閉じる</button>
+    </div>
+  </div>
+
+  <div id="resultModalBackdrop" class="half-modal-backdrop" onclick="closeResultModal()"></div>
+  <div id="resultHalfModal" class="half-modal">
+    <div class="half-modal-handle"></div>
+    <h2 style="margin: 0 0 16px; font-weight: 900; text-align: center; display:flex; align-items:center; justify-content:center; gap:8px;"><span>✨</span> 完成しました！</h2>
+    <textarea id="finalResultText" class="input-field" style="height: 240px; margin-bottom: 16px; font-size: 14px; line-height: 1.6;" placeholder="生成された文章がここに表示されます。自由に手直しできます。"></textarea>
+    <div style="display:flex; gap:10px;">
+      <button onclick="copyResultText()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; gap:6px;">📋 コピー</button>
+      <button onclick="sendToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; gap:6px;">💬 LINEへ送信</button>
     </div>
   </div>
 
@@ -383,7 +401,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.2.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.3.0</span></div>
         </div>
       </div>
     </main>
@@ -413,7 +431,7 @@
     let myCustomAttrs = []; 
     let currentListFilter = 'all'; 
     let isCompactMode = false;
-    let isFilterScrolled = false; // ★NEW: 初回スクロール判定用フラグ
+    let isFilterScrolled = false;
 
     const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
 
@@ -441,7 +459,6 @@
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
       if (params.get('modal') === 'help') openHelpModal();
 
-      // ★NEW: 顧客タブを開いた瞬間に、右端に続きがあることをアピールするフワッとスクロール
       document.getElementById('nav-data').addEventListener('change', (e) => {
         if (e.target.checked && !isFilterScrolled) {
           setTimeout(() => {
@@ -469,7 +486,6 @@
 
       updateChips(); fetchCustomers();
 
-      // 初期状態で顧客タブが開かれている場合の処理
       if (document.getElementById('nav-data').checked && !isFilterScrolled) {
         setTimeout(() => {
           const container = document.querySelector('.filter-container');
@@ -670,9 +686,8 @@
         if(el) { 
             if (currentListFilter === f) {
                 el.classList.add('active-filter');
-                // ★NEW: タップしたタブを画面の中央に自動スクロール
                 const container = document.querySelector('.filter-container');
-                if (container && isFilterScrolled) { // 初期スクロールが終わっている場合のみ
+                if (container && isFilterScrolled) { 
                     const scrollPos = el.offsetLeft - (container.offsetWidth / 2) + (el.offsetWidth / 2);
                     container.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
                 }
@@ -700,6 +715,39 @@
 
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
+
+    // モーダル操作関数
+    function openResultModal(text) {
+      document.getElementById('finalResultText').value = text;
+      document.getElementById('resultModalBackdrop').classList.add('show');
+      setTimeout(() => { document.getElementById('resultHalfModal').classList.add('open'); }, 10);
+    }
+
+    function closeResultModal() {
+      document.getElementById('resultHalfModal').classList.remove('open');
+      setTimeout(() => { document.getElementById('resultModalBackdrop').classList.remove('show'); }, 300);
+    }
+
+    function copyResultText() {
+      const text = document.getElementById('finalResultText').value;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("コピーしました！");
+      }).catch(err => {
+        alert("コピーに失敗しました: " + err);
+      });
+    }
+
+    function sendToLine() {
+      const text = document.getElementById('finalResultText').value;
+      if (liff.isLoggedIn() && liff.isInClient()) {
+        liff.sendMessages([{ type: 'text', text: text }]).then(() => {
+          liff.closeWindow();
+        }).catch(err => alert("LINE送信エラー: " + err));
+      } else {
+        const url = "https://line.me/R/msg/text/?" + encodeURIComponent(text);
+        window.open(url, '_blank');
+      }
+    }
 
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
@@ -1075,7 +1123,10 @@
       if (!isPhoto && !name) return alert("名前を入れてね");
 
       const overlay = document.getElementById('loadingOverlay'), msg = document.getElementById('loadingMessage'), closeBtn = document.getElementById('loadingCloseBtn'), spinner = document.getElementById('loadingSpinner');
-      overlay.style.display = 'flex'; msg.innerText = "🚀 データを送信中...\n(画面を開いたままお待ち下さい)"; closeBtn.style.display = 'none'; spinner.style.display = 'block';
+      overlay.style.display = 'flex'; 
+      msg.innerText = "🚀 AIが執筆中...\n(数秒〜数十秒かかります)"; 
+      closeBtn.style.display = 'none'; 
+      spinner.style.display = 'block';
 
       const targetCustomer = customerData.find(c => c.name === name);
       let customerRank = '新規'; 
@@ -1123,10 +1174,24 @@
       
       resetInputForm();
 
-      setTimeout(() => { msg.innerText = "✨ AIが執筆を開始しました！\n数秒〜数十秒後にLINEにお届けします。\nそのまま次の日記を作成できます😊"; closeBtn.style.display = 'block'; spinner.style.display = 'none'; }, 1200);
-
       fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
-        .then(res => res.json()).then(data => { if(data.success) fetchCustomers(); }).catch(e => console.error("GASエラー", e));
+        .then(res => res.json())
+        .then(data => { 
+           closeLoadingOverlay();
+           if(data.success) { 
+              fetchCustomers(); 
+              const resultText = data.generatedText || data.text || data.result || "（AIの生成結果がここに表示されます。GAS側からテキストを返すように設定してください）\n\n【送信したエピソード】\n" + payload.episode;
+              openResultModal(resultText);
+           } else {
+              alert("エラーが発生しました");
+           }
+        })
+        .catch(e => { 
+           console.error("GASエラー", e); 
+           msg.innerText = "❌ エラーが発生しました"; 
+           closeBtn.style.display = 'block'; 
+           spinner.style.display = 'none'; 
+        });
     }
 
     function startDictation() {
