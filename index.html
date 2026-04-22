@@ -80,6 +80,9 @@
     .story-name { font-size: 11px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
     .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 1.5px solid #FFF; z-index: 5; }
 
+    /* ★NEW: ささやかなアラート用の丸いバッジCSS */
+    .story-alert-badge { position: absolute; bottom: -2px; right: -4px; background: #EF4444; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 9px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+
     .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 24px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
     .selected-chip { background: var(--primary-gradient); color: #FFF; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 4px; animation: pop 0.2s ease-out; }
     @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -348,10 +351,6 @@
       <div class="page page-settings">
         <h2 style="margin:0 0 16px; font-weight:900;">設定・情報</h2>
 
-        <!-- ✂️ ここから移行用（終わったら削除してOK） ✂️ -->
-        <button onclick="migrateDataFromGAS()" style="width:100%; background:#10B981; color:#FFF; border:none; padding:16px; border-radius:16px; font-weight:800; margin-bottom:16px;">🚚 スプレッドシートからデータを移行する</button>
-        <!-- ✂️ ここまで ✂️ -->
-
         <div class="settings-list">
           <div class="settings-item" onclick="openStyleModal()"><span>🎨 AIスタイル・口調設定</span><span class="settings-val" id="styleOverviewText">かわいい・清楚・カスタム</span></div>
           <div class="settings-item">
@@ -388,7 +387,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.8.1</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.8.2</span></div>
         </div>
       </div>
     </main>
@@ -438,7 +437,7 @@
     };
 
     const LIFF_ID = "2009843865-hghVLuaS";
-    const GAS_URL = "/api"; // Vercel APIに向けたパス
+    const GAS_URL = "/api"; 
 
     let userId = "test-user";
     let customerData = [];
@@ -501,7 +500,6 @@
         }
       });
 
-      // タブ切り替え時のスクロールリセット
       document.querySelectorAll('input[name="nav"]').forEach(radio => {
         radio.addEventListener('change', () => {
           document.querySelector('.scroll-area').scrollTop = 0;
@@ -639,7 +637,7 @@
         const data = await res.json();
         customerData = data.success ? data.customers.map(c => ({ ...c, name: String(c.name || "名前なし"), memo: String(c.memo || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : [] })) : [];
         renderCustomerList(); renderQuickAccess(); updateAlertBadge();
-      } catch (e) { alert("データ読み込みエラー"); }
+      } catch (e) { alert("データ読み込みエラーの詳細:\n" + e.message); console.error(e); }
     }
 
     function parseMemoToJSON(memoStr) {
@@ -729,11 +727,19 @@
       const currentType = localStorage.getItem('businessType') || 'cabaret', targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
       let filtered = customerData.map((c, i) => ({c, index: i})).filter(item => { if (item.c.tagsArray.includes('ダミー') && !item.c.tagsArray.includes(targetDummyTag)) return false; return true; });
       filtered.sort((a, b) => { const statsA = getCustomerStats(a.c), statsB = getCustomerStats(b.c); if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; return statsB.count - statsA.count; });
+      
       filtered.slice(0, 15).forEach(item => {
         const c = item.c, index = item.index, stats = getCustomerStats(c);
-        let topBadge = ''; if (stats.isVip) topBadge = `<div class="story-badge" style="background:#F59E0B; border-color:#FFF; color:#FFF;">👑VIP</div>`; else if (c.tagsArray.length > 0) topBadge = `<div class="story-badge">${c.tagsArray[0]}</div>`;
+        let topBadge = ''; 
+        if (stats.isVip) topBadge = `<div class="story-badge" style="background:#F59E0B; border-color:#FFF; color:#FFF;">👑VIP</div>`; 
+        else if (c.tagsArray.length > 0) topBadge = `<div class="story-badge">${c.tagsArray[0]}</div>`;
+        
+        // ★NEW: ささやかなアラートバッジを追加
+        const isAlert = isAlertCustomer(c);
+        const alertBadgeHtml = isAlert ? `<div class="story-alert-badge">🚨</div>` : '';
+
         const ringClass = stats.isVip ? "story-ring story-ring-vip" : "story-ring";
-        area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
+        area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}${alertBadgeHtml}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
       });
     }
 
@@ -989,72 +995,13 @@
            } else { alert("エラーが発生しました"); }
         })
         .catch(e => { 
-           console.error("GASエラー", e); 
+           console.error("Vercelエラー", e); 
            document.getElementById('snackbar-text').innerText = "❌ 通信エラーが発生しました"; 
            setTimeout(() => { snackbar.classList.remove('show'); }, 3000);
            submitBtn.disabled = false;
            submitBtn.innerText = "✨ AIで作成する";
         });
     }
-
-    /* ✂️ ここから移行用（終わったら削除してOK） ✂️ */
-    async function migrateDataFromGAS() {
-      const confirmMove = confirm("スプレッドシートのデータを読み込んで、新しいデータベースにコピーしますか？");
-      if (!confirmMove) return;
-
-      const btn = document.querySelector('button[onclick="migrateDataFromGAS()"]');
-      btn.innerText = "🚚 移行中...（画面を閉じないでください）";
-      btn.disabled = true;
-
-      try {
-        const OLD_GAS_URL = "https://script.google.com/macros/s/AKfycbyWcx1XN8MuLsscHjoi9DdItYm7jCsMdZvNgrohG0o51KlTEheIXVdrHbSmGeSS2FV2/exec";
-        const res = await fetch(OLD_GAS_URL, { 
-          method: "POST", 
-          headers: { "Content-Type": "text/plain" }, 
-          body: JSON.stringify({ action: "getCustomers", userId: userId }) 
-        });
-        const data = await res.json();
-
-        if (!data.success || !data.customers) {
-          throw new Error("旧データの取得に失敗しました");
-        }
-
-        const oldCustomers = data.customers;
-        let successCount = 0;
-
-        for (const c of oldCustomers) {
-          const payload = {
-            action: "createCustomer",
-            userId: userId,
-            newName: String(c.name || "名前なし"),
-            newTags: c.tags ? String(c.tags) : "",
-            newMemo: c.memo ? String(c.memo) : "[]"
-          };
-
-          const saveRes = await fetch("/api", {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(payload)
-          });
-          
-          const saveData = await saveRes.json();
-          if (saveData.success) successCount++;
-        }
-
-        alert(`✨ 移行完了！\n${oldCustomers.length}件中、${successCount}件の顧客データを新しいデータベースにコピーしました！`);
-        
-        fetchCustomers();
-        btn.innerText = "✅ 移行完了しました";
-
-      } catch (err) {
-        console.error(err);
-        alert("エラーが発生しました: " + err.message);
-        btn.innerText = "❌ エラーが発生しました";
-        btn.disabled = false;
-      }
-    }
-    /* ✂️ ここまで ✂️ */
-
   </script>
 </body>
 </html>
