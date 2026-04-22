@@ -33,6 +33,13 @@
     #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
     #mode-photo:checked ~ .app-container .toggle-photo, #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
     
+    /* ★NEW: 写メ日記モード時の顧客選択ブロック非アクティブ化 */
+    #mode-photo:checked ~ .app-container .card-customer-select {
+      opacity: 0.4;
+      pointer-events: none;
+      filter: grayscale(80%);
+    }
+
     .style-content-wrapper { min-height: 310px; position: relative; }
     .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; animation: fadeInTab 0.3s ease-out forwards; }
     #style-cute:checked ~ .modal-overlay .style-desc-cute, #style-custom:checked ~ .modal-overlay .style-desc-custom, #style-neat:checked ~ .modal-overlay .style-desc-neat { display: block; }
@@ -120,13 +127,11 @@
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
     .modal-content { background: #FFF; border-radius: 28px; padding: 24px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
 
-    /* ★NEW: 邪魔にならない非同期ローディング用スナックバー */
     .snackbar { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: rgba(17, 24, 39, 0.9); backdrop-filter: blur(8px); color: #FFF; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 12px; z-index: 9000; transition: bottom 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: none; white-space: nowrap; }
-    .snackbar.show { bottom: calc(env(safe-area-inset-bottom, 12px) + 85px); } /* ナビバーの少し上に表示 */
+    .snackbar.show { bottom: calc(env(safe-area-inset-bottom, 12px) + 85px); } 
     .snackbar-spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.3); border-top: 2.5px solid #F472B6; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* ハーフモーダルのCSS */
     .half-modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; }
     .half-modal-backdrop.show { opacity: 1; visibility: visible; }
     .half-modal { position: fixed; bottom: -100%; left: 0; width: 100%; background: #FFF; border-radius: 28px 28px 0 0; padding: 20px 20px calc(env(safe-area-inset-bottom, 20px) + 20px); z-index: 10001; transition: bottom 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
@@ -152,7 +157,6 @@
 </head>
 <body>
 
-  <!-- ★NEW: 画面操作を邪魔しないスナックバー -->
   <div id="snackbar" class="snackbar">
     <div class="snackbar-spinner"></div>
     <span id="snackbar-text">🚀 AIが裏で執筆中...</span>
@@ -272,7 +276,8 @@
 
     <main class="scroll-area">
       <div class="page page-create">
-        <div class="card">
+        <!-- ★NEW: クラスに card-customer-select を追加 -->
+        <div class="card card-customer-select">
           <span class="label">👤 誰に送る？</span>
           <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea">
             <div class="story-item">
@@ -382,7 +387,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.4.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.4.1</span></div>
         </div>
       </div>
     </main>
@@ -506,6 +511,16 @@
       const masterTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags], savedTags = localStorage.getItem(storageKey);
       if (savedTags) { let parsed = JSON.parse(savedTags); if (parsed.length < masterTags.length) { activeTags = masterTags; localStorage.setItem(storageKey, JSON.stringify(masterTags)); } else activeTags = parsed; } else activeTags = masterTags;
       renderChips();
+
+      // ★NEW: 写メ日記モードに切り替えたら、顧客情報の選択状態をクリアする
+      if (isPhoto) {
+        document.getElementById('nameInput').value = "";
+        document.getElementById('pastMemoDisplay').innerHTML = "(写メ日記モードでは顧客情報は使用しません)";
+        currentCustomerTags = [];
+        renderAttributeTags();
+      } else {
+        document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
+      }
     }
 
     function renderChips() {
@@ -804,7 +819,6 @@
       const isPhoto = document.getElementById('mode-photo').checked, type = localStorage.getItem('businessType') || 'cabaret';
       if (!isPhoto && !name) return alert("名前を入れてね");
 
-      // ★NEW: スナックバーの表示とボタンの無効化（非同期ローディング）
       const snackbar = document.getElementById('snackbar');
       document.getElementById('snackbar-text').innerText = "🚀 AIが裏で執筆中...";
       snackbar.classList.add('show');
