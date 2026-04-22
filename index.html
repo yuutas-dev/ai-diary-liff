@@ -291,7 +291,12 @@
         </div>
 
         <div class="card">
-          <span class="label">📝 エピソード作成</span>
+          <!-- ★NEW: 手動クリアボタンを追加 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span class="label" style="margin-bottom: 0;">📝 エピソード作成</span>
+            <span onclick="clearEpisodeInput()" style="font-size: 11px; color: var(--text-sub); font-weight: 800; cursor: pointer; background: var(--input-bg); padding: 6px 12px; border-radius: 16px; border: 1px solid var(--border-color); transition: 0.2s;">🧹 クリア</span>
+          </div>
+
           <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 12px;">
             <div class="tags-scroll-container" id="attributeTagsArea"></div>
           </div>
@@ -377,7 +382,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.6.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.7.0</span></div>
         </div>
       </div>
     </main>
@@ -572,7 +577,6 @@
         const isSelected = selectedEpisodeTags.includes(text), chip = document.createElement('div');
         chip.className = 'chip' + (isSelected ? ' dimmed' : ''); chip.innerHTML = text;
         chip.onclick = () => { 
-          // ★NEW: 選択時は配列の並び替え(ソート)を行わず、見た目だけ変える
           if (!isSelected) { 
             selectedEpisodeTags.push(text); 
             renderSelectedEpisodeTags(); 
@@ -602,6 +606,20 @@
         const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked; 
         localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags)); 
       } 
+    }
+
+    // ★NEW: エピソード入力の手動クリア機能
+    function clearEpisodeInput() {
+      if (document.getElementById('todayEpisodeInput').value || selectedEpisodeTags.length > 0 || currentBase64Image) {
+        if (!confirm("入力中のエピソード・タグ・写真をクリアしますか？")) return;
+      }
+      document.getElementById('todayEpisodeInput').value = "";
+      selectedEpisodeTags = [];
+      currentBase64Image = null; 
+      document.getElementById('photoPreview').style.display = 'none'; 
+      document.getElementById('uploadText').style.display = 'block';
+      updateChips(); // activeTagsをストレージ状態に戻す
+      renderSelectedEpisodeTags();
     }
     
     function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); updateAlertBadge(); }
@@ -761,7 +779,16 @@
 
     function selectCustomerByIndex(index) {
       const c = customerData[index], nameInput = document.getElementById('nameInput');
-      if (nameInput.value === c.name) { resetInputForm(); return; }
+      
+      // ★NEW: 同じ人をタップしたら「顧客選択だけ」解除する（エピソードやタグは残す）
+      if (nameInput.value === c.name) { 
+        nameInput.value = ""; 
+        document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
+        currentCustomerTags = []; 
+        renderAttributeTags();
+        return; 
+      }
+      
       document.getElementById('nav-create').checked = true; nameInput.value = c.name;
       const memos = parseMemoToJSON(c.memo); let pastMemoHtml = '';
       if (memos.length === 0) { pastMemoHtml = '(過去の記録はありません)'; } else {
@@ -771,15 +798,29 @@
           });
       }
       document.getElementById('pastMemoDisplay').innerHTML = pastMemoHtml;
-      document.getElementById('todayEpisodeInput').value = ""; currentCustomerTags = c.tagsArray; renderAttributeTags(); selectedEpisodeTags = []; 
+      
+      // ★NEW: ここにあったエピソードとタグの初期化処理を削除（引き継ぐため）
+      currentCustomerTags = c.tagsArray; renderAttributeTags(); 
+      
       if (isAlertCustomer(c)) { const type = localStorage.getItem('businessType') || 'cabaret', autoTag = (type === 'fuzoku') ? '🥺 寂しい' : '🥺 会いたい'; if (!selectedEpisodeTags.includes(autoTag)) { selectedEpisodeTags.push(autoTag); activeTags = activeTags.filter(t => t !== autoTag); } }
       renderSelectedEpisodeTags(); renderChips(); 
     }
 
-    function resetInputForm() {
-      document.getElementById('nameInput').value = ""; document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
-      document.getElementById('todayEpisodeInput').value = ""; currentCustomerTags = []; renderAttributeTags(); selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips();
-      currentBase64Image = null; document.getElementById('photoPreview').style.display = 'none'; document.getElementById('uploadText').style.display = 'block';
+    // ★NEW: AI生成後にすべてをリセットするための専用関数
+    function resetAllForNext() {
+      document.getElementById('nameInput').value = ""; 
+      document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
+      currentCustomerTags = []; 
+      renderAttributeTags(); 
+      
+      document.getElementById('todayEpisodeInput').value = ""; 
+      selectedEpisodeTags = []; 
+      currentBase64Image = null; 
+      document.getElementById('photoPreview').style.display = 'none'; 
+      document.getElementById('uploadText').style.display = 'block';
+      
+      updateChips(); 
+      renderSelectedEpisodeTags();
     }
 
     function renderAttributeTags() {
@@ -875,10 +916,8 @@
     function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
     function autoScrollTextarea() { const el = document.getElementById('todayEpisodeInput'); el.scrollTop = el.scrollHeight; }
 
-    // ★NEW: ソートと保存を実行する関数を切り出し
     function sortAndSaveTags() {
       if (selectedEpisodeTags.length > 0) {
-        // 選ばれたタグを前に持ってくる
         activeTags = [...selectedEpisodeTags, ...activeTags.filter(t => !selectedEpisodeTags.includes(t))];
         const type = localStorage.getItem('businessType') || 'cabaret';
         const isPhoto = document.getElementById('mode-photo').checked;
@@ -891,7 +930,6 @@
       const isPhoto = document.getElementById('mode-photo').checked, type = localStorage.getItem('businessType') || 'cabaret';
       if (!isPhoto && !name) return alert("名前を入れてね");
 
-      // ★NEW: 生成ボタンを押したタイミングで、選択したタグをソートして保存する
       sortAndSaveTags();
 
       const snackbar = document.getElementById('snackbar');
@@ -922,7 +960,9 @@
       newCombinedMemo = JSON.stringify(memos);
 
       const payload = { action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: filteredMemosStr, combinedMemoToSave: newCombinedMemo, style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, customerTags: cleanedCustomerTags.join(', '), customerRank: customerRank, episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" };
-      resetInputForm();
+      
+      // ★NEW: 生成開始時にUIをリセットする
+      resetAllForNext();
 
       fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
         .then(res => res.json())
