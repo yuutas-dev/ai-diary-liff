@@ -49,10 +49,24 @@
     .card-vip { border: 2px solid #FCD34D; background: linear-gradient(to right, #FFF, #FEF3C7); }
     .story-ring-vip { background: linear-gradient(135deg, #F59E0B, #FBBF24) !important; }
     
-    .filter-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    /* 修正: フィルタボタンの高さが潰れないように min-height と flex-shrink を追加 */
+    .filter-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px 0; margin-bottom: 12px; scrollbar-width: none; flex-shrink: 0; min-height: 48px; align-items: center; }
     .filter-container::-webkit-scrollbar { display: none; }
-    .filter-btn { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .filter-btn { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; flex-shrink: 0; height: fit-content; }
     .filter-btn.active-filter { background: var(--primary-gradient); color: #FFF; border-color: transparent; }
+
+    /* コンパクトモードのトグルUI */
+    .view-toggle { background: var(--input-bg); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 800; color: var(--text-sub); cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
+    
+    /* NEW: コンパクト表示モード用CSS */
+    .compact-view .card { padding: 12px 14px; margin-bottom: 10px; }
+    .compact-view .card-inner { align-items: center !important; }
+    .compact-view .card-memo { display: none !important; }
+    .compact-view .card-tags { margin-top: 6px; }
+    .compact-view .card-actions { flex-direction: row !important; gap: 8px !important; }
+    .compact-view .action-btn { width: 36px; height: 36px; padding: 0 !important; border-radius: 50% !important; }
+    .compact-view .action-icon { font-size: 16px !important; }
+    .compact-view .action-text { display: none !important; }
 
     .skeleton { background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 12px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -266,10 +280,17 @@
       </div>
 
       <div class="page page-data">
-        <h2 style="margin:0 0 12px; font-weight:900;">顧客カルテ</h2>
+        <!-- ★NEW: 見出し横にコンパクト切り替えトグルを追加 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2 style="margin:0; font-weight:900;">顧客カルテ</h2>
+          <div class="view-toggle" onclick="toggleCompactMode()">
+            <span id="viewIcon">🗂️ 詳細表示</span>
+          </div>
+        </div>
+        
         <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
         
-        <!-- ★NEW: クイックフィルタUI -->
+        <!-- フィルタUI -->
         <div class="filter-container">
           <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
           <div class="filter-btn" id="filter-btn-vip" onclick="setListFilter('vip')">💎 一軍</div>
@@ -301,7 +322,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">1.3.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">1.4.0</span></div>
         </div>
       </div>
     </main>
@@ -329,7 +350,8 @@
     let currentBase64Image = null;
     let isDemoMode = false;
     let myCustomAttrs = []; 
-    let currentListFilter = 'all'; // ★NEW: 現在のフィルタ状態
+    let currentListFilter = 'all'; 
+    let isCompactMode = false; // ★NEW: コンパクト表示の状態管理
 
     const stylePlaceholders = { cabaret: "（例）昨日は来てくれてありがとう🥺\n久しぶりに顔見れて普通に嬉しかった💗\n○○くんへ✨...", fuzoku: "（例）今日はありがとう🥺\nちょっと肌寒かったのに来てくれて嬉しかったな☁️\n○○さんへ💗...", host: "（例）今日ありがとな。\nちょっと肌寒かったのに来てくれたの、普通に嬉しかった☁️\n○○へ..." };
     const industryAttributeTags = { cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'], fuzoku: ['M気質', 'S気質', '常連', '新規', 'キモい', '優しい', '痛客', '匂いキツめ', 'マナー良', '本番要求', 'おじさん', '若者', 'イケメン', 'デブ', 'ハゲ'], host: ['太客', '細客', 'エース', '痛客', '常連', '新規', 'メンヘラ', '金持ち', 'ケチ', '酒癖悪い', 'マナー良', '独身', '既婚', '若者', 'おばさん'] };
@@ -384,7 +406,7 @@
         chip.onclick = () => {
           if (!isSelected) { 
             selectedEpisodeTags.push(text); 
-            activeTags = [text, ...activeTags.filter(t => t !== text)]; // 直近使ったものを前に
+            activeTags = [text, ...activeTags.filter(t => t !== text)]; 
             renderSelectedEpisodeTags(); renderChips(); 
             const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked;
             localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
@@ -419,23 +441,20 @@
       } catch (e) { alert("データ読み込みエラー"); renderQuickAccess(); }
     }
 
-    // ★NEW: 顧客の来店回数とVIP判定を行う関数
     function getCustomerStats(c) {
       const blocks = parseMemoToBlocks(c.memo);
-      const count = blocks.length === 0 ? 1 : blocks.length; // 過去メモがない人も1回目（新規）扱い
-      const vipKeywords = ['太客', 'エース', '一軍', 'VIP', '金持ち', '良客', '常連']; // これらがあれば一軍
+      const count = blocks.length === 0 ? 1 : blocks.length; 
+      const vipKeywords = ['太客', 'エース', '一軍', 'VIP', '金持ち', '良客', '常連']; 
       const isVip = c.tagsArray.some(tag => vipKeywords.includes(tag));
       return { count, isVip };
     }
 
-    // ★NEW: フィルタボタンの制御（トグル）
     function setListFilter(filterType) {
       if (currentListFilter === filterType && filterType !== 'all') {
-        currentListFilter = 'all'; // 同じボタンを押したら解除
+        currentListFilter = 'all'; 
       } else {
         currentListFilter = filterType;
       }
-      
       const filters = ['all', 'vip', 'new', 'second', 'regular'];
       filters.forEach(f => {
         const el = document.getElementById(`filter-btn-${f}`);
@@ -444,7 +463,20 @@
       filterCustomerList();
     }
 
-    // ★UPDATE: 上部アイコンもVIP＆来店回数順に並び替え
+    // ★NEW: コンパクトモードの切り替え関数
+    function toggleCompactMode() {
+      isCompactMode = !isCompactMode;
+      const listArea = document.getElementById('customerListArea');
+      const viewIcon = document.getElementById('viewIcon');
+      if(isCompactMode) {
+        listArea.classList.add('compact-view');
+        viewIcon.innerText = '📋 コンパクト';
+      } else {
+        listArea.classList.remove('compact-view');
+        viewIcon.innerText = '🗂️ 詳細表示';
+      }
+    }
+
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -458,7 +490,7 @@
         const statsA = getCustomerStats(a.c), statsB = getCustomerStats(b.c);
         if (statsA.isVip && !statsB.isVip) return -1;
         if (!statsA.isVip && statsB.isVip) return 1;
-        return statsB.count - statsA.count; // VIP以外は回数が多い順
+        return statsB.count - statsA.count; 
       });
 
       filtered.slice(0, 15).forEach(item => {
@@ -474,7 +506,7 @@
 
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
-    // ★UPDATE: 顧客カルテを自動並び替え＆フィルタリング＆VIP表示対応
+    // ★UPDATE: HTMLの構造をコンパクトモード対応に調整
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -492,7 +524,6 @@
         return true;
       });
 
-      // VIP優先、その次は来店回数が多い順でソート
       displayList.sort((a, b) => {
         const statsA = getCustomerStats(a), statsB = getCustomerStats(b);
         if (statsA.isVip && !statsB.isVip) return -1;
@@ -508,28 +539,38 @@
         if (stats.count === 1) sysBadge = '🔰 新規';
         else if (stats.count === 2) sysBadge = '✌️ 2回目';
         else if (stats.count >= 3) sysBadge = '👑 常連';
-        const sysBadgeHtml = sysBadge ? `<span style="background:#F3F4F6; color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #E5E7EB; margin-right:4px;">${sysBadge}</span>` : '';
+        
+        // ★修正: バッジが絶対に潰れないように調整
+        const sysBadgeHtml = sysBadge ? `<span style="background:#F3F4F6; color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #E5E7EB; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content;">${sysBadge}</span>` : '';
 
-        const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
-        const isDummy = c.tagsArray.includes("ダミー"), btnLabel = isDummy ? '🔍 閲覧' : '⚙️ 編集';
-        const editBtn = `<button onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px;">${btnLabel}</button>`;
-
+        const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
+        const isDummy = c.tagsArray.includes("ダミー");
+        
+        // ★修正: コンパクトモード時のアイコンだけ表示にも対応できるボタン構造
+        const actionIcon1 = '✏️', actionText1 = '日記作成';
+        const actionIcon2 = isDummy ? '🔍' : '⚙️', actionText2 = isDummy ? '閲覧' : '編集';
         const cardClass = stats.isVip ? "card card-vip" : "card";
 
         area.innerHTML += `
-          <div class="${cardClass}" style="margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div style="flex:1; margin-right:10px;">
-                <div style="display:flex; align-items:center;">
+          <div class="${cardClass}">
+            <div class="card-inner" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="flex:1; margin-right:10px; overflow:hidden;">
+                <div style="display:flex; align-items:flex-start;">
                   ${sysBadgeHtml}
-                  <b style="font-size:16px;">${c.name}</b>
+                  <b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b>
                 </div>
-                <small style="color:var(--text-sub); display:block; margin-top:4px;">${c.memo ? c.memo.substring(0,40)+"..." : "メモなし"}</small>
-                ${tagHtml}
+                <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${c.memo ? c.memo.substring(0,40)+"..." : "メモなし"}</small>
+                <div class="card-tags" style="margin-top:6px;">
+                  ${tagHtml}
+                </div>
               </div>
-              <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
-                <button onclick="selectCustomerByIndex(${index})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px;">✏️ 日記作成</button>
-                ${editBtn}
+              <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+                <button class="action-btn" onclick="selectCustomerByIndex(${index})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s;">
+                  <span class="action-icon" style="font-size:14px;">${actionIcon1}</span><span class="action-text">${actionText1}</span>
+                </button>
+                <button class="action-btn" onclick="openEditModal(${index})" style="background:#F3E8FF; color:#9333EA; border:none; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s;">
+                  <span class="action-icon" style="font-size:14px;">${actionIcon2}</span><span class="action-text">${actionText2}</span>
+                </button>
               </div>
             </div>
           </div>`;
