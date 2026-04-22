@@ -101,6 +101,7 @@
     .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
     .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: #FFF; transition: 0.2s; }
 
+    /* ★修正: past-memo-box の余白削除設定 */
     .past-memo-box { background: var(--input-bg); border-radius: 14px; padding: 14px; font-size: 13px; color: var(--text-main); margin-bottom: 12px; max-height: 120px; overflow-y: auto; line-height: 1.6; }
     #pastMemoDisplay { white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
     .past-memo-label { font-size: 11px; font-weight: 800; color: var(--text-sub); margin-bottom: 6px; display: block; }
@@ -156,7 +157,7 @@
   <div id="setupModal" class="modal-overlay">
     <div class="modal-content" style="text-align: center;">
       <h2 style="margin: 0 0 10px; font-weight: 900;">🎉 初期設定</h2>
-      <p style="color:var(--text-sub); font-size:14px; font-weight:700; margin-bottom:24px;">現在の業態を教えてください!(後で変更可能)</p>
+      <p style="color:var(--text-sub); font-size:14px; font-weight:700; margin-bottom:24px;">現在の業態を教えてください。</p>
       <select id="initialBusinessType" class="input-field" style="margin-bottom: 24px; font-weight:800; text-align:center;">
         <option value="cabaret">キャバクラ・ラウンジ</option>
         <option value="fuzoku">風俗・メンエス</option>
@@ -221,6 +222,36 @@
     </div>
   </div>
 
+  <!-- ★NEW: 使い方ヘルプモーダル -->
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">📖 アプリの使い方と仕様</h2>
+      
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>👑</span> 自動ランク付け</h3>
+        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+          過去の接客メモ（エピソード）の数をシステムが自動でカウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。リストの上部にも優先的に表示されます。
+        </p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>💎</span> VIP（一軍）の特別扱い</h3>
+        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+          顧客のタグに<strong>「太客」「エース」「一軍」「VIP」「金持ち」「良客」</strong>のいずれかを設定すると、AIが「VIP客」と認識します。リストで常に<strong>金枠で最上位</strong>に表示され、AIの文章も特別仕様になります。
+        </p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🔍</span> 強力な検索機能</h3>
+        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+          顧客カルテの検索窓は、名前だけでなく<strong>「過去のメモの内容」や「タグ」</strong>でも検索できます。<br>例：「ゴルフ」や「#同業」と検索すれば、該当するお客様が一発で表示されます。
+        </p>
+      </div>
+
+      <button onclick="closeHelpModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 10px;">閉じる</button>
+    </div>
+  </div>
+
   <div class="app-container">
     <header class="header-area">
       <div class="app-title">AIお礼日記メーカー</div>
@@ -282,7 +313,7 @@
           <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
         </div>
         
-        <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
+        <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモの内容で検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
         
         <div class="filter-container">
           <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
@@ -313,9 +344,13 @@
           </div>
         </div>
         <div class="settings-list">
+          <!-- ★NEW: アプリの使い方・仕様（ヘルプ）を追加 -->
+          <div class="settings-item" onclick="openHelpModal()"><span>📖 アプリの使い方と仕様（必読）</span><span style="color:var(--border-color);">▶</span></div>
+        </div>
+        <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">1.5.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">1.6.0</span></div>
         </div>
       </div>
     </main>
@@ -346,7 +381,6 @@
     let currentListFilter = 'all'; 
     let isCompactMode = false;
 
-    // ★UPDATE: 例文を本格的なものに差し替え
     const stylePlaceholders = {
       cabaret: "（例）昨日はお店来てくれて本当にありがとう🥺✨\n久しぶりに〇〇くんの顔見れて、めちゃくちゃ楽しかったよ💗\nお仕事忙しいのに時間作ってくれて嬉しかったな🥂\nまたお仕事落ち着いたら顔見せに来てね！待ってるね💕",
       fuzoku: "（例）今日は指名してくれてありがとう🧸💓\n〇〇さんと一緒にいる時間、すごく落ち着くし癒されちゃった🛁✨\nマッサージも気持ちよかったって言ってくれて嬉しかったな🧴\nまたお仕事疲れたら、いつでも癒されにおいでね💋",
@@ -473,6 +507,9 @@
       }
     }
 
+    function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
+    function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
+
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -502,14 +539,23 @@
 
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
+    // ★UPDATE: 検索機能の強化（名前だけでなく、タグやメモの内容も含めて絞り込み）
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
       const targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+      const lowerFilter = filterText.toLowerCase();
 
       let displayList = customerData.filter(c => {
         if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
-        if (!String(c.name).includes(filterText)) return false;
+        
+        // メモ全文、名前、タグを対象に検索（大文字小文字区別なし）
+        const matchName = String(c.name).toLowerCase().includes(lowerFilter);
+        const matchMemo = String(c.memo).toLowerCase().includes(lowerFilter);
+        const matchTags = c.tagsArray.some(t => t.toLowerCase().includes(lowerFilter));
+        
+        // フィルターテキストがある場合、どれにもヒットしなかったら除外
+        if (filterText && !matchName && !matchMemo && !matchTags) return false;
         
         const stats = getCustomerStats(c);
         if (currentListFilter === 'new' && stats.count !== 1) return false;
@@ -699,7 +745,6 @@
       const overlay = document.getElementById('loadingOverlay'), msg = document.getElementById('loadingMessage'), closeBtn = document.getElementById('loadingCloseBtn'), spinner = document.getElementById('loadingSpinner');
       overlay.style.display = 'flex'; msg.innerText = "🚀 データを送信中...\n(画面を開いたままお待ち下さい)"; closeBtn.style.display = 'none'; spinner.style.display = 'block';
 
-      // ★NEW: 対象顧客のシステムランクを計算する
       const targetCustomer = customerData.find(c => c.name === name);
       let customerRank = '新規'; 
       if (targetCustomer) {
@@ -710,7 +755,6 @@
         else customerRank = '常連';
       }
 
-      // ★NEW: 厄介な手動タグを強制消去（サニタイズ）
       const forbiddenTags = ['新規', '初回', '初回来店', '初めて', '一見', '常連', 'リピーター', '2回目', '二回目', '3回目', '三回目', '1回目', '一回目'];
       const cleanedCustomerTags = currentCustomerTags.filter(tag => {
         return !forbiddenTags.some(forbidden => tag.includes(forbidden));
@@ -727,8 +771,8 @@
       const payload = { 
         action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, 
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, 
-        customerTags: cleanedCustomerTags.join(', '), // ★UPDATE: クリーニング済みのタグを送る
-        customerRank: customerRank, // ★NEW: 絶対的なシステムランクを送る
+        customerTags: cleanedCustomerTags.join(', '), 
+        customerRank: customerRank, 
         episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" 
       };
       
