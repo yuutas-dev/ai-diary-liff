@@ -40,7 +40,7 @@
     @keyframes fadeInTab { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     .card { background: var(--card-bg); border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-md); border: 2px solid transparent; transition: 0.3s; }
-    .card-alert { border: 2px solid #FCA5A5; background: #FEF2F2; } /* アラート用赤枠 */
+    .card-alert { border: 2px solid #FCA5A5; background: #FEF2F2; }
     .card-vip { border: 2px solid #FCD34D; background: linear-gradient(to right, #FFF, #FEF3C7); }
     .label { font-weight: 800; font-size: 14px; margin-bottom: 10px; display: block; color: var(--text-main); }
     .input-field { width: 100%; background: var(--input-bg); border: 1.5px solid transparent; border-radius: 14px; padding: 14px; font-size: 15px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
@@ -267,7 +267,10 @@
         <div class="card">
           <span class="label">👤 誰に送る？</span>
           <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea">
-            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px;"></span></div>
+            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px; background:#E5E7EB;"></span></div>
+            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px; background:#E5E7EB;"></span></div>
+            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px; background:#E5E7EB;"></span></div>
+            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px; background:#E5E7EB;"></span></div>
           </div></div>
           <div style="position: relative;">
             <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
@@ -344,16 +347,22 @@
           </div>
         </div>
         
-        <!-- ★NEW: アラート日数設定 -->
         <div class="settings-list">
-          <div class="settings-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-            <div style="width:100%; display:flex; justify-content:space-between;">
-              <span style="color: #DC2626;">🚨 放置アラート設定（日数）</span>
-            </div>
-            <div style="display:flex; width:100%; gap:8px; font-size:12px; align-items:center; color: var(--text-sub); font-weight:bold;">
-              🔰新規 <input type="number" id="alert-new" class="input-field" style="padding:8px; text-align:center; flex:1;" value="7" onchange="saveAlertSettings()">
-              👑常連 <input type="number" id="alert-regular" class="input-field" style="padding:8px; text-align:center; flex:1;" value="30" onchange="saveAlertSettings()">
-              💎VIP <input type="number" id="alert-vip" class="input-field" style="padding:8px; text-align:center; flex:1;" value="14" onchange="saveAlertSettings()">
+          <div style="padding: 16px 20px;">
+            <div style="color: #DC2626; font-weight: 800; font-size: 14px; margin-bottom: 16px; display:flex; align-items:center; gap:6px;">🚨 放置アラート設定（日数）</div>
+            <div style="display: flex; gap: 12px;">
+              <div style="flex: 1; text-align: center;">
+                <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">🔰 新規</div>
+                <input type="number" id="alert-new" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="7" onchange="saveAlertSettings()">
+              </div>
+              <div style="flex: 1; text-align: center;">
+                <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">👑 常連</div>
+                <input type="number" id="alert-regular" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="30" onchange="saveAlertSettings()">
+              </div>
+              <div style="flex: 1; text-align: center;">
+                <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">💎 VIP</div>
+                <input type="number" id="alert-vip" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="14" onchange="saveAlertSettings()">
+              </div>
             </div>
           </div>
         </div>
@@ -364,7 +373,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">2.0.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">2.0.1</span></div>
         </div>
       </div>
     </main>
@@ -423,7 +432,6 @@
       if (!savedType) { document.getElementById('setupModal').style.display = 'flex'; }
       else { document.getElementById('businessType').value = savedType; }
 
-      // ★NEW: 保存データ（詳細/コンパクト、スタイル、アラート日数）の読み込み
       if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
       loadStyleSettings();
       loadAlertSettings();
@@ -438,7 +446,6 @@
       loadStyleSettings(true); updateChips(); document.getElementById('setupModal').style.display = 'none';
     }
 
-    // ★NEW: スタイルの保存と読み込み
     function loadStyleSettings(isInit = false) {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const defaults = { cabaret: { tension: 4, emoji: 5 }, fuzoku: { tension: 3, emoji: 4 }, host: { tension: 3, emoji: 2 } };
@@ -462,7 +469,6 @@
       localStorage.setItem('selectedStyle', document.querySelector('input[name="style"]:checked').id.replace('style-', ''));
     }
 
-    // ★NEW: アラート日数の保存と読み込み
     function loadAlertSettings() {
       const settings = JSON.parse(localStorage.getItem('alertSettings')) || { new: 7, regular: 30, vip: 14 };
       document.getElementById('alert-new').value = settings.new;
@@ -476,7 +482,7 @@
         vip: parseInt(document.getElementById('alert-vip').value) || 14
       };
       localStorage.setItem('alertSettings', JSON.stringify(settings));
-      if (customerData.length > 0) { renderCustomerList(); renderQuickAccess(); } // 即時反映
+      if (customerData.length > 0) { renderCustomerList(); renderQuickAccess(); } 
     }
 
     function updateStyleUI(type) {
@@ -547,7 +553,6 @@
       return { count, isVip };
     }
 
-    // ★NEW: 最終来店日からの経過日数を計算
     function getDaysSinceLastVisit(memoStr) {
       const blocks = parseMemoToBlocks(memoStr);
       if (blocks.length === 0) return null;
@@ -566,7 +571,6 @@
       return Math.floor(diffTime / (1000 * 60 * 60 * 24));
     }
 
-    // ★NEW: アラート対象かどうかを判定
     function isAlertCustomer(c) {
       const stats = getCustomerStats(c);
       const days = getDaysSinceLastVisit(c.memo);
@@ -591,7 +595,6 @@
       filterCustomerList();
     }
 
-    // ★NEW: 状態保存対応
     function toggleCompactMode(forceState = null) {
       if (forceState !== null) isCompactMode = forceState;
       else isCompactMode = !isCompactMode;
@@ -609,7 +612,6 @@
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
-    // ★UPDATE: クイックアクセスの赤ポチとアラート優先ソート
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -636,7 +638,6 @@
         if (stats.isVip) topBadge = `<div class="story-badge" style="background:#F59E0B; border-color:#FFF; color:#FFF;">👑VIP</div>`;
         else if (c.tagsArray.length > 0) topBadge = `<div class="story-badge">${c.tagsArray[0]}</div>`;
         
-        // 🚨 赤ポチ追加
         if (isAlert) topBadge += '<div style="position:absolute; top:-2px; left:-2px; width:16px; height:16px; background:#EF4444; border:2.5px solid #FFF; border-radius:50%; z-index:6; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></div>';
 
         const ringClass = stats.isVip ? "story-ring story-ring-vip" : "story-ring";
@@ -646,7 +647,6 @@
 
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
-    // ★UPDATE: リストのアラート赤バッジとソート
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -664,7 +664,7 @@
         const stats = getCustomerStats(c);
         const isAlert = isAlertCustomer(c);
 
-        if (currentListFilter === 'alert' && !isAlert) return false; // アラートフィルタ
+        if (currentListFilter === 'alert' && !isAlert) return false; 
         if (currentListFilter === 'new' && stats.count !== 1) return false;
         if (currentListFilter === 'second' && stats.count !== 2) return false;
         if (currentListFilter === 'regular' && stats.count < 3) return false;
@@ -672,7 +672,6 @@
         return true;
       });
 
-      // ★NEW: アラート客を一番上にソート
       displayList.sort((a, b) => {
         const alertA = isAlertCustomer(a), alertB = isAlertCustomer(b);
         if (alertA && !alertB) return -1;
@@ -697,7 +696,6 @@
         
         const sysBadgeHtml = sysBadge ? `<span style="background:#F3F4F6; color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #E5E7EB; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content;">${sysBadge}</span>` : '';
         
-        // 🚨 赤バッジ
         const alertBadgeHtml = isAlert ? `<span style="background:#FEE2E2; color:#B91C1C; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:900; border:1px solid #FCA5A5; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content; box-shadow:0 1px 3px rgba(185,28,28,0.2);">🚨 ${days}日放置</span>` : '';
 
         const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
@@ -705,7 +703,6 @@
         const actionIcon1 = '✏️', actionText1 = '日記作成';
         const actionIcon2 = isDummy ? '🔍' : '⚙️', actionText2 = isDummy ? '閲覧' : '編集';
         
-        // アラート時は赤枠（VIP優先）
         let cardClass = "card";
         if (stats.isVip) cardClass = "card card-vip";
         else if (isAlert) cardClass = "card card-alert";
@@ -742,7 +739,6 @@
       currentCustomerTags = c.tagsArray; renderAttributeTags(); 
       selectedEpisodeTags = []; 
       
-      // ★NEW: アラート客の場合、自動でタグをセット
       if (isAlertCustomer(c)) {
         const type = localStorage.getItem('businessType') || 'cabaret';
         const autoTag = (type === 'fuzoku') ? '🥺 寂しい' : '🥺 会いたい';
@@ -871,7 +867,6 @@
     function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
     function autoScrollTextarea() { const el = document.getElementById('todayEpisodeInput'); el.scrollTop = el.scrollHeight; }
     
-    // ★UPDATE: アプリが強制終了しないように liff.closeWindow() を削除
     function closeLoadingOverlay() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
     function generateDiary() {
