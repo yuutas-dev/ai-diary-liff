@@ -267,10 +267,10 @@
         <div class="card">
           <span class="label">👤 誰に送る？</span>
           <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea">
-            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px; background:#E5E7EB;"></span></div>
-            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px; background:#E5E7EB;"></span></div>
-            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px; background:#E5E7EB;"></span></div>
-            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px; background:#E5E7EB;"></span></div>
+            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px;"></span></div>
+            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px;"></span></div>
+            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px;"></span></div>
+            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px; border-radius:4px;"></span></div>
           </div></div>
           <div style="position: relative;">
             <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
@@ -347,22 +347,20 @@
           </div>
         </div>
         
-        <div class="settings-list">
-          <div style="padding: 16px 20px;">
-            <div style="color: #DC2626; font-weight: 800; font-size: 14px; margin-bottom: 16px; display:flex; align-items:center; gap:6px;">🚨 放置アラート設定（日数）</div>
-            <div style="display: flex; gap: 12px;">
-              <div style="flex: 1; text-align: center;">
-                <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">🔰 新規</div>
-                <input type="number" id="alert-new" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="7" onchange="saveAlertSettings()">
-              </div>
-              <div style="flex: 1; text-align: center;">
-                <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">👑 常連</div>
-                <input type="number" id="alert-regular" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="30" onchange="saveAlertSettings()">
-              </div>
-              <div style="flex: 1; text-align: center;">
-                <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">💎 VIP</div>
-                <input type="number" id="alert-vip" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="14" onchange="saveAlertSettings()">
-              </div>
+        <div class="settings-list" style="padding: 16px 20px;">
+          <div style="color: #DC2626; font-weight: 800; font-size: 14px; margin-bottom: 16px; display:flex; align-items:center; gap:6px;">🚨 放置アラート設定（日数）</div>
+          <div style="display: flex; gap: 12px;">
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">🔰 新規</div>
+              <input type="number" id="alert-new" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="7" onchange="saveAlertSettings()">
+            </div>
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">👑 常連</div>
+              <input type="number" id="alert-regular" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="30" onchange="saveAlertSettings()">
+            </div>
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">💎 VIP</div>
+              <input type="number" id="alert-vip" class="input-field" style="padding: 10px; text-align: center; font-size: 16px; border-radius: 12px;" value="14" onchange="saveAlertSettings()">
             </div>
           </div>
         </div>
@@ -373,7 +371,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">2.0.1</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">2.0.2</span></div>
         </div>
       </div>
     </main>
