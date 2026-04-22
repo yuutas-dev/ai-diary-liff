@@ -40,18 +40,21 @@
     @keyframes fadeInTab { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     .card { background: var(--card-bg); border-radius: 20px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow-md); border: 2px solid transparent; transition: 0.3s; }
+    .card-alert { border: 2px solid #FCA5A5; background: #FEF2F2; } /* アラート用赤枠 */
+    .card-vip { border: 2px solid #FCD34D; background: linear-gradient(to right, #FFF, #FEF3C7); }
     .label { font-weight: 800; font-size: 14px; margin-bottom: 10px; display: block; color: var(--text-main); }
     .input-field { width: 100%; background: var(--input-bg); border: 1.5px solid transparent; border-radius: 14px; padding: 14px; font-size: 15px; color: var(--text-main); font-family: inherit; transition: 0.2s; }
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; box-shadow: 0 0 0 3px rgba(244,114,182,0.1); }
     ::placeholder { color: #9CA3AF; }
 
-    .card-vip { border: 2px solid #FCD34D; background: linear-gradient(to right, #FFF, #FEF3C7); }
     .story-ring-vip { background: linear-gradient(135deg, #F59E0B, #FBBF24) !important; }
     
     .filter-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px 0; margin-bottom: 12px; scrollbar-width: none; flex-shrink: 0; min-height: 48px; align-items: center; }
     .filter-container::-webkit-scrollbar { display: none; }
     .filter-btn { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; flex-shrink: 0; height: fit-content; }
     .filter-btn.active-filter { background: var(--primary-gradient); color: #FFF; border-color: transparent; }
+    .filter-btn-alert { color: #DC2626; border-color: #FECACA; background: #FEF2F2; }
+    .filter-btn-alert.active-filter { background: #DC2626; color: #FFF; border-color: transparent; }
 
     .view-toggle { background: var(--input-bg); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 800; color: var(--text-sub); cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
     
@@ -101,7 +104,6 @@
     .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
     .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: #FFF; transition: 0.2s; }
 
-    /* ★修正: past-memo-box の余白削除設定 */
     .past-memo-box { background: var(--input-bg); border-radius: 14px; padding: 14px; font-size: 13px; color: var(--text-main); margin-bottom: 12px; max-height: 120px; overflow-y: auto; line-height: 1.6; }
     #pastMemoDisplay { white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
     .past-memo-label { font-size: 11px; font-weight: 800; color: var(--text-sub); margin-bottom: 6px; display: block; }
@@ -144,9 +146,9 @@
   <input type="radio" name="nav" id="nav-settings" class="ui-state">
   <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
   <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
-  <input type="radio" name="style" id="style-cute" class="ui-state" checked>
-  <input type="radio" name="style" id="style-custom" class="ui-state">
-  <input type="radio" name="style" id="style-neat" class="ui-state">
+  <input type="radio" name="style" id="style-cute" class="ui-state" checked onchange="saveStyleSettings()">
+  <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
+  <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
 
   <div id="loadingOverlay" class="modal-overlay" style="z-index: 10000;">
     <div class="spinner" id="loadingSpinner"></div>
@@ -180,11 +182,11 @@
         <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
         <div class="style-desc-custom">
           <div class="style-desc-box" style="margin-bottom:12px;">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
-          <textarea id="customStyleText" class="input-field" style="height: 120px; margin-bottom:16px; font-size: 13px;"></textarea>
+          <textarea id="customStyleText" class="input-field" style="height: 120px; margin-bottom:16px; font-size: 13px;" onchange="saveStyleSettings()"></textarea>
           <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;"><span>テンション（低）</span><span>（高）</span></div>
-          <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;">
+          <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;" onchange="saveStyleSettings()">
           <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;"><span>絵文字の量（少）</span><span>（多）</span></div>
-          <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:10px;">
+          <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:10px;" onchange="saveStyleSettings()">
         </div>
       </div>
       <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">設定を保存して閉じる</button>
@@ -222,7 +224,6 @@
     </div>
   </div>
 
-  <!-- ★NEW: 使い方ヘルプモーダル -->
   <div id="helpModal" class="modal-overlay">
     <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">📖 アプリの使い方と仕様</h2>
@@ -230,21 +231,21 @@
       <div style="margin-bottom: 24px;">
         <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>👑</span> 自動ランク付け</h3>
         <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
-          過去の接客メモ（エピソード）の数をシステムが自動でカウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。リストの上部にも優先的に表示されます。
+          過去の接客メモの数をシステムが自動でカウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。
+        </p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🚨</span> 放置アラート（呼び戻し）</h3>
+        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+          設定した日数以上来店がないお客様には<strong>「🚨◯日放置」</strong>と赤く表示され、リストの一番上に強制移動します。また、AIが自動で「会いたい」アピールを組み込みます。
         </p>
       </div>
 
       <div style="margin-bottom: 24px;">
         <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>💎</span> VIP（一軍）の特別扱い</h3>
         <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
-          顧客のタグに<strong>「太客」「エース」「一軍」「VIP」「金持ち」「良客」</strong>のいずれかを設定すると、AIが「VIP客」と認識します。リストで常に<strong>金枠で最上位</strong>に表示され、AIの文章も特別仕様になります。
-        </p>
-      </div>
-
-      <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🔍</span> 強力な検索機能</h3>
-        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
-          顧客カルテの検索窓は、名前だけでなく<strong>「過去のメモの内容」や「タグ」</strong>でも検索できます。<br>例：「ゴルフ」や「#同業」と検索すれば、該当するお客様が一発で表示されます。
+          顧客のタグに<strong>「太客」「エース」「VIP」</strong>等を設定すると、AIが「VIP客」と認識し、リストで常に金枠で最上位に表示されます。
         </p>
       </div>
 
@@ -266,8 +267,6 @@
         <div class="card">
           <span class="label">👤 誰に送る？</span>
           <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea">
-            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px;"></span></div>
-            <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px;"></span></div>
             <div class="story-item"><div class="story-ring skeleton"></div><span class="story-name skeleton" style="width:40px; height:10px;"></span></div>
           </div></div>
           <div style="position: relative;">
@@ -313,10 +312,11 @@
           <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
         </div>
         
-        <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモの内容で検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
+        <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
         
         <div class="filter-container">
           <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
+          <div class="filter-btn filter-btn-alert" id="filter-btn-alert" onclick="setListFilter('alert')">⚠️ 要連絡</div>
           <div class="filter-btn" id="filter-btn-vip" onclick="setListFilter('vip')">💎 一軍</div>
           <div class="filter-btn" id="filter-btn-new" onclick="setListFilter('new')">🔰 新規</div>
           <div class="filter-btn" id="filter-btn-second" onclick="setListFilter('second')">✌️ 2回目</div>
@@ -343,14 +343,28 @@
             </select>
           </div>
         </div>
+        
+        <!-- ★NEW: アラート日数設定 -->
         <div class="settings-list">
-          <!-- ★NEW: アプリの使い方・仕様（ヘルプ）を追加 -->
+          <div class="settings-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+            <div style="width:100%; display:flex; justify-content:space-between;">
+              <span style="color: #DC2626;">🚨 放置アラート設定（日数）</span>
+            </div>
+            <div style="display:flex; width:100%; gap:8px; font-size:12px; align-items:center; color: var(--text-sub); font-weight:bold;">
+              🔰新規 <input type="number" id="alert-new" class="input-field" style="padding:8px; text-align:center; flex:1;" value="7" onchange="saveAlertSettings()">
+              👑常連 <input type="number" id="alert-regular" class="input-field" style="padding:8px; text-align:center; flex:1;" value="30" onchange="saveAlertSettings()">
+              💎VIP <input type="number" id="alert-vip" class="input-field" style="padding:8px; text-align:center; flex:1;" value="14" onchange="saveAlertSettings()">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-list">
           <div class="settings-item" onclick="openHelpModal()"><span>📖 アプリの使い方と仕様（必読）</span><span style="color:var(--border-color);">▶</span></div>
         </div>
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">1.6.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">2.0.0</span></div>
         </div>
       </div>
     </main>
@@ -399,11 +413,21 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
+      if (params.get('modal') === 'help') openHelpModal();
+
       try { await liff.init({ liffId: LIFF_ID }); if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; } catch (e) {}
+      
       if (localStorage.getItem('myCustomAttrs')) myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
+      
       const savedType = localStorage.getItem('businessType');
-      if (!savedType) document.getElementById('setupModal').style.display = 'flex';
-      else document.getElementById('businessType').value = savedType;
+      if (!savedType) { document.getElementById('setupModal').style.display = 'flex'; }
+      else { document.getElementById('businessType').value = savedType; }
+
+      // ★NEW: 保存データ（詳細/コンパクト、スタイル、アラート日数）の読み込み
+      if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
+      loadStyleSettings();
+      loadAlertSettings();
+
       updateChips(); fetchCustomers();
     }
     window.onload = init;
@@ -411,7 +435,48 @@
     function saveInitialSetup() {
       const type = document.getElementById('initialBusinessType').value;
       localStorage.setItem('businessType', type); document.getElementById('businessType').value = type;
-      updateChips(); document.getElementById('setupModal').style.display = 'none';
+      loadStyleSettings(true); updateChips(); document.getElementById('setupModal').style.display = 'none';
+    }
+
+    // ★NEW: スタイルの保存と読み込み
+    function loadStyleSettings(isInit = false) {
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const defaults = { cabaret: { tension: 4, emoji: 5 }, fuzoku: { tension: 3, emoji: 4 }, host: { tension: 3, emoji: 2 } };
+      
+      if (isInit) {
+        document.getElementById('tensionSlider').value = defaults[type].tension;
+        document.getElementById('emojiSlider').value = defaults[type].emoji;
+        saveStyleSettings();
+      } else {
+        document.getElementById('tensionSlider').value = localStorage.getItem('tensionSlider') || defaults[type].tension;
+        document.getElementById('emojiSlider').value = localStorage.getItem('emojiSlider') || defaults[type].emoji;
+        document.getElementById('customStyleText').value = localStorage.getItem('customStyleText') || "";
+        const savedStyle = localStorage.getItem('selectedStyle');
+        if (savedStyle) document.getElementById(`style-${savedStyle}`).checked = true;
+      }
+    }
+    function saveStyleSettings() {
+      localStorage.setItem('tensionSlider', document.getElementById('tensionSlider').value);
+      localStorage.setItem('emojiSlider', document.getElementById('emojiSlider').value);
+      localStorage.setItem('customStyleText', document.getElementById('customStyleText').value);
+      localStorage.setItem('selectedStyle', document.querySelector('input[name="style"]:checked').id.replace('style-', ''));
+    }
+
+    // ★NEW: アラート日数の保存と読み込み
+    function loadAlertSettings() {
+      const settings = JSON.parse(localStorage.getItem('alertSettings')) || { new: 7, regular: 30, vip: 14 };
+      document.getElementById('alert-new').value = settings.new;
+      document.getElementById('alert-regular').value = settings.regular;
+      document.getElementById('alert-vip').value = settings.vip;
+    }
+    function saveAlertSettings() {
+      const settings = {
+        new: parseInt(document.getElementById('alert-new').value) || 7,
+        regular: parseInt(document.getElementById('alert-regular').value) || 30,
+        vip: parseInt(document.getElementById('alert-vip').value) || 14
+      };
+      localStorage.setItem('alertSettings', JSON.stringify(settings));
+      if (customerData.length > 0) { renderCustomerList(); renderQuickAccess(); } // 即時反映
     }
 
     function updateStyleUI(type) {
@@ -463,7 +528,7 @@
       if(input.value.trim() !== "") { activeTags.unshift(input.value.trim()); input.value = ""; renderChips(); const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked; localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags)); }
     }
 
-    function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); updateChips(); renderQuickAccess(); renderCustomerList(); }
+    function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); }
 
     async function fetchCustomers() {
       try {
@@ -482,13 +547,43 @@
       return { count, isVip };
     }
 
+    // ★NEW: 最終来店日からの経過日数を計算
+    function getDaysSinceLastVisit(memoStr) {
+      const blocks = parseMemoToBlocks(memoStr);
+      if (blocks.length === 0) return null;
+      let latestTime = 0;
+      blocks.forEach(b => {
+          if(b.date) {
+              const d = new Date(b.date.replace(/-/g, '/'));
+              if(!isNaN(d) && d.getTime() > latestTime) latestTime = d.getTime();
+          }
+      });
+      if(latestTime === 0) return null;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const lastDate = new Date(latestTime); lastDate.setHours(0,0,0,0);
+      const diffTime = today - lastDate;
+      if(diffTime < 0) return 0;
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    // ★NEW: アラート対象かどうかを判定
+    function isAlertCustomer(c) {
+      const stats = getCustomerStats(c);
+      const days = getDaysSinceLastVisit(c.memo);
+      if (days === null) return false;
+      const alertSettings = JSON.parse(localStorage.getItem('alertSettings')) || { new: 7, regular: 30, vip: 14 };
+      if (stats.isVip) return days >= alertSettings.vip;
+      if (stats.count <= 2) return days >= alertSettings.new;
+      return days >= alertSettings.regular;
+    }
+
     function setListFilter(filterType) {
       if (currentListFilter === filterType && filterType !== 'all') {
         currentListFilter = 'all'; 
       } else {
         currentListFilter = filterType;
       }
-      const filters = ['all', 'vip', 'new', 'second', 'regular'];
+      const filters = ['all', 'alert', 'vip', 'new', 'second', 'regular'];
       filters.forEach(f => {
         const el = document.getElementById(`filter-btn-${f}`);
         if(el) { if (currentListFilter === f) el.classList.add('active-filter'); else el.classList.remove('active-filter'); }
@@ -496,8 +591,12 @@
       filterCustomerList();
     }
 
-    function toggleCompactMode() {
-      isCompactMode = !isCompactMode;
+    // ★NEW: 状態保存対応
+    function toggleCompactMode(forceState = null) {
+      if (forceState !== null) isCompactMode = forceState;
+      else isCompactMode = !isCompactMode;
+      localStorage.setItem('isCompactMode', isCompactMode);
+      
       const listArea = document.getElementById('customerListArea');
       const viewIcon = document.getElementById('viewIcon');
       if(isCompactMode) {
@@ -510,6 +609,7 @@
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
+    // ★UPDATE: クイックアクセスの赤ポチとアラート優先ソート
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -520,6 +620,10 @@
       });
 
       filtered.sort((a, b) => {
+        const alertA = isAlertCustomer(a.c), alertB = isAlertCustomer(b.c);
+        if (alertA && !alertB) return -1;
+        if (!alertA && alertB) return 1;
+
         const statsA = getCustomerStats(a.c), statsB = getCustomerStats(b.c);
         if (statsA.isVip && !statsB.isVip) return -1;
         if (!statsA.isVip && statsB.isVip) return 1;
@@ -527,11 +631,14 @@
       });
 
       filtered.slice(0, 15).forEach(item => {
-        const c = item.c, index = item.index, stats = getCustomerStats(c);
+        const c = item.c, index = item.index, stats = getCustomerStats(c), isAlert = isAlertCustomer(c);
         let topBadge = '';
         if (stats.isVip) topBadge = `<div class="story-badge" style="background:#F59E0B; border-color:#FFF; color:#FFF;">👑VIP</div>`;
         else if (c.tagsArray.length > 0) topBadge = `<div class="story-badge">${c.tagsArray[0]}</div>`;
         
+        // 🚨 赤ポチ追加
+        if (isAlert) topBadge += '<div style="position:absolute; top:-2px; left:-2px; width:16px; height:16px; background:#EF4444; border:2.5px solid #FFF; border-radius:50%; z-index:6; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></div>';
+
         const ringClass = stats.isVip ? "story-ring story-ring-vip" : "story-ring";
         area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
       });
@@ -539,7 +646,7 @@
 
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
-    // ★UPDATE: 検索機能の強化（名前だけでなく、タグやメモの内容も含めて絞り込み）
+    // ★UPDATE: リストのアラート赤バッジとソート
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -549,15 +656,15 @@
       let displayList = customerData.filter(c => {
         if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
         
-        // メモ全文、名前、タグを対象に検索（大文字小文字区別なし）
         const matchName = String(c.name).toLowerCase().includes(lowerFilter);
         const matchMemo = String(c.memo).toLowerCase().includes(lowerFilter);
         const matchTags = c.tagsArray.some(t => t.toLowerCase().includes(lowerFilter));
-        
-        // フィルターテキストがある場合、どれにもヒットしなかったら除外
         if (filterText && !matchName && !matchMemo && !matchTags) return false;
         
         const stats = getCustomerStats(c);
+        const isAlert = isAlertCustomer(c);
+
+        if (currentListFilter === 'alert' && !isAlert) return false; // アラートフィルタ
         if (currentListFilter === 'new' && stats.count !== 1) return false;
         if (currentListFilter === 'second' && stats.count !== 2) return false;
         if (currentListFilter === 'regular' && stats.count < 3) return false;
@@ -565,7 +672,12 @@
         return true;
       });
 
+      // ★NEW: アラート客を一番上にソート
       displayList.sort((a, b) => {
+        const alertA = isAlertCustomer(a), alertB = isAlertCustomer(b);
+        if (alertA && !alertB) return -1;
+        if (!alertA && alertB) return 1;
+
         const statsA = getCustomerStats(a), statsB = getCustomerStats(b);
         if (statsA.isVip && !statsB.isVip) return -1;
         if (!statsA.isVip && statsB.isVip) return 1;
@@ -575,6 +687,8 @@
       displayList.forEach(c => {
         const index = customerData.indexOf(c);
         const stats = getCustomerStats(c);
+        const isAlert = isAlertCustomer(c);
+        const days = getDaysSinceLastVisit(c.memo);
         
         let sysBadge = '';
         if (stats.count === 1) sysBadge = '🔰 新規';
@@ -582,18 +696,26 @@
         else if (stats.count >= 3) sysBadge = '👑 常連';
         
         const sysBadgeHtml = sysBadge ? `<span style="background:#F3F4F6; color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #E5E7EB; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content;">${sysBadge}</span>` : '';
+        
+        // 🚨 赤バッジ
+        const alertBadgeHtml = isAlert ? `<span style="background:#FEE2E2; color:#B91C1C; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:900; border:1px solid #FCA5A5; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content; box-shadow:0 1px 3px rgba(185,28,28,0.2);">🚨 ${days}日放置</span>` : '';
+
         const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
         const isDummy = c.tagsArray.includes("ダミー");
         const actionIcon1 = '✏️', actionText1 = '日記作成';
         const actionIcon2 = isDummy ? '🔍' : '⚙️', actionText2 = isDummy ? '閲覧' : '編集';
-        const cardClass = stats.isVip ? "card card-vip" : "card";
+        
+        // アラート時は赤枠（VIP優先）
+        let cardClass = "card";
+        if (stats.isVip) cardClass = "card card-vip";
+        else if (isAlert) cardClass = "card card-alert";
 
         area.innerHTML += `
           <div class="${cardClass}">
             <div class="card-inner" style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div style="flex:1; margin-right:10px; overflow:hidden;">
                 <div style="display:flex; align-items:flex-start;">
-                  ${sysBadgeHtml}
+                  ${alertBadgeHtml}${sysBadgeHtml}
                   <b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b>
                 </div>
                 <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${c.memo ? c.memo.substring(0,40)+"..." : "メモなし"}</small>
@@ -617,7 +739,20 @@
       if (nameInput.value === c.name) { resetInputForm(); return; }
       document.getElementById('nav-create').checked = true; nameInput.value = c.name;
       document.getElementById('pastMemoDisplay').innerText = c.memo || "(過去の記録はありません)"; document.getElementById('todayEpisodeInput').value = "";
-      currentCustomerTags = c.tagsArray; renderAttributeTags(); selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips(); 
+      currentCustomerTags = c.tagsArray; renderAttributeTags(); 
+      selectedEpisodeTags = []; 
+      
+      // ★NEW: アラート客の場合、自動でタグをセット
+      if (isAlertCustomer(c)) {
+        const type = localStorage.getItem('businessType') || 'cabaret';
+        const autoTag = (type === 'fuzoku') ? '🥺 寂しい' : '🥺 会いたい';
+        if (!selectedEpisodeTags.includes(autoTag)) {
+          selectedEpisodeTags.push(autoTag);
+          activeTags = activeTags.filter(t => t !== autoTag);
+        }
+      }
+
+      renderSelectedEpisodeTags(); renderChips(); 
     }
 
     function resetInputForm() {
@@ -735,7 +870,9 @@
     function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
     function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
     function autoScrollTextarea() { const el = document.getElementById('todayEpisodeInput'); el.scrollTop = el.scrollHeight; }
-    function closeLoadingOverlay() { document.getElementById('loadingOverlay').style.display = 'none'; liff.closeWindow(); }
+    
+    // ★UPDATE: アプリが強制終了しないように liff.closeWindow() を削除
+    function closeLoadingOverlay() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
     function generateDiary() {
       const name = document.getElementById('nameInput').value, todayEpisode = document.getElementById('todayEpisodeInput').value;
@@ -778,7 +915,7 @@
       
       resetInputForm();
 
-      setTimeout(() => { msg.innerText = "✨ AIが執筆を開始しました！\n数秒〜数十秒後にLINEにお届けします。\n画面を閉じても大丈夫です😊"; closeBtn.style.display = 'block'; spinner.style.display = 'none'; }, 1200);
+      setTimeout(() => { msg.innerText = "✨ AIが執筆を開始しました！\n数秒〜数十秒後にLINEにお届けします。\nそのまま次の日記を作成できます😊"; closeBtn.style.display = 'block'; spinner.style.display = 'none'; }, 1200);
 
       fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
         .then(res => res.json()).then(data => { if(data.success) fetchCustomers(); }).catch(e => console.error("GASエラー", e));
