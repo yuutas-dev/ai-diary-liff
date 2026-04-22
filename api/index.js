@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const userId = data.userId || "test-user";
 
     // Supabaseの接続準備
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     // 1. 顧客リスト取得
     if (action === 'getCustomers') {
