@@ -48,7 +48,7 @@
 
     .story-ring-vip { background: linear-gradient(135deg, #F59E0B, #FBBF24) !important; }
     
-    .filter-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px 0; margin-bottom: 12px; scrollbar-width: none; flex-shrink: 0; min-height: 48px; align-items: center; }
+    .filter-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px 0; margin-bottom: 12px; scrollbar-width: none; flex-shrink: 0; min-height: 48px; align-items: center; scroll-behavior: smooth; }
     .filter-container::-webkit-scrollbar { display: none; }
     .filter-btn { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; flex-shrink: 0; height: fit-content; position: relative; }
     .filter-btn.active-filter { background: var(--primary-gradient); color: #FFF; border-color: transparent; }
@@ -101,7 +101,6 @@
     .memo-date { font-weight: 800; color: var(--active-color); border: none; background: transparent; font-size: 12px; margin-bottom: 4px; outline: none; font-family: inherit; width: 100%; }
     .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
     
-    /* 吹き出しのアニメーション */
     .memo-tag-dropdown { animation: fadeInTab 0.2s ease-out; }
 
     .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: #FFF; transition: 0.2s; }
@@ -384,7 +383,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.1.1</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.2.0</span></div>
         </div>
       </div>
     </main>
@@ -414,6 +413,7 @@
     let myCustomAttrs = []; 
     let currentListFilter = 'all'; 
     let isCompactMode = false;
+    let isFilterScrolled = false; // ★NEW: 初回スクロール判定用フラグ
 
     const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
 
@@ -441,6 +441,20 @@
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
       if (params.get('modal') === 'help') openHelpModal();
 
+      // ★NEW: 顧客タブを開いた瞬間に、右端に続きがあることをアピールするフワッとスクロール
+      document.getElementById('nav-data').addEventListener('change', (e) => {
+        if (e.target.checked && !isFilterScrolled) {
+          setTimeout(() => {
+            const container = document.querySelector('.filter-container');
+            const allTab = document.getElementById('filter-btn-all');
+            if (container && allTab) {
+              container.scrollTo({ left: allTab.offsetLeft - 20, behavior: 'smooth' });
+              isFilterScrolled = true;
+            }
+          }, 50);
+        }
+      });
+
       try { await liff.init({ liffId: LIFF_ID }); if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; } catch (e) {}
       
       if (localStorage.getItem('myCustomAttrs')) myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
@@ -454,6 +468,18 @@
       loadAlertSettings();
 
       updateChips(); fetchCustomers();
+
+      // 初期状態で顧客タブが開かれている場合の処理
+      if (document.getElementById('nav-data').checked && !isFilterScrolled) {
+        setTimeout(() => {
+          const container = document.querySelector('.filter-container');
+          const allTab = document.getElementById('filter-btn-all');
+          if (container && allTab) {
+            container.scrollTo({ left: allTab.offsetLeft - 20, behavior: 'smooth' });
+            isFilterScrolled = true;
+          }
+        }, 300); 
+      }
     }
     window.onload = init;
 
@@ -641,7 +667,19 @@
       const filters = ['all', 'alert', 'vip', 'new', 'second', 'regular'];
       filters.forEach(f => {
         const el = document.getElementById(`filter-btn-${f}`);
-        if(el) { if (currentListFilter === f) el.classList.add('active-filter'); else el.classList.remove('active-filter'); }
+        if(el) { 
+            if (currentListFilter === f) {
+                el.classList.add('active-filter');
+                // ★NEW: タップしたタブを画面の中央に自動スクロール
+                const container = document.querySelector('.filter-container');
+                if (container && isFilterScrolled) { // 初期スクロールが終わっている場合のみ
+                    const scrollPos = el.offsetLeft - (container.offsetWidth / 2) + (el.offsetWidth / 2);
+                    container.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
+                }
+            } else {
+                el.classList.remove('active-filter'); 
+            }
+        }
       });
       filterCustomerList();
     }
@@ -660,7 +698,6 @@
       }
     }
 
-    // ★復活させました！
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
