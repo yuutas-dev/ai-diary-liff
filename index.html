@@ -33,12 +33,7 @@
     #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
     #mode-photo:checked ~ .app-container .toggle-photo, #mode-text:checked ~ .app-container .toggle-text { background: var(--card-bg); color: var(--active-color); box-shadow: var(--shadow-sm); }
     
-    /* ★NEW: 写メ日記モード時の顧客選択ブロック非アクティブ化 */
-    #mode-photo:checked ~ .app-container .card-customer-select {
-      opacity: 0.4;
-      pointer-events: none;
-      filter: grayscale(80%);
-    }
+    #mode-photo:checked ~ .app-container .card-customer-select { opacity: 0.4; pointer-events: none; filter: grayscale(80%); }
 
     .style-content-wrapper { min-height: 310px; position: relative; }
     .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; animation: fadeInTab 0.3s ease-out forwards; }
@@ -171,10 +166,11 @@
   <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
   <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
 
+  <!-- 初期設定モーダル -->
   <div id="setupModal" class="modal-overlay">
     <div class="modal-content" style="text-align: center;">
-      <h2 style="margin: 0 0 10px; font-weight: 900;">🎉 初期設定</h2>
-      <p style="color:var(--text-sub); font-size:14px; font-weight:700; margin-bottom:24px;">現在の業態を教えてください。</p>
+      <h2 id="setup-title" style="margin: 0 0 10px; font-weight: 900;"></h2>
+      <p id="setup-desc" style="color:var(--text-sub); font-size:14px; font-weight:700; margin-bottom:24px;"></p>
       <select id="initialBusinessType" class="input-field" style="margin-bottom: 24px; font-weight:800; text-align:center;">
         <option value="cabaret">キャバクラ・ラウンジ</option>
         <option value="fuzoku">風俗・メンエス</option>
@@ -184,6 +180,7 @@
     </div>
   </div>
 
+  <!-- スタイル設定モーダル -->
   <div id="styleModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
@@ -193,10 +190,10 @@
         <label for="style-neat" class="style-btn btn-neat">清楚</label>
       </div>
       <div class="style-content-wrapper">
-        <div class="style-desc-cute style-desc-box">🎀 可愛らしく、絵文字を多用した親しみやすい文体。</div>
-        <div class="style-desc-neat style-desc-box">💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。</div>
+        <div id="text-style-cute" class="style-desc-cute style-desc-box"></div>
+        <div id="text-style-neat" class="style-desc-neat style-desc-box"></div>
         <div class="style-desc-custom">
-          <div class="style-desc-box" style="margin-bottom:12px;">⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。</div>
+          <div id="text-style-custom" class="style-desc-box" style="margin-bottom:12px;"></div>
           <textarea id="customStyleText" class="input-field" style="height: 120px; margin-bottom:16px; font-size: 13px;" onchange="saveStyleSettings()"></textarea>
           <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;"><span>テンション（低）</span><span>（高）</span></div>
           <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;" onchange="saveStyleSettings()">
@@ -239,17 +236,12 @@
     </div>
   </div>
 
+  <!-- ヘルプ（必読）モーダル -->
   <div id="helpModal" class="modal-overlay">
     <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
-      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">📖 アプリの使い方と仕様</h2>
-      <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>👑</span> 自動ランク付け</h3>
-        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">過去の接客エピソード数をシステムが自動カウントし、名前にバッジを付与します。</p>
-      </div>
-      <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;"><span>🚨</span> 放置アラート（呼び戻し）</h3>
-        <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">設定日数以上来店がないお客様は優先表示され、AIが自動で「会いたい」感情タグを組み込みます。</p>
-      </div>
+      <h2 id="help-title" style="margin: 0 0 20px; font-weight: 900; text-align: center;"></h2>
+      <!-- ★NEW: ここにJavaScriptで文言が流し込まれます -->
+      <div id="help-sections-container"></div>
       <button onclick="closeHelpModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 10px;">閉じる</button>
     </div>
   </div>
@@ -276,7 +268,6 @@
 
     <main class="scroll-area">
       <div class="page page-create">
-        <!-- ★NEW: クラスに card-customer-select を追加 -->
         <div class="card card-customer-select">
           <span class="label">👤 誰に送る？</span>
           <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea">
@@ -387,7 +378,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.4.1</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.5.0</span></div>
         </div>
       </div>
     </main>
@@ -404,6 +395,39 @@
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
+    // ★NEW: テキスト一元管理オブジェクト（config.js として外部化可能）
+    const AppTexts = {
+      helpModal: {
+        title: "📖 アプリの使い方と仕様",
+        sections: [
+          {
+            icon: "👑",
+            title: "自動ランク付け",
+            content: "過去の接客エピソード数をシステムが自動カウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。"
+          },
+          {
+            icon: "🚨",
+            title: "放置アラート（呼び戻し）",
+            content: "設定日数以上来店がないお客様には、名前横に<strong>「🚨◯日放置」</strong>と表示されます。「要連絡」タブを開くと対象者が優先表示され、AIが自動で「会いたい」感情タグを組み込みます。"
+          },
+          {
+            icon: "💎",
+            title: "VIP（一軍）の特別扱い",
+            content: "顧客のタグに<strong>「太客」「エース」「VIP」</strong>等を設定すると、AIが「VIP客」と認識し、リストで常に金枠で最上位に表示されます。"
+          }
+        ]
+      },
+      styleModal: {
+        cute: "🎀 可愛らしく、絵文字を多用した親しみやすい文体。",
+        neat: "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。",
+        custom: "⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。"
+      },
+      setupModal: {
+        title: "🎉 初期設定",
+        desc: "現在の業態を教えてください。"
+      }
+    };
+
     const LIFF_ID = "2009843865-hghVLuaS";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyWcx1XN8MuLsscHjoi9DdItYm7jCsMdZvNgrohG0o51KlTEheIXVdrHbSmGeSS2FV2/exec";
 
@@ -431,7 +455,35 @@
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function getTodayFormatted() { return getTodayString().replace(/-/g, '/'); }
 
+    // ★NEW: テキスト流し込み関数
+    function renderTexts() {
+      // 初期設定
+      document.getElementById('setup-title').innerText = AppTexts.setupModal.title;
+      document.getElementById('setup-desc').innerText = AppTexts.setupModal.desc;
+      
+      // スタイル設定
+      document.getElementById('text-style-cute').innerText = AppTexts.styleModal.cute;
+      document.getElementById('text-style-neat').innerText = AppTexts.styleModal.neat;
+      document.getElementById('text-style-custom').innerText = AppTexts.styleModal.custom;
+
+      // ヘルプ
+      document.getElementById('help-title').innerText = AppTexts.helpModal.title;
+      const helpContainer = document.getElementById('help-sections-container');
+      helpContainer.innerHTML = AppTexts.helpModal.sections.map(sec => `
+        <div style="margin-bottom: 24px;">
+          <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+            <span>${sec.icon}</span> ${sec.title}
+          </h3>
+          <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+            ${sec.content}
+          </p>
+        </div>
+      `).join('');
+    }
+
     async function init() {
+      renderTexts(); // ★アプリ起動時にテキストをセット
+
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
@@ -500,8 +552,8 @@
 
     function updateStyleUI(type) {
       const cuteLabel = document.querySelector('.btn-cute'), neatLabel = document.querySelector('.btn-neat'), cuteDesc = document.querySelector('.style-desc-cute'), neatDesc = document.querySelector('.style-desc-neat'), overviewText = document.getElementById('styleOverviewText'), customTextArea = document.getElementById('customStyleText'); 
-      if (type === 'host') { cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)"; cuteDesc.innerText = "😎 強気でSっ気のある、独占欲強めのオラオラ系文体。"; neatDesc.innerText = "🐶 母性本能をくすぐる、可愛くて甘えん坊な文体。"; overviewText.innerText = "オラオラ・カスタム・子犬";
-      } else { cuteLabel.innerText = "かわいい"; neatLabel.innerText = "清楚"; cuteDesc.innerText = "🎀 可愛らしく、絵文字を多用した親しみやすい文体。"; neatDesc.innerText = "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。"; overviewText.innerText = "かわいい・カスタム・清楚"; }
+      if (type === 'host') { cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)"; overviewText.innerText = "オラオラ・カスタム・子犬";
+      } else { cuteLabel.innerText = "かわいい"; neatLabel.innerText = "清楚"; overviewText.innerText = "かわいい・カスタム・清楚"; }
       customTextArea.placeholder = stylePlaceholders[type];
     }
 
@@ -512,7 +564,6 @@
       if (savedTags) { let parsed = JSON.parse(savedTags); if (parsed.length < masterTags.length) { activeTags = masterTags; localStorage.setItem(storageKey, JSON.stringify(masterTags)); } else activeTags = parsed; } else activeTags = masterTags;
       renderChips();
 
-      // ★NEW: 写メ日記モードに切り替えたら、顧客情報の選択状態をクリアする
       if (isPhoto) {
         document.getElementById('nameInput').value = "";
         document.getElementById('pastMemoDisplay').innerHTML = "(写メ日記モードでは顧客情報は使用しません)";
