@@ -45,20 +45,16 @@
     .input-field:focus { background: #FFF; border-color: #F472B6; outline: none; box-shadow: 0 0 0 3px rgba(244,114,182,0.1); }
     ::placeholder { color: #9CA3AF; }
 
-    /* VIP金枠・フィルタボタン */
     .card-vip { border: 2px solid #FCD34D; background: linear-gradient(to right, #FFF, #FEF3C7); }
     .story-ring-vip { background: linear-gradient(135deg, #F59E0B, #FBBF24) !important; }
     
-    /* 修正: フィルタボタンの高さが潰れないように min-height と flex-shrink を追加 */
     .filter-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px 0; margin-bottom: 12px; scrollbar-width: none; flex-shrink: 0; min-height: 48px; align-items: center; }
     .filter-container::-webkit-scrollbar { display: none; }
     .filter-btn { background: #FFF; border: 1.5px solid var(--border-color); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; flex-shrink: 0; height: fit-content; }
     .filter-btn.active-filter { background: var(--primary-gradient); color: #FFF; border-color: transparent; }
 
-    /* コンパクトモードのトグルUI */
     .view-toggle { background: var(--input-bg); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 800; color: var(--text-sub); cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
     
-    /* NEW: コンパクト表示モード用CSS */
     .compact-view .card { padding: 12px 14px; margin-bottom: 10px; }
     .compact-view .card-inner { align-items: center !important; }
     .compact-view .card-memo { display: none !important; }
@@ -280,17 +276,13 @@
       </div>
 
       <div class="page page-data">
-        <!-- ★NEW: 見出し横にコンパクト切り替えトグルを追加 -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <h2 style="margin:0; font-weight:900;">顧客カルテ</h2>
-          <div class="view-toggle" onclick="toggleCompactMode()">
-            <span id="viewIcon">🗂️ 詳細表示</span>
-          </div>
+          <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
         </div>
         
         <input type="text" id="customerSearch" class="input-field" placeholder="名前で検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
         
-        <!-- フィルタUI -->
         <div class="filter-container">
           <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
           <div class="filter-btn" id="filter-btn-vip" onclick="setListFilter('vip')">💎 一軍</div>
@@ -322,7 +314,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます（準備中）')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます（準備中）')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">1.4.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">1.5.0</span></div>
         </div>
       </div>
     </main>
@@ -351,13 +343,15 @@
     let isDemoMode = false;
     let myCustomAttrs = []; 
     let currentListFilter = 'all'; 
-    let isCompactMode = false; // ★NEW: コンパクト表示の状態管理
+    let isCompactMode = false;
 
+    // ★UPDATE: 例文を本格的なものに差し替え
     const stylePlaceholders = {
       cabaret: "（例）昨日はお店来てくれて本当にありがとう🥺✨\n久しぶりに〇〇くんの顔見れて、めちゃくちゃ楽しかったよ💗\nお仕事忙しいのに時間作ってくれて嬉しかったな🥂\nまたお仕事落ち着いたら顔見せに来てね！待ってるね💕",
       fuzoku: "（例）今日は指名してくれてありがとう🧸💓\n〇〇さんと一緒にいる時間、すごく落ち着くし癒されちゃった🛁✨\nマッサージも気持ちよかったって言ってくれて嬉しかったな🧴\nまたお仕事疲れたら、いつでも癒されにおいでね💋",
       host: "（例）今日はお店来てくれてありがとな🍾✨\n最近会えてなかったから、〇〇の顔見れて普通にテンション上がったわ😎\n仕事で色々大変そうだったけど、無理すんなよ🥂\nまたすぐ連絡する。ちゃんと休めよ🖤"
     };
+    
     const industryAttributeTags = { cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'], fuzoku: ['M気質', 'S気質', '常連', '新規', 'キモい', '優しい', '痛客', '匂いキツめ', 'マナー良', '本番要求', 'おじさん', '若者', 'イケメン', 'デブ', 'ハゲ'], host: ['太客', '細客', 'エース', '痛客', '常連', '新規', 'メンヘラ', '金持ち', 'ケチ', '酒癖悪い', 'マナー良', '独身', '既婚', '若者', 'おばさん'] };
     let tempSelectedAttributes = [];
     const industryConfigs = { cabaret: { prompt: "", tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '📱 LINE嬉しい', '💤 おやすみ'] }, fuzoku: { prompt: "", tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長', '🌹 夢心地'] }, host: { prompt: "", tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '🤐 誰にも内緒', '🖤 独占'] } };
@@ -391,7 +385,7 @@
       const overviewText = document.getElementById('styleOverviewText'), customTextArea = document.getElementById('customStyleText'); 
       if (type === 'host') { cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)"; cuteDesc.innerText = "😎 強気でSっ気のある、独占欲強めのオラオラ系文体。"; neatDesc.innerText = "🐶 母性本能をくすぐる、可愛くて甘えん坊な文体。"; overviewText.innerText = "オラオラ・カスタム・子犬";
       } else { cuteLabel.innerText = "かわいい"; neatLabel.innerText = "清楚"; cuteDesc.innerText = "🎀 可愛らしく、絵文字を多用した親しみやすい文体。"; neatDesc.innerText = "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。"; overviewText.innerText = "かわいい・カスタム・清楚"; }
-      customTextArea.placeholder = stylePlaceholders[type] || "学習用の過去の文章をここにペースト...";
+      customTextArea.placeholder = stylePlaceholders[type];
     }
 
     function updateChips() {
@@ -467,17 +461,14 @@
       filterCustomerList();
     }
 
-    // ★NEW: コンパクトモードの切り替え関数
     function toggleCompactMode() {
       isCompactMode = !isCompactMode;
       const listArea = document.getElementById('customerListArea');
       const viewIcon = document.getElementById('viewIcon');
       if(isCompactMode) {
-        listArea.classList.add('compact-view');
-        viewIcon.innerText = '📋 コンパクト';
+        listArea.classList.add('compact-view'); viewIcon.innerText = '📋 コンパクト';
       } else {
-        listArea.classList.remove('compact-view');
-        viewIcon.innerText = '🗂️ 詳細表示';
+        listArea.classList.remove('compact-view'); viewIcon.innerText = '🗂️ 詳細表示';
       }
     }
 
@@ -510,7 +501,6 @@
 
     function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
-    // ★UPDATE: HTMLの構造をコンパクトモード対応に調整
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
@@ -544,13 +534,9 @@
         else if (stats.count === 2) sysBadge = '✌️ 2回目';
         else if (stats.count >= 3) sysBadge = '👑 常連';
         
-        // ★修正: バッジが絶対に潰れないように調整
         const sysBadgeHtml = sysBadge ? `<span style="background:#F3F4F6; color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #E5E7EB; margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content;">${sysBadge}</span>` : '';
-
         const tagHtml = c.tagsArray.length > 0 ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">` + c.tagsArray.map(t => `<span style="background:#FCE7F3; color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold;">#${t}</span>`).join('') + `</div>` : '';
         const isDummy = c.tagsArray.includes("ダミー");
-        
-        // ★修正: コンパクトモード時のアイコンだけ表示にも対応できるボタン構造
         const actionIcon1 = '✏️', actionText1 = '日記作成';
         const actionIcon2 = isDummy ? '🔍' : '⚙️', actionText2 = isDummy ? '閲覧' : '編集';
         const cardClass = stats.isVip ? "card card-vip" : "card";
@@ -564,9 +550,7 @@
                   <b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b>
                 </div>
                 <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${c.memo ? c.memo.substring(0,40)+"..." : "メモなし"}</small>
-                <div class="card-tags" style="margin-top:6px;">
-                  ${tagHtml}
-                </div>
+                <div class="card-tags" style="margin-top:6px;">${tagHtml}</div>
               </div>
               <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
                 <button class="action-btn" onclick="selectCustomerByIndex(${index})" style="background:#FCE7F3; color:#DB2777; border:none; padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s;">
@@ -714,6 +698,23 @@
       const overlay = document.getElementById('loadingOverlay'), msg = document.getElementById('loadingMessage'), closeBtn = document.getElementById('loadingCloseBtn'), spinner = document.getElementById('loadingSpinner');
       overlay.style.display = 'flex'; msg.innerText = "🚀 データを送信中...\n(画面を開いたままお待ち下さい)"; closeBtn.style.display = 'none'; spinner.style.display = 'block';
 
+      // ★NEW: 対象顧客のシステムランクを計算する
+      const targetCustomer = customerData.find(c => c.name === name);
+      let customerRank = '新規'; 
+      if (targetCustomer) {
+        const stats = getCustomerStats(targetCustomer);
+        if (stats.isVip) customerRank = 'VIP';
+        else if (stats.count === 1) customerRank = '新規';
+        else if (stats.count === 2) customerRank = '2回目';
+        else customerRank = '常連';
+      }
+
+      // ★NEW: 厄介な手動タグを強制消去（サニタイズ）
+      const forbiddenTags = ['新規', '初回', '初回来店', '初めて', '一見', '常連', 'リピーター', '2回目', '二回目', '3回目', '三回目', '1回目', '一回目'];
+      const cleanedCustomerTags = currentCustomerTags.filter(tag => {
+        return !forbiddenTags.some(forbidden => tag.includes(forbidden));
+      });
+
       let actualPastMemo = (pastMemoText === "(顧客を選択するか、過去の記録がありません)" || pastMemoText === "(過去の記録はありません)") ? "" : pastMemoText;
       let newCombinedMemo = actualPastMemo;
       if (todayEpisode || selectedEpisodeTags.length > 0) {
@@ -722,7 +723,14 @@
         newCombinedMemo = actualPastMemo ? actualPastMemo + "\n---\n" + todayText : todayText;
       }
 
-      const payload = { action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, customerTags: currentCustomerTags.join(', '), episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" };
+      const payload = { 
+        action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: actualPastMemo, combinedMemoToSave: newCombinedMemo, 
+        style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, 
+        customerTags: cleanedCustomerTags.join(', '), // ★UPDATE: クリーニング済みのタグを送る
+        customerRank: customerRank, // ★NEW: 絶対的なシステムランクを送る
+        episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" 
+      };
+      
       resetInputForm();
 
       setTimeout(() => { msg.innerText = "✨ AIが執筆を開始しました！\n数秒〜数十秒後にLINEにお届けします。\n画面を閉じても大丈夫です😊"; closeBtn.style.display = 'block'; spinner.style.display = 'none'; }, 1200);
