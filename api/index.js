@@ -9,15 +9,20 @@ export default async function handler(req, res) {
     const action = data.action;
     const userId = data.userId || "test-user";
 
-    // Vercelの金庫から鍵を取り出す
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // ★NEW: コピペ時の「見えない空白・改行」を強制削除（.trim()）する
+    // さらに、環境変数が空だった場合は教えてもらったURLを直接使う！
+    const supabaseUrl = (process.env.SUPABASE_URL || "https://fdlfwtlzphntfontwcfa.supabase.co").trim();
+    const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+
+    // ログ調査用（裏側にだけ出力されます）
+    console.log("👀 接続チェック URL: [" + supabaseUrl + "]");
+    console.log("👀 接続チェック 鍵の文字数: " + supabaseKey.length);
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error("【致命的エラー】Vercelの環境変数が読み込めていません！(SUPABASE_URL または SUPABASE_SERVICE_ROLE_KEY が空です)");
+      throw new Error("【致命的エラー】Vercelの環境変数が読み込めていません！(URLまたは鍵が空です)");
     }
 
-    // Supabaseの接続準備（強力なマスターキーを使用）
+    // Supabaseの接続準備
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // 1. 顧客リスト取得
@@ -38,7 +43,6 @@ export default async function handler(req, res) {
       const tagsArray = data.newTags ? data.newTags.split(',').map(t => t.trim()) : [];
       const memoJson = data.newMemo ? JSON.parse(data.newMemo) : [];
       
-      // ★ エラーをしっかり検知する
       const { error } = await supabase.from('customers').insert({ 
         user_id: userId, 
         name: data.newName, 
@@ -66,7 +70,6 @@ export default async function handler(req, res) {
 
     // 4. AI日記生成
     if (action === 'generate') {
-      // 接客メモの更新
       if (data.combinedMemoToSave) {
         const memoJson = JSON.parse(data.combinedMemoToSave);
         const { error } = await supabase.from('customers')
@@ -81,7 +84,6 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, generatedText: "※テスト環境のためAI生成はスキップされました。\n\n【送ろうとしたエピソード】\n" + data.episode });
       }
 
-      // 写真がある場合はDifyへアップロード
       let uploadFileId = null;
       if (data.mode === "photo" && data.image) {
         const base64Data = data.image.replace(/^data:image\/\w+;base64,/, "");
@@ -101,7 +103,6 @@ export default async function handler(req, res) {
         if (uploadJson.id) uploadFileId = uploadJson.id;
       }
 
-      // Dify APIを叩く
       const difyPayload = {
         inputs: { 
           name: data.name || "", episode: data.episode || "", pastMemo: data.pastMemo || "",
@@ -128,7 +129,6 @@ export default async function handler(req, res) {
       const difyData = await difyRes.json();
       const aiText = difyData.data?.outputs?.text || difyData.data?.outputs?.answer || difyData.answer || "生成されましたがテキストが空です。";
 
-      // LINEへ送信
       await fetch("https://api.line.me/v2/bot/message/push", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.LINE_ACCESS_TOKEN}` },
@@ -140,7 +140,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error("バックエンド処理エラー:", err);
-    // 失敗した場合は確実に 500 エラーを返す
     return res.status(500).json({ success: false, error: err.message });
   }
 }
