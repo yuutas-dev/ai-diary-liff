@@ -4,7 +4,6 @@ export default async function handler(req, res) {
   // POSTリクエスト以外は弾く
   if (req.method !== 'POST') return res.status(200).send('OK');
 
-  
   try {
     const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const action = data.action;
