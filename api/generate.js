@@ -21,6 +21,7 @@ export default async function handler(req, res) {
     let uploadFileId = null;
     let photoUrl = null;
 
+    // 画像処理ロジック (既存のまま)
     if (data.mode === 'photo' && data.image) {
       const base64Data = data.image.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
@@ -52,6 +53,7 @@ export default async function handler(req, res) {
       if (uploadJson.id) uploadFileId = uploadJson.id;
     }
 
+    // メモの保存ロジック (既存のまま)
     if (data.combinedMemoToSave && data.name) {
       const memoJson = JSON.parse(data.combinedMemoToSave);
       if (photoUrl && memoJson.length > 0) {
@@ -67,6 +69,7 @@ export default async function handler(req, res) {
       if (error) throw new Error('Supabaseメモ更新エラー: ' + error.message);
     }
 
+    // Difyへのリクエスト (既存のまま)
     const difyPayload = {
       inputs: {
         name: data.name || '',
@@ -104,20 +107,10 @@ export default async function handler(req, res) {
     const difyData = await difyRes.json();
     const aiText = difyData.data?.outputs?.text || difyData.data?.outputs?.answer || difyData.answer || '生成されましたがテキストが空です。';
 
-    if (userId !== 'test-user' && process.env.LINE_ACCESS_TOKEN) {
-      try {
-        await fetch('https://api.line.me/v2/bot/message/push', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.LINE_ACCESS_TOKEN}`
-          },
-          body: JSON.stringify({ to: userId, messages: [{ type: 'text', text: aiText }] })
-        });
-      } catch (e) {
-        console.error('LINE Push Error:', e);
-      }
-    }
+    // ==========================================
+    // 修正：ここの LINE Messaging API による
+    // 自動Push送信ブロックを完全に削除しました。
+    // ==========================================
 
     return sendJson(res, 200, { success: true, generatedText: aiText });
   } catch (err) {
