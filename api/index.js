@@ -1,163 +1,1453 @@
-import { createClient } from '@supabase/supabase-js';
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AIお礼日記メーカー</title>
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #A855F7, #EC4899);
+      --bg-color: transparent; 
+      --card-bg: rgba(255, 255, 255, 0.55); 
+      --text-main: #1F2937; --text-sub: #6B7280;
+      --input-bg: rgba(243, 244, 246, 0.7); 
+      --border-color: rgba(229, 231, 235, 0.6); 
+      --active-color: #D946EF;
+      --shadow-sm: 0 4px 12px rgba(0,0,0,0.03); 
+      --shadow-md: 0 10px 32px rgba(31, 38, 135, 0.07);
+    }
+    * { box-sizing: border-box; }
+    
+    body { 
+      width: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; 
+      background: linear-gradient(135deg, #FDF2F8 0%, #F3E8FF 50%, #F0FDF4 100%);
+      color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif; 
+      -webkit-tap-highlight-color: transparent; 
+    }
+    
+    input[type="radio"].ui-state { display: none; }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(200).send('OK');
+    .page { display: none; flex-direction: column; padding-bottom: 20px; position: relative; min-height: 100%; }
+    #nav-create:checked ~ .app-container .page-create { display: flex; }
+    #nav-data:checked ~ .app-container .page-data { display: flex; }
+    #nav-settings:checked ~ .app-container .page-settings { display: flex; }
+    #nav-create:checked ~ .app-container .tab-create, #nav-data:checked ~ .app-container .tab-data, #nav-settings:checked ~ .app-container .tab-settings { color: var(--active-color); }
+    #nav-create:not(:checked) ~ .app-container .header-toggle { display: none; }
 
-  try {
-    const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const action = data.action;
-    const userId = data.userId || "test-user";
+    .app-container { display: flex; flex-direction: column; height: 100dvh; position: relative; }
+    
+    .header-area { 
+      padding: env(safe-area-inset-top, 20px) 16px 12px; 
+      background: rgba(255, 255, 255, 0.4); 
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+      z-index: 100; flex-shrink: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.6); 
+    }
+    
+    .toggle-container { display: flex; background: rgba(255, 255, 255, 0.6); border-radius: 40px; padding: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+    .toggle-label { flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 700; color: var(--text-sub); border-radius: 34px; transition: 0.3s; cursor: pointer; }
+    .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 90px); }
+    
+    .mode-photo-ui { display: none; }
+    #mode-photo:checked ~ .app-container .mode-photo-ui { display: block; }
+    #mode-photo:checked ~ .app-container .toggle-photo, #mode-text:checked ~ .app-container .toggle-text { background: #FFF; color: var(--active-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    
+    #mode-photo:checked ~ .app-container .card-customer-select { opacity: 0.4; pointer-events: none; filter: grayscale(80%); }
 
-    const supabaseUrl = (process.env.SUPABASE_URL || "https://fdlfwtlzphntfontwcfa.supabase.co").trim();
-    const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+    .style-content-wrapper { min-height: 310px; position: relative; }
+    .style-desc-cute, .style-desc-custom, .style-desc-neat { display: none; animation: fadeInTab 0.3s ease-out forwards; }
+    #style-cute:checked ~ .modal-overlay .style-desc-cute, #style-custom:checked ~ .modal-overlay .style-desc-custom, #style-neat:checked ~ .modal-overlay .style-desc-neat { display: block; }
+    #style-cute:checked ~ .modal-overlay .btn-cute, #style-custom:checked ~ .modal-overlay .btn-custom, #style-neat:checked ~ .modal-overlay .btn-neat { background: var(--primary-gradient); color: white; border-color: transparent; }
+    @keyframes fadeInTab { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("【致命的エラー】Vercelの環境変数が読み込めていません！(URLまたは鍵が空です)");
+    .card { 
+      background: var(--card-bg); 
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.8); 
+      border-radius: 24px; padding: 18px; margin-bottom: 16px; 
+      box-shadow: var(--shadow-md); 
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, opacity 0.3s; 
+      flex-shrink: 0; 
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    }
+    
+    .card.pressing {
+      transform: scale(0.96);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    .card-vip { 
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(254, 243, 199, 0.6)); 
+      border: 1px solid rgba(252, 211, 77, 0.8); 
+    }
+    
+    .label { font-weight: 800; font-size: 14px; margin-bottom: 10px; display: block; color: var(--text-main); }
+    .input-field { width: 100%; background: var(--input-bg); border: 1.5px solid transparent; border-radius: 14px; padding: 14px; font-size: 15px; color: var(--text-main); font-family: inherit; transition: 0.2s; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .input-field:focus { background: rgba(255,255,255,0.9); border-color: #F472B6; outline: none; box-shadow: 0 0 0 3px rgba(244,114,182,0.1); }
+    ::placeholder { color: #9CA3AF; }
 
-    // 1. 顧客リスト取得
-    if (action === 'getCustomers') {
-      const { data: rows, error } = await supabase.from('customers').select('*');
-      if (error) throw new Error("Supabase取得エラー: " + error.message);
+    .story-ring-vip { background: linear-gradient(135deg, #F59E0B, #FBBF24) !important; }
+    
+    .filter-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px 0; scrollbar-width: none; flex-shrink: 0; min-height: 48px; align-items: center; scroll-behavior: smooth; }
+    .filter-container::-webkit-scrollbar { display: none; }
+    .filter-btn { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.8); color: var(--text-sub); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; flex-shrink: 0; height: fit-content; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+    .filter-btn.active-filter { background: var(--primary-gradient); color: #FFF; border-color: transparent; }
+    #filter-btn-alert.active-filter { background: #EF4444; color: #FFF; border-color: transparent; }
+
+    .view-toggle { background: var(--input-bg); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 800; color: var(--text-sub); cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
+    
+    .compact-view { padding: 12px 14px !important; margin-bottom: 10px !important; }
+    .compact-view .card-inner { align-items: center !important; }
+    .compact-view .card-memo { display: none !important; }
+    .compact-view .card-tags { margin-top: 6px; }
+
+    .skeleton { 
+      background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%); 
+      background-size: 200% 100%; 
+      animation: shimmer 1.5s infinite; 
+      border-radius: 24px; 
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
+    .fade-scroll-wrapper::after { content: ""; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.6)); pointer-events: none; }
+    .stories-scroll { display: flex; gap: 14px; overflow-x: auto; padding: 6px 40px 10px 0; scrollbar-width: none; }
+    .stories-scroll::-webkit-scrollbar { display: none; }
+    .story-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; width: 62px; position: relative; }
+    .story-ring { width: 62px; height: 62px; border-radius: 50%; background: var(--primary-gradient); padding: 2.5px; position: relative; }
+    .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: var(--active-color); border: 2px solid #FFF; }
+    .story-name { font-size: 11px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
+    .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 1.5px solid #FFF; z-index: 5; }
+    .story-alert-badge { position: absolute; bottom: -2px; right: -4px; background: #EF4444; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 9px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+
+    .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 24px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
+    .selected-chip { background: var(--primary-gradient); color: #FFF; padding: 6px 12px; border-radius: 14px; font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 4px; animation: pop 0.2s ease-out; }
+    @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .episode-tags-container { display: flex; flex-wrap: wrap; gap: 8px; max-height: 180px; overflow-y: auto; padding: 4px 0; align-content: flex-start; margin-top: 12px; }
+    .chip { background: rgba(255,255,255,0.7); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.9); color: var(--text-main); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .chip.dimmed { opacity: 0.4; background: var(--input-bg); border-color: transparent; pointer-events: none; }
+    .attr-chip { background: #FDF2F8; border: 1px solid #FBCFE8; color: #DB2777; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+    .tags-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding: 0 40px 6px 0; scrollbar-width: none; align-items: center; }
+    .tags-scroll-container::-webkit-scrollbar { display: none; }
+
+    .accordion-header { background: #FDF2F8; color: #DB2777; padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 12px; }
+    .accordion-content { display: none; margin-bottom: 16px; animation: fadeInTab 0.2s ease-out forwards; }
+    .accordion-content.open { display: block; }
+
+    .memo-blocks-wrapper { position: relative; margin-bottom: 8px; }
+    .memo-blocks-wrapper::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 24px; background: linear-gradient(to bottom, rgba(255,255,255,0.8), transparent); z-index: 10; pointer-events: none; border-radius: 12px; }
+    #editMemoBlocksArea { max-height: 400px; overflow-y: auto; padding-top: 12px; padding-bottom: 20px; scrollbar-width: thin; scroll-behavior: smooth; }
+    
+    .memo-block { 
+      background: rgba(255, 255, 255, 0.6); 
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
+      border: 1px solid rgba(255, 255, 255, 0.8); 
+      border-radius: 16px; padding: 12px; margin-bottom: 12px; 
+      position: relative; transition: 0.3s; 
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03); 
+    }
+    .memo-block.expanded { 
+      background: rgba(255, 255, 255, 0.9); 
+      border-color: #F472B6; 
+      box-shadow: 0 8px 24px rgba(244, 114, 182, 0.15); 
+    }
+    
+    .memo-date { font-weight: 800; color: var(--active-color); border: none; background: transparent; font-size: 12px; margin-bottom: 4px; outline: none; font-family: inherit; }
+    .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
+    .memo-tag-dropdown { animation: fadeInTab 0.2s ease-out; }
+
+    .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: rgba(255,255,255,0.7); backdrop-filter: blur(4px); transition: 0.2s; }
+
+    .past-memo-box { background: var(--input-bg); border-radius: 14px; padding: 14px; font-size: 13px; color: var(--text-main); margin-bottom: 12px; max-height: 140px; overflow-y: auto; line-height: 1.6; backdrop-filter: blur(4px); }
+    #pastMemoDisplay { margin-top: 4px; }
+    .past-memo-label { font-size: 11px; font-weight: 800; color: var(--text-sub); margin-bottom: 6px; display: block; }
+
+    .submit-area { padding: 16px 0; pointer-events: auto; }
+    .submit-btn { width: 100%; background: var(--primary-gradient); color: #FFF; border: none; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 35px; box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3); cursor: pointer; transition: 0.3s; }
+    .submit-btn:disabled { background: #9CA3AF; box-shadow: none; cursor: not-allowed; }
+
+    .bottom-nav { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px); border-top: 1px solid rgba(255, 255, 255, 0.5); pointer-events: auto; z-index: 500; position: relative; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #9CA3AF; font-size: 10px; font-weight: 800; gap: 6px; flex: 1; cursor: pointer; }
+    .fab { position: fixed; bottom: calc(env(safe-area-inset-bottom, 12px) + 90px); right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-gradient); color: #FFF; display: flex; justify-content: center; align-items: center; font-size: 30px; font-weight: bold; box-shadow: 0 6px 16px rgba(236,72,153,0.4); cursor: pointer; z-index: 1000; transition: 0.2s; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+    .modal-content { background: #FFF; border-radius: 28px; padding: 24px 20px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+
+    .half-modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; }
+    .half-modal-backdrop.show { opacity: 1; visibility: visible; }
+    .half-modal { position: fixed; bottom: -100%; left: 0; width: 100%; background: #FFF; border-radius: 28px 28px 0 0; padding: 20px 20px calc(env(safe-area-inset-bottom, 20px) + 20px); z-index: 10001; transition: bottom 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+    .half-modal.open { bottom: 0; }
+    .half-modal-handle { width: 40px; height: 5px; background: #E5E7EB; border-radius: 10px; margin: 0 auto 20px auto; }
+
+    .textarea-wrapper { position: relative; }
+    textarea.input-field { height: 90px; resize: none; padding-right: 80px; line-height: 1.5; }
+    
+    .clear-btn { position: absolute; bottom: 12px; right: 12px; background: rgba(255,255,255,0.9); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: 800; cursor: pointer; color: var(--text-sub); display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); transition: 0.2s; }
+    .clear-btn:active { transform: scale(0.95); }
+
+    .upload-area { border: 2px dashed #D1C5D4; background: rgba(255,255,255,0.5); backdrop-filter: blur(4px); border-radius: 16px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-sub); font-weight: bold; cursor: pointer; position: relative; overflow: hidden; }
+    .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+    .result-box { display: none; background: #FFF; border: 1px solid var(--border-color); border-radius: 16px; margin-top: 8px; padding: 4px; box-shadow: var(--shadow-md); max-height: 150px; overflow-y: auto; position: absolute; width: 100%; z-index: 50; }
+    .suggest-item { padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: 800; cursor: pointer; }
+    .style-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+    .style-btn { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 800; color: var(--text-sub); background: var(--input-bg); border-radius: 14px; border: 1px solid transparent; cursor: pointer; transition: 0.2s; }
+    .style-desc-box { background: #FDF2F8; border-left: 4px solid #EC4899; padding: 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: #831843; font-weight: 700; margin-bottom: 16px; }
+
+    .settings-list { background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.8); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-md); margin-bottom: 16px; flex-shrink: 0; }
+    .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-weight: 800; font-size: 14px; }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-val { color: var(--text-sub); font-size: 13px; font-weight: 700; }
+
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #D1D5DB; transition: .3s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    input:checked + .slider { background-color: #10B981; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    #searchContainer { position: relative; height: 60px; z-index: 5; margin-bottom: 12px; }
+
+    #cuteToast {
+      position: fixed; bottom: calc(env(safe-area-inset-bottom, 12px) + 80px); right: -250px; 
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); 
+      padding: 12px 20px; border-radius: 30px 0 0 30px; 
+      box-shadow: -4px 4px 20px rgba(236, 72, 153, 0.15); 
+      border: 2px solid #FBCFE8; border-right: none; 
+      display: flex; align-items: center; gap: 8px; z-index: 9999; 
+      transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      font-weight: 800; font-size: 13px; color: #DB2777;
+    }
+    @keyframes bounce-icon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  </style>
+</head>
+<body>
+
+  <!-- 可愛いポップアップ -->
+  <div id="cuteToast">
+    <span id="cuteToastIcon" style="font-size: 18px; display:inline-block;">🐰</span>
+    <span id="cuteToastText">執筆中だよ...</span>
+  </div>
+
+  <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
+  <input type="radio" name="nav" id="nav-data" class="ui-state">
+  <input type="radio" name="nav" id="nav-settings" class="ui-state">
+  <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
+  <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
+  <input type="radio" name="style" id="style-cute" class="ui-state" checked onchange="saveStyleSettings()">
+  <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
+  <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
+
+  <!-- 写真拡大用モーダル -->
+  <div id="photoModal" class="modal-overlay" style="z-index: 10005;" onclick="closePhotoModal(event)">
+    <div style="position: relative; max-width: 90%; max-height: 90%; margin: auto; display: flex; flex-direction: column; justify-content: center; align-items: center;" onclick="event.stopPropagation()">
+      <img id="expandedPhoto" src="" style="width: 100%; height: auto; max-height: 80vh; object-fit: contain; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+      <div onclick="closePhotoModal(event)" style="position: absolute; top: -12px; right: -12px; background: #FFF; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 16px; color: #1F2937; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">×</div>
+    </div>
+  </div>
+
+  <!-- 顧客カード長押し時のアクションメニュー -->
+  <div id="cardActionModalBackdrop" class="half-modal-backdrop" onclick="closeCardActionModal()"></div>
+  <div id="cardActionHalfModal" class="half-modal" style="z-index:10002;">
+    <div class="half-modal-handle"></div>
+    <h3 id="actionModalName" style="margin: 0 0 16px; font-weight: 900; text-align: center; color: var(--text-main);"></h3>
+    <button id="btnToggleVip" onclick="toggleVipPin()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:16px; font-weight:800; font-size:15px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"></button>
+    <button onclick="setHidden()" style="width:100%; background:#FEE2E2; color:#EF4444; border:none; padding:16px; border-radius:16px; font-weight:800; font-size:15px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">💤 非表示にする</button>
+  </div>
+
+  <!-- 非表示リスト管理モーダル -->
+  <div id="hiddenListModal" class="modal-overlay" style="z-index: 10005;">
+    <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">💤 非表示にした顧客</h2>
+      <div id="hiddenCustomersArea" style="overflow-y: auto; flex: 1; padding-bottom: 20px; margin: -10px;"></div>
+      <button onclick="closeHiddenListModal()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 20px;">閉じる</button>
+    </div>
+  </div>
+
+  <!-- 初期設定モーダル -->
+  <div id="setupModal" class="modal-overlay">
+    <div class="modal-content" style="text-align: center;">
+      <h2 id="setup-title" style="margin: 0 0 10px; font-weight: 900;"></h2>
+      <p id="setup-desc" style="color:var(--text-sub); font-size:14px; font-weight:700; margin-bottom:24px;"></p>
+      <select id="initialBusinessType" class="input-field" style="margin-bottom: 24px; font-weight:800; text-align:center;">
+        <option value="cabaret">キャバクラ・ラウンジ</option>
+        <option value="fuzoku">風俗・メンエス</option>
+        <option value="host">ホストクラブ</option>
+      </select>
+      <button onclick="saveInitialSetup()" style="width:100%; background:var(--primary-gradient); color:#FFF; border:none; padding:18px; border-radius:30px; font-weight:800; font-size:16px;">はじめる ✨</button>
+    </div>
+  </div>
+
+  <!-- スタイル設定モーダル -->
+  <div id="styleModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🎨 AI口調・スタイル設定</h2>
+      <div class="style-selector">
+        <label for="style-cute" class="style-btn btn-cute">かわいい</label>
+        <label for="style-custom" class="style-btn btn-custom">カスタム</label>
+        <label for="style-neat" class="style-btn btn-neat">清楚</label>
+      </div>
+      <div class="style-content-wrapper">
+        <div id="text-style-cute" class="style-desc-cute style-desc-box"></div>
+        <div id="text-style-neat" class="style-desc-neat style-desc-box"></div>
+        <div class="style-desc-custom">
+          <div id="text-style-custom" class="style-desc-box" style="margin-bottom:12px;"></div>
+          <textarea id="customStyleText" class="input-field" style="height: 120px; margin-bottom:16px; font-size: 13px;" onchange="saveStyleSettings()"></textarea>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;"><span>テンション（低）</span><span>（高）</span></div>
+          <input type="range" id="tensionSlider" min="1" max="5" value="3" style="width:100%; margin-bottom:20px;" onchange="saveStyleSettings()">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;"><span>絵文字の量（少）</span><span>（多）</span></div>
+          <input type="range" id="emojiSlider" min="1" max="5" value="4" style="width:100%; margin-bottom:10px;" onchange="saveStyleSettings()">
+        </div>
+      </div>
+      <button onclick="closeStyleModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">設定を保存して閉じる</button>
+    </div>
+  </div>
+
+  <!-- 顧客編集モーダル -->
+  <div id="editCustomerModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;" id="modalTitle">顧客情報の編集</h2>
+      <input type="hidden" id="editCustomerIndex">
+      <input type="hidden" id="isCreateMode" value="false">
       
-      const customers = rows.filter(r => r.user_id === userId || (r.tags && r.tags.includes('ダミー'))).map(r => ({
-        name: r.name,
-        memo: typeof r.memo === 'string' ? r.memo : JSON.stringify(r.memo || []),
-        tags: Array.isArray(r.tags) ? r.tags.join(', ') : (r.tags || "")
-      }));
-      return res.status(200).json({ success: true, customers });
-    }
-
-    // 2. 新規顧客作成
-    if (action === 'createCustomer') {
-      const tagsArray = data.newTags ? data.newTags.split(',').map(t => t.trim()) : [];
-      const memoJson = typeof data.newMemo === 'string' ? JSON.parse(data.newMemo) : data.newMemo;
+      <span class="label">名前</span>
+      <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
       
-      const { error } = await supabase.from('customers').insert({ 
-        user_id: userId, 
-        name: data.newName, 
-        memo: memoJson, 
-        tags: tagsArray 
-      });
-      if (error) throw new Error("Supabase保存エラー: " + error.message);
-      return res.status(200).json({ success: true });
-    }
-
-    // 3. 顧客情報の更新
-    if (action === 'updateCustomer') {
-      const tagsArray = data.newTags ? data.newTags.split(',').map(t => t.trim()) : [];
-      const memoJson = typeof data.newMemo === 'string' ? JSON.parse(data.newMemo) : data.newMemo;
+      <div id="archiveToggleArea" style="background: #F3F4F6; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 13px; font-weight: 800; color: #4B5563;">💤 この顧客を非表示にする</span>
+        <label class="switch">
+          <input type="checkbox" id="editCustomerArchive">
+          <span class="slider"></span>
+        </label>
+      </div>
       
-      const { error } = await supabase.from('customers')
-        .update({ name: data.newName, memo: memoJson, tags: tagsArray, updated_at: new Date() })
-        .eq('user_id', userId)
-        .eq('name', data.oldName);
-      if (error) throw new Error("Supabase更新エラー: " + error.message);
-      return res.status(200).json({ success: true });
+      <div class="accordion-header" onclick="toggleTagAccordion()">
+        <span>🏷️ 属性タグ（設定・追加）</span><span id="tagAccordionIcon">▼</span>
+      </div>
+      <div class="accordion-content" id="tagAccordionContent">
+        <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="customAttrInput" class="input-field" placeholder="オリジナルタグを入力..." style="padding:10px; font-size:13px;">
+          <button id="addAttrBtn" onclick="addCustomAttributeTag()" style="background:var(--active-color); color:#FFF; border:none; border-radius:12px; padding:0 15px; font-weight:bold; white-space:nowrap;">追加</button>
+        </div>
+      </div>
+
+      <span class="label">📝 接客メモ</span>
+      <div class="memo-blocks-wrapper"><div id="editMemoBlocksArea"></div></div>
+      <div class="add-memo-btn" id="addMemoBtn" onclick="addNewMemoBlock()">＋ 日付とエピソードを追加</div>
+      
+      <div style="display:flex; gap:10px;">
+        <button onclick="closeEditModal()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800;" id="cancelBtn">閉じる</button>
+        <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">全体を保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <header class="header-area">
+      <div class="toggle-container header-toggle">
+        <label for="mode-text" class="toggle-label toggle-text">💌 お礼日記</label>
+        <label for="mode-photo" class="toggle-label toggle-photo">📸 写メ日記</label>
+      </div>
+    </header>
+
+    <main class="scroll-area">
+      <div class="page page-create">
+        <div class="card card-customer-select">
+          <span class="label">👤 誰に送る？</span>
+          <div class="fade-scroll-wrapper"><div class="stories-scroll" id="quickAccessArea">
+            <div class="story-item">
+              <div class="skeleton" style="width: 62px; height: 62px; border-radius: 50%; flex-shrink: 0;"></div>
+              <div class="skeleton" style="width: 40px; height: 10px; border-radius: 4px; margin-top: 4px;"></div>
+            </div>
+          </div></div>
+          <div style="position: relative;">
+            <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
+            <div id="resultArea" class="result-box"></div>
+          </div>
+        </div>
+
+        <div class="card mode-photo-ui">
+          <span class="label">📷 写真を選ぶ</span>
+          <input type="file" id="photoUpload" accept="image/*" style="display:none;" onchange="previewPhoto(event)">
+          <label for="photoUpload" id="uploadArea" class="upload-area">
+            <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
+            <img id="photoPreview">
+          </label>
+        </div>
+
+        <div class="card">
+          <span class="label">📝 エピソード作成</span>
+
+          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 12px;">
+            <div class="tags-scroll-container" id="attributeTagsArea"></div>
+          </div>
+          <div class="past-memo-box">
+            <span class="past-memo-label">📖 過去のメモ</span>
+            <div id="pastMemoDisplay">(顧客を選択するか、過去の記録がありません)</div>
+          </div>
+          <div id="selectedEpisodeTags" class="selected-tags-box"></div>
+          
+          <div class="textarea-wrapper">
+            <textarea id="todayEpisodeInput" class="input-field" placeholder="今日の出来事や特記事項を入力..." oninput="autoScrollTextarea()"></textarea>
+            <div class="clear-btn" onclick="clearEpisodeInput()">🧹 クリア</div>
+          </div>
+          
+          <div class="episode-tags-container" id="dynamicChips"></div>
+          <div style="margin-top: 16px; display: flex; gap: 8px;">
+            <input type="text" id="customTagInput" placeholder="＋オリジナルタグ追加" class="input-field" style="padding:10px; font-size:13px; flex:1;">
+            <button onclick="addCustomTag()" style="background:var(--active-color); color:#fff; border:none; padding:0 16px; border-radius:12px; font-weight:800;">追加</button>
+          </div>
+        </div>
+
+        <div class="submit-area">
+          <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
+        </div>
+
+        <!-- インラインの生成結果エリア -->
+        <div id="inlineResultArea" class="card" style="display: none; border: 2px solid #F472B6; margin-top: 0;">
+          <h3 style="margin: 0 0 12px; font-weight: 900; text-align: center; color: #DB2777;">✨ 執筆完了！</h3>
+          <textarea id="inlineResultText" class="input-field" style="height: 180px; margin-bottom: 12px; font-size: 14px; line-height: 1.6;" placeholder="ここに生成された文章が表示されます。自由に修正できます。"></textarea>
+          <div style="display:flex; gap:10px;">
+            <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:14px; border-radius:20px; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 コピー</button>
+            <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:14px; border-radius:20px; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; gap:4px;">💬 LINE送信</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="page page-data">
+        <div id="dataStickyHeader" style="position: sticky; top: -10px; z-index: 10; margin: -10px -16px 0; padding: 10px 16px 0;">
+          <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index:-1; border-bottom: 1px solid rgba(255,255,255,0.6);"></div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h2 style="margin:0; font-weight:900;">顧客カルテ</h2>
+            <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
+          </div>
+          
+          <div id="searchContainer">
+            <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="padding-right: 36px; background: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.9);">
+            <div id="clearSearchBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.1); color: #6B7280; width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer; backdrop-filter: blur(4px);" onclick="clearSearch()">×</div>
+          </div>
+          
+          <div class="filter-container" style="padding-bottom: 10px; margin-bottom: 0;">
+            <div class="filter-btn" id="filter-btn-alert" onclick="setListFilter('alert')">
+              ⚠️ 要連絡
+              <div id="alertBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:#EF4444; color:#FFF; font-size:10px; font-weight:800; min-width:18px; height:18px; border-radius:10px; padding:0 4px; align-items:center; justify-content:center; border:2px solid #FFF; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+            </div>
+            <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
+            <div class="filter-btn" id="filter-btn-vip" onclick="setListFilter('vip')">💎 一軍</div>
+            <div class="filter-btn" id="filter-btn-new" onclick="setListFilter('new')">🔰 新規</div>
+            <div class="filter-btn" id="filter-btn-second" onclick="setListFilter('second')">✌️ 2回目</div>
+            <div class="filter-btn" id="filter-btn-regular" onclick="setListFilter('regular')">👑 常連</div>
+          </div>
+        </div>
+
+        <div id="customerListArea" style="margin-top: 12px; position:relative; z-index:1;">
+          <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
+          <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
+        </div>
+        <div class="fab" onclick="openCreateModal()">＋</div>
+      </div>
+
+      <div class="page page-settings" style="position: relative;">
+        <h2 style="margin:0 0 16px; font-weight:900;">設定・情報</h2>
+
+        <div class="settings-list">
+          <div class="settings-item" onclick="openStyleModal()"><span>🎨 AIスタイル・口調設定</span><span class="settings-val" id="styleOverviewText">かわいい・清楚・カスタム</span></div>
+          <div class="settings-item">
+            <span>🏢 業態設定</span>
+            <select class="input-field" id="businessType" onchange="updateChipsAndSave()" style="width:140px; padding:6px; font-weight:800; text-align:right; border:none; background:transparent;">
+              <option value="cabaret">キャバクラ</option>
+              <option value="fuzoku">風俗・メンエス</option>
+              <option value="host">ホスト</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="card" style="padding: 16px 20px;">
+          <div style="color: #DC2626; font-weight: 800; font-size: 14px; margin-bottom: 16px; display:flex; align-items:center; gap:6px;">🚨 放置アラート設定（日数）</div>
+          <div style="display: flex; gap: 12px;">
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">🔰 新規</div>
+              <input type="number" id="alert-new" class="input-field" style="padding: 10px 0; text-align: center; font-size: 16px; border-radius: 12px; width: 100%; box-sizing: border-box;" value="7" onchange="saveAlertSettings()">
+            </div>
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">👑 常連</div>
+              <input type="number" id="alert-regular" class="input-field" style="padding: 10px 0; text-align: center; font-size: 16px; border-radius: 12px; width: 100%; box-sizing: border-box;" value="30" onchange="saveAlertSettings()">
+            </div>
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 8px;">💎 VIP</div>
+              <input type="number" id="alert-vip" class="input-field" style="padding: 10px 0; text-align: center; font-size: 16px; border-radius: 12px; width: 100%; box-sizing: border-box;" value="14" onchange="saveAlertSettings()">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-list">
+          <div class="settings-item" onclick="openHiddenListModal()"><span>💤 非表示にした顧客</span><span style="color:var(--border-color);">▶</span></div>
+          <div class="settings-item" onclick="openHelpModal()"><span>📖 アプリの使い方と仕様（必読）</span><span style="color:var(--border-color);">▶</span></div>
+        </div>
+        <div class="settings-list" style="margin-bottom: 40px;">
+          <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
+          <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.6.0 (Stable)</span></div>
+        </div>
+
+        <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
+      </div>
+    </main>
+
+    <footer class="fixed-footer">
+      <nav class="bottom-nav">
+        <label for="nav-create" class="nav-item tab-create"><span style="font-size:18px;">📝</span>作成</label>
+        <label for="nav-data" class="nav-item tab-data"><span style="font-size:18px;">📖</span>顧客</label>
+        <label for="nav-settings" class="nav-item tab-settings"><span style="font-size:18px;">⚙️</span>設定</label>
+      </nav>
+    </footer>
+  </div>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    const AppTexts = {
+      helpModal: {
+        title: "📖 アプリの使い方と仕様",
+        sections: [
+          { icon: "👑", title: "自動ランク付け", content: "過去の接客エピソード数をシステムが自動カウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。" },
+          { icon: "🚨", title: "放置アラート（呼び戻し）", content: "設定日数以上来店がないお客様には、名前横に<strong>「🚨◯日放置」</strong>と表示されます。「要連絡」タブを開くと対象者が優先表示され、AIが自動で「会いたい」感情タグを組み込みます。" },
+          { icon: "💎", title: "VIP（一軍）の特別扱い", content: "顧客のタグに<strong>「太客」「エース」「VIP」</strong>等を設定すると、AIが「VIP客」と認識し、リストで常に金枠で最上位に表示されます。また、顧客カードを長押しすることで「💎一軍に固定」することも可能です。" }
+        ]
+      },
+      styleModal: { cute: "🎀 可愛らしく、絵文字を多用した親しみやすい文体。", neat: "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。", custom: "⚙️ 過去の文章を貼り付けると、AIがあなたの口調を学習します。" },
+      setupModal: { title: "🎉 初期設定", desc: "現在の業態を教えてください。" }
+    };
+
+    const LIFF_ID = "2009843865-hghVLuaS";
+    const GAS_URL = "/api"; 
+
+    let userId = "test-user";
+    let customerData = [];
+    let activeTags = []; 
+    let currentCustomerTags = []; 
+    let selectedEpisodeTags = []; 
+    let autoAddedTags = []; 
+    let currentBase64Image = null;
+    let isDemoMode = false;
+    let isDevMode = false; 
+    let myCustomAttrs = []; 
+    let currentListFilter = 'all'; 
+    let isCompactMode = false;
+    let isFilterScrolled = false;
+
+    const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
+    function isEmotionTag(tag) { return EMOTION_TAG_KEYWORDS.some(keyword => tag.includes(keyword)); }
+
+    const stylePlaceholders = { cabaret: "（例）昨日はお店来てくれて本当にありがとう🥺✨\n久しぶりに〇〇くんの顔見れて、めちゃくちゃ楽しかったよ💗", fuzoku: "（例）今日は指名してくれてありがとう🧸💓\n〇〇さんと一緒にいる時間、すごく落ち着くし癒されちゃった🛁✨", host: "（例）今日はお店来てくれてありがとな🍾✨\n最近会えてなかったから、〇〇の顔見れて普通にテンション上がったわ😎" };
+    const industryAttributeTags = { cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'], fuzoku: ['M気質', 'S気質', '常連', '新規', 'キモい', '優しい', '痛客', '匂いキツめ', 'マナー良', '本番要求', 'おじさん', '若者', 'イケメン', 'デブ', 'ハゲ'], host: ['太客', '細客', 'エース', '痛客', '常連', '新規', 'メンヘラ', '金持ち', 'ケチ', '酒癖悪い', 'マナー良', '独身', '既婚', '若者', 'おばさん'] };
+    let tempSelectedAttributes = [];
+    const industryConfigs = { cabaret: { prompt: "", tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '📱 LINE嬉しい', '💤 おやすみ'] }, fuzoku: { prompt: "", tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長', '🌹 夢心地'] }, host: { prompt: "", tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '🤐 誰にも内緒', '🖤 独占'] } };
+    const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯', '🤳 自撮り', '🛏️ 寝起き', '🏠 お家', '🛍️ お買い物'];
+
+    function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+    function getTodayFormatted() { return getTodayString().replace(/-/g, '/'); }
+
+    function showCuteToast(isComplete) {
+      const toast = document.getElementById('cuteToast');
+      const icon = document.getElementById('cuteToastIcon');
+      const text = document.getElementById('cuteToastText');
+      
+      if (!isComplete) {
+        icon.innerText = '🐰';
+        icon.style.animation = 'bounce-icon 1s infinite';
+        text.innerText = '執筆中だよ...';
+        toast.style.right = '0px';
+      } else {
+        icon.innerText = '✨';
+        icon.style.animation = 'none';
+        text.innerText = 'できたよ！';
+        setTimeout(() => { toast.style.right = '-250px'; }, 3000);
+      }
     }
 
-    // 4. AI日記生成
-    if (action === 'generate') {
-      // ★FIX: ここにあったテストユーザーのブロックを削除しました！
-      // これにより test-user でも正常にSupabaseへ保存され、Difyへのリクエストが飛びます。
+    async function init() {
+      renderTexts(); 
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
+      if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
 
-      let uploadFileId = null;
-      let photoUrl = null;
+      const scrollArea = document.querySelector('.scroll-area');
+      const searchContainer = document.getElementById('searchContainer');
+      let lastScrollTop = 0;
+      let currentSearchOffset = 0;
 
-      if (data.mode === "photo" && data.image) {
-        const base64Data = data.image.replace(/^data:image\/\w+;base64,/, "");
-        const buffer = Buffer.from(base64Data, 'base64');
-
-        const fileName = `${userId}/${Date.now()}.jpg`;
-        const { error: storageError } = await supabase.storage
-          .from('photos')
-          .upload(fileName, buffer, { contentType: 'image/jpeg', upsert: false });
-
-        if (!storageError) {
-          const { data: publicUrlData } = supabase.storage.from('photos').getPublicUrl(fileName);
-          photoUrl = publicUrlData.publicUrl;
-        } else {
-          console.error("Storage upload error:", storageError);
+      scrollArea.addEventListener('scroll', () => {
+        if (document.getElementById('nav-data').checked) {
+          let st = scrollArea.scrollTop;
+          let diff = st - lastScrollTop;
+          
+          if (st > 30) {
+            currentSearchOffset -= diff;
+            if (currentSearchOffset < -60) currentSearchOffset = -60; 
+            if (currentSearchOffset > 0) currentSearchOffset = 0;
+          } else {
+            currentSearchOffset = 0;
+          }
+          
+          if(searchContainer) {
+            searchContainer.style.transform = `translateY(${currentSearchOffset}px)`;
+            searchContainer.style.marginBottom = `${currentSearchOffset}px`;
+          }
+          lastScrollTop = st <= 0 ? 0 : st;
         }
+      }, { passive: true });
 
-        const blob = new Blob([buffer], { type: 'image/jpeg' });
-        const formData = new FormData();
-        formData.append('file', blob, 'image.jpg');
-        formData.append('user', userId);
-
-        const uploadRes = await fetch("https://api.dify.ai/v1/files/upload", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${process.env.DIFY_API_KEY}` },
-          body: formData
+      document.querySelectorAll('input[name="nav"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          document.querySelector('.scroll-area').scrollTop = 0;
         });
-        const uploadJson = await uploadRes.json();
-        if (uploadJson.id) uploadFileId = uploadJson.id;
+      });
+
+      // ★FIX: ここにあったliff.initとfetchの競合を解消し、安全な順番（直列）に戻しました
+      try { 
+        await liff.init({ liffId: LIFF_ID }); 
+        if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; 
+      } catch (e) {
+        console.error("LIFF Init Error:", e);
       }
 
-      if (data.combinedMemoToSave) {
-        const memoJson = JSON.parse(data.combinedMemoToSave);
-        if (photoUrl && memoJson.length > 0) {
-          memoJson[memoJson.length - 1].photoUrl = photoUrl;
+      if (localStorage.getItem('myCustomAttrs')) myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
+      const savedType = localStorage.getItem('businessType');
+      if (!savedType) { document.getElementById('setupModal').style.display = 'flex'; } else { document.getElementById('businessType').value = savedType; }
+      if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
+      
+      loadStyleSettings(); loadAlertSettings(); updateChips(); 
+      
+      // 直列で1回だけ呼ばれるのでエラーが起きない
+      fetchCustomers(); 
+    }
+    window.onload = init;
+
+    function promptDevMode() {
+      if (isDevMode) { alert("既に開発者モードです。"); return; }
+      const pass = prompt("開発者パスワードを入力してください:");
+      if (pass === "0804") {
+        isDevMode = true;
+        alert("開発者モードを有効にしました。ダミー顧客（テストユーザー）の裏側への保存・削除が可能になります。");
+      } else if (pass !== null) { alert("パスワードが違います。"); }
+    }
+
+    function clearAutoTags() {
+      if (autoAddedTags.length > 0) {
+        selectedEpisodeTags = selectedEpisodeTags.filter(tag => !autoAddedTags.includes(tag));
+        autoAddedTags.forEach(tag => {
+          if (!activeTags.includes(tag)) activeTags.unshift(tag);
+        });
+        autoAddedTags = [];
+      }
+    }
+
+    function saveInitialSetup() {
+      const type = document.getElementById('initialBusinessType').value;
+      localStorage.setItem('businessType', type); document.getElementById('businessType').value = type;
+      loadStyleSettings(true); updateChips(); document.getElementById('setupModal').style.display = 'none';
+    }
+
+    function loadStyleSettings(isInit = false) {
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const defaults = { cabaret: { tension: 4, emoji: 5 }, fuzoku: { tension: 3, emoji: 4 }, host: { tension: 3, emoji: 2 } };
+      if (isInit) { document.getElementById('tensionSlider').value = defaults[type].tension; document.getElementById('emojiSlider').value = defaults[type].emoji; saveStyleSettings();
+      } else {
+        document.getElementById('tensionSlider').value = localStorage.getItem('tensionSlider') || defaults[type].tension;
+        document.getElementById('emojiSlider').value = localStorage.getItem('emojiSlider') || defaults[type].emoji;
+        document.getElementById('customStyleText').value = localStorage.getItem('customStyleText') || "";
+        const savedStyle = localStorage.getItem('selectedStyle'); if (savedStyle) document.getElementById(`style-${savedStyle}`).checked = true;
+      }
+    }
+    function saveStyleSettings() {
+      localStorage.setItem('tensionSlider', document.getElementById('tensionSlider').value);
+      localStorage.setItem('emojiSlider', document.getElementById('emojiSlider').value);
+      localStorage.setItem('customStyleText', document.getElementById('customStyleText').value);
+      localStorage.setItem('selectedStyle', document.querySelector('input[name="style"]:checked').id.replace('style-', ''));
+    }
+
+    function loadAlertSettings() {
+      const settings = JSON.parse(localStorage.getItem('alertSettings')) || { new: 7, regular: 30, vip: 14 };
+      document.getElementById('alert-new').value = settings.new; document.getElementById('alert-regular').value = settings.regular; document.getElementById('alert-vip').value = settings.vip;
+    }
+    function saveAlertSettings() {
+      const settings = { new: parseInt(document.getElementById('alert-new').value) || 7, regular: parseInt(document.getElementById('alert-regular').value) || 30, vip: parseInt(document.getElementById('alert-vip').value) || 14 };
+      localStorage.setItem('alertSettings', JSON.stringify(settings));
+      if (customerData.length > 0) { renderCustomerList(); renderQuickAccess(); updateAlertBadge(); } 
+    }
+
+    function updateStyleUI(type) {
+      const cuteLabel = document.querySelector('.btn-cute'), neatLabel = document.querySelector('.btn-neat'), overviewText = document.getElementById('styleOverviewText'), customTextArea = document.getElementById('customStyleText'); 
+      if (type === 'host') { cuteLabel.innerText = "オラオラ"; neatLabel.innerText = "子犬(甘え)"; overviewText.innerText = "オラオラ・カスタム・子犬";
+      } else { cuteLabel.innerText = "かわいい"; neatLabel.innerText = "清楚"; overviewText.innerText = "かわいい・カスタム・清楚"; }
+      customTextArea.placeholder = stylePlaceholders[type];
+    }
+
+    function updateChips() {
+      const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked, storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
+      updateStyleUI(type);
+      const masterTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags], savedTags = localStorage.getItem(storageKey);
+      if (savedTags) { let parsed = JSON.parse(savedTags); if (parsed.length < masterTags.length) { activeTags = masterTags; localStorage.setItem(storageKey, JSON.stringify(masterTags)); } else activeTags = parsed; } else activeTags = masterTags;
+      renderChips();
+
+      if (isPhoto) {
+        document.getElementById('nameInput').value = "";
+        document.getElementById('pastMemoDisplay').innerHTML = "(写メ日記モードでは顧客情報は使用しません)";
+        currentCustomerTags = [];
+        renderAttributeTags();
+      } else {
+        document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
+      }
+    }
+
+    function renderChips() {
+      const container = document.getElementById('dynamicChips'); container.innerHTML = '';
+      activeTags.forEach(text => {
+        const isSelected = selectedEpisodeTags.includes(text), chip = document.createElement('div');
+        chip.className = 'chip' + (isSelected ? ' dimmed' : ''); chip.innerHTML = text;
+        chip.onclick = () => { 
+          if (!isSelected) { 
+            selectedEpisodeTags.push(text); 
+            renderSelectedEpisodeTags(); 
+            renderChips(); 
+          } 
+        }; 
+        container.appendChild(chip);
+      });
+    }
+
+    function renderSelectedEpisodeTags() {
+      const area = document.getElementById('selectedEpisodeTags'); area.innerHTML = '';
+      selectedEpisodeTags.forEach((tag, index) => {
+        const chip = document.createElement('div'); chip.className = 'selected-chip';
+        chip.innerHTML = `${tag} <span onclick="removeEpisodeTag(${index})" style="margin-left:4px; cursor:pointer;">×</span>`; area.appendChild(chip);
+      });
+    }
+
+    function removeEpisodeTag(index) { 
+      const tag = selectedEpisodeTags[index];
+      autoAddedTags = autoAddedTags.filter(t => t !== tag);
+      selectedEpisodeTags.splice(index, 1); 
+      renderSelectedEpisodeTags(); 
+      renderChips(); 
+    }
+    
+    function addCustomTag() { 
+      const input = document.getElementById('customTagInput'); 
+      if(input.value.trim() !== "") { 
+        activeTags.unshift(input.value.trim()); 
+        input.value = ""; 
+        renderChips(); 
+        const type = localStorage.getItem('businessType') || 'cabaret', isPhoto = document.getElementById('mode-photo').checked; 
+        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags)); 
+      } 
+    }
+
+    function clearEpisodeInput() {
+      if (document.getElementById('todayEpisodeInput').value || selectedEpisodeTags.length > 0) {
+        if (!confirm("入力中のエピソードとタグをクリアしますか？")) return;
+      }
+      document.getElementById('todayEpisodeInput').value = "";
+      selectedEpisodeTags = [];
+      autoAddedTags = [];
+      updateChips();
+      renderSelectedEpisodeTags();
+    }
+    
+    function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); updateAlertBadge(); }
+
+    async function fetchCustomers() {
+      try {
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "getCustomers", userId: userId }) });
+        const data = await res.json();
+        customerData = data.success ? data.customers.map(c => ({ ...c, name: String(c.name || "名前なし"), memo: String(c.memo || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : [] })) : [];
+        renderCustomerList(); renderQuickAccess(); updateAlertBadge();
+      } catch (e) { 
+        console.error("fetchCustomers Error:", e); 
+      }
+    }
+
+    function parseMemoToJSON(memoStr) {
+      if (!memoStr) return [];
+      try { const parsed = JSON.parse(memoStr); if (Array.isArray(parsed)) return parsed; return []; } catch (e) {
+        return memoStr.split(/\n?---\n?/).map(block => {
+          const match = block.trim().match(/^(\d{4}\/\d{2}\/\d{2}):\s*([\s\S]*)$/);
+          if (match) return { date: match[1].replace(/\//g, '-'), text: match[2].trim(), tags: [] };
+          return { date: '', text: block.trim(), tags: [] };
+        }).filter(b => b.text || b.date);
+      }
+    }
+
+    function getCustomerStats(c) {
+      const memos = parseMemoToJSON(c.memo), count = memos.length === 0 ? 1 : memos.length;
+      const vipKeywords = ['太客', 'エース', '一軍', 'VIP', '金持ち', '良客', '常連', '一軍固定']; 
+      const isVip = c.tagsArray.some(tag => vipKeywords.includes(tag));
+      return { count, isVip };
+    }
+
+    function getDaysSinceLastVisit(memoStr) {
+      const memos = parseMemoToJSON(memoStr); if (memos.length === 0) return null;
+      let latestTime = 0; memos.forEach(m => { if(m.date) { const d = new Date(m.date.replace(/-/g, '/')); if(!isNaN(d) && d.getTime() > latestTime) latestTime = d.getTime(); } });
+      if(latestTime === 0) return null;
+      const today = new Date(); today.setHours(0,0,0,0); const lastDate = new Date(latestTime); lastDate.setHours(0,0,0,0);
+      const diffTime = today - lastDate; return diffTime < 0 ? 0 : Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function isAlertCustomer(c) {
+      const stats = getCustomerStats(c), days = getDaysSinceLastVisit(c.memo); if (days === null) return false;
+      const alertSettings = JSON.parse(localStorage.getItem('alertSettings')) || { new: 7, regular: 30, vip: 14 };
+      if (stats.isVip) return days >= alertSettings.vip; if (stats.count <= 2) return days >= alertSettings.new; return days >= alertSettings.regular;
+    }
+
+    function updateAlertBadge() {
+        const currentType = localStorage.getItem('businessType') || 'cabaret', targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+        const alertCount = customerData.filter(c => { 
+          if (c.tagsArray.includes('非表示')) return false; 
+          if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false; 
+          return isAlertCustomer(c); 
+        }).length;
+        const badge = document.getElementById('alertBadge');
+        if (alertCount > 0) { badge.style.display = 'flex'; badge.innerText = alertCount; } else { badge.style.display = 'none'; }
+    }
+
+    function filterCustomerList() { 
+      const searchInput = document.getElementById('customerSearch');
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if(clearBtn) clearBtn.style.display = searchInput.value ? 'flex' : 'none';
+      renderCustomerList(searchInput.value); 
+    }
+
+    function clearSearch() {
+      const searchInput = document.getElementById('customerSearch');
+      searchInput.value = '';
+      filterCustomerList();
+    }
+
+    function setListFilter(filterType) {
+      if (currentListFilter === filterType && filterType !== 'all') { currentListFilter = 'all'; } else { currentListFilter = filterType; }
+      const filters = ['all', 'alert', 'vip', 'new', 'second', 'regular'];
+      filters.forEach(f => {
+        const el = document.getElementById(`filter-btn-${f}`);
+        if(el) { 
+            if (currentListFilter === f) { 
+              el.classList.add('active-filter'); 
+              const container = document.querySelector('.filter-container'); 
+              if (container) { 
+                const scrollPos = el.offsetLeft - (container.offsetWidth / 2) + (el.offsetWidth / 2); 
+                container.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' }); 
+              } 
+            } else { 
+              el.classList.remove('active-filter'); 
+            }
+        }
+      });
+      filterCustomerList();
+    }
+
+    function toggleCompactMode(forceState = null) {
+      if (forceState !== null) isCompactMode = forceState; else isCompactMode = !isCompactMode;
+      localStorage.setItem('isCompactMode', isCompactMode);
+      const listArea = document.getElementById('customerListArea'), viewIcon = document.getElementById('viewIcon');
+      if(isCompactMode) { listArea.classList.add('compact-view'); viewIcon.innerText = '📋 コンパクト'; } else { listArea.classList.remove('compact-view'); viewIcon.innerText = '🗂️ 詳細表示'; }
+    }
+
+    function openPhotoModal(url, e) {
+      if(e) e.stopPropagation();
+      document.getElementById('expandedPhoto').src = url;
+      document.getElementById('photoModal').style.display = 'flex';
+    }
+    function closePhotoModal(e) {
+      if(e) e.stopPropagation();
+      document.getElementById('photoModal').style.display = 'none';
+      document.getElementById('expandedPhoto').src = '';
+    }
+
+    function copyInlineResult() {
+      const text = document.getElementById('inlineResultText').value;
+      navigator.clipboard.writeText(text).then(() => { alert("コピーしました！"); }).catch(err => { alert("コピーに失敗しました: " + err); });
+    }
+
+    function sendInlineToLine() {
+      const text = document.getElementById('inlineResultText').value;
+      if (liff.isLoggedIn() && liff.isInClient()) {
+        liff.sendMessages([{ type: 'text', text: text }]).then(() => { liff.closeWindow(); }).catch(err => alert("LINE送信エラー: " + err));
+      } else { const url = "https://line.me/R/msg/text/?" + encodeURIComponent(text); window.open(url, '_blank'); }
+    }
+
+    function renderQuickAccess() {
+      const area = document.getElementById('quickAccessArea'); area.innerHTML = "";
+      const currentType = localStorage.getItem('businessType') || 'cabaret', targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+      
+      let filtered = customerData.map((c, i) => ({c, index: i})).filter(item => { 
+        if (item.c.tagsArray.includes('非表示')) return false;
+        if (item.c.tagsArray.includes('ダミー') && !item.c.tagsArray.includes(targetDummyTag)) return false; 
+        return true; 
+      });
+      filtered.sort((a, b) => { const statsA = getCustomerStats(a.c), statsB = getCustomerStats(b.c); if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; return statsB.count - statsA.count; });
+      
+      filtered.slice(0, 15).forEach(item => {
+        const c = item.c, index = item.index, stats = getCustomerStats(c);
+        let topBadge = ''; 
+        if (stats.isVip) topBadge = `<div class="story-badge" style="background:#F59E0B; border-color:#FFF; color:#FFF;">👑VIP</div>`; 
+        else if (c.tagsArray.length > 0) topBadge = `<div class="story-badge">${c.tagsArray[0]}</div>`;
+        
+        const isAlert = isAlertCustomer(c);
+        const alertBadgeHtml = isAlert ? `<div class="story-alert-badge">🚨</div>` : '';
+
+        const ringClass = stats.isVip ? "story-ring story-ring-vip" : "story-ring";
+        area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}${alertBadgeHtml}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
+      });
+    }
+
+    let pressTimer;
+    let startX = 0; let startY = 0;
+
+    function handleTouchStart(e, el, index) {
+      el.classList.add('pressing');
+      if (e.touches && e.touches.length > 0) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+      pressTimer = setTimeout(() => {
+        if (navigator.vibrate) navigator.vibrate(50);
+        openCardActionModal(index);
+      }, 550);
+    }
+    function handleTouchMove(e, el) {
+      el.classList.remove('pressing');
+      if (e.touches && e.touches.length > 0) {
+        const touch = e.touches[0];
+        if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) clearTimeout(pressTimer);
+      }
+    }
+    function handleTouchEnd(e, el) { 
+      el.classList.remove('pressing');
+      clearTimeout(pressTimer); 
+    }
+
+    function renderCustomerList(filterText = "") {
+      const area = document.getElementById('customerListArea'); area.innerHTML = "";
+      const currentType = localStorage.getItem('businessType') || 'cabaret', targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+      const lowerFilter = filterText.toLowerCase();
+
+      let displayList = customerData.filter(c => {
+        if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
+        const matchName = String(c.name).toLowerCase().includes(lowerFilter), memos = parseMemoToJSON(c.memo), matchMemo = memos.some(m => String(m.text).toLowerCase().includes(lowerFilter) || (m.tags && m.tags.some(t => t.toLowerCase().includes(lowerFilter)))), matchTags = c.tagsArray.some(t => t.toLowerCase().includes(lowerFilter));
+        const isHidden = c.tagsArray.includes('非表示');
+
+        if (filterText) {
+          if (!matchName && !matchMemo && !matchTags) return false;
+        } else {
+          if (isHidden) return false;
+          const stats = getCustomerStats(c), isAlert = isAlertCustomer(c);
+          if (currentListFilter === 'alert' && !isAlert) return false; 
+          if (currentListFilter === 'new' && stats.count !== 1) return false; 
+          if (currentListFilter === 'second' && stats.count !== 2) return false; 
+          if (currentListFilter === 'regular' && stats.count < 3) return false; 
+          if (currentListFilter === 'vip' && !stats.isVip) return false;
+        }
+        return true;
+      });
+
+      displayList.sort((a, b) => {
+        const statsA = getCustomerStats(a), statsB = getCustomerStats(b);
+        if (currentListFilter === 'alert') { if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; const daysA = getDaysSinceLastVisit(a.memo) || 0, daysB = getDaysSinceLastVisit(b.memo) || 0; if (daysA !== daysB) return daysB - daysA; }
+        if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; return statsB.count - statsA.count;
+      });
+
+      displayList.forEach(c => {
+        const index = customerData.indexOf(c), stats = getCustomerStats(c), isAlert = isAlertCustomer(c), days = getDaysSinceLastVisit(c.memo);
+        let sysBadge = ''; if (stats.count === 1) sysBadge = '🔰 新規'; else if (stats.count === 2) sysBadge = '✌️ 2回目'; else if (stats.count >= 3) sysBadge = '👑 常連';
+        if (c.tagsArray.includes('一軍固定')) sysBadge = '💎 固定一軍';
+
+        const sysBadgeHtml = sysBadge ? `<span style="background:rgba(243,244,246,0.8); color:#4B3E41; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid rgba(229,231,235,0.8); margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content; backdrop-filter: blur(4px);">${sysBadge}</span>` : '';
+        const alertBadgeHtml = (isAlert && !c.tagsArray.includes('非表示')) ? `<span style="background:rgba(254,226,226,0.9); color:#B91C1C; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:900; border:1px solid rgba(252,165,165,0.9); margin-right:6px; display:inline-block; flex-shrink:0; white-space:nowrap; height: fit-content; box-shadow:0 1px 3px rgba(185,28,28,0.2); backdrop-filter: blur(4px);">🚨 ${days}日放置</span>` : '';
+        
+        const visibleTags = c.tagsArray.filter(t => t !== 'ダミー' && t !== '非表示' && t !== '一軍固定');
+        const tagHtml = visibleTags.length > 0 ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">` + visibleTags.map(t => `<span style="background:rgba(252,231,243,0.8); color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; backdrop-filter: blur(4px);">#${t}</span>`).join('') + `</div>` : '';
+        
+        const isDummy = c.tagsArray.includes("ダミー"), actionIcon1 = '✏️', actionText1 = '日記作成', actionIcon2 = isDummy ? '🔍' : '⚙️', actionText2 = isDummy ? '閲覧' : '編集';
+        let cardClass = "card"; if (stats.isVip) cardClass = "card card-vip";
+
+        const memos = parseMemoToJSON(c.memo); let previewMemo = "メモなし"; if (memos.length > 0) { const lastM = memos[memos.length - 1]; previewMemo = lastM.text ? lastM.text.substring(0,40) + "..." : (lastM.tags && lastM.tags.length > 0 ? lastM.tags.join(', ') : "メモなし"); }
+
+        area.innerHTML += `
+          <div class="${cardClass}"
+               ontouchstart="handleTouchStart(event, this, ${index})" 
+               ontouchmove="handleTouchMove(event, this)" 
+               ontouchend="handleTouchEnd(event, this)" 
+               onmousedown="handleTouchStart(event, this, ${index})" 
+               onmouseup="handleTouchEnd(event, this)" 
+               onmouseleave="handleTouchEnd(event, this)">
+            <div class="card-inner" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="flex:1; margin-right:10px; overflow:hidden; position:relative;">
+                <div style="display:flex; align-items:flex-start;">${alertBadgeHtml}${sysBadgeHtml}<b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b></div>
+                <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${previewMemo}</small>
+                <div class="card-tags" style="margin-top:6px;">${tagHtml}</div>
+              </div>
+              <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0; position:relative; z-index:10;">
+                <button class="action-btn" onclick="event.stopPropagation(); selectCustomerByIndex(${index})" style="background:rgba(252,231,243,0.8); color:#DB2777; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon1}</span><span class="action-text">${actionText1}</span></button>
+                <button class="action-btn" onclick="event.stopPropagation(); openEditModal(${index})" style="background:rgba(243,232,255,0.8); color:#9333EA; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon2}</span><span class="action-text">${actionText2}</span></button>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+
+    let actionTargetIndex = -1;
+
+    function openCardActionModal(index) {
+      actionTargetIndex = index;
+      const c = customerData[index];
+      const isPinned = c.tagsArray.includes('一軍固定');
+      document.getElementById('actionModalName').innerText = c.name;
+      document.getElementById('btnToggleVip').innerHTML = isPinned ? '❄️ 一軍固定を解除する' : '💎 一軍に固定する';
+      
+      document.getElementById('cardActionModalBackdrop').classList.add('show');
+      setTimeout(() => { document.getElementById('cardActionHalfModal').classList.add('open'); }, 10);
+    }
+
+    function closeCardActionModal() {
+      document.getElementById('cardActionHalfModal').classList.remove('open');
+      setTimeout(() => { document.getElementById('cardActionModalBackdrop').classList.remove('show'); }, 300);
+    }
+
+    async function toggleVipPin() {
+      const c = customerData[actionTargetIndex];
+      let newTags = [...c.tagsArray];
+      if (newTags.includes('一軍固定')) { 
+        newTags = newTags.filter(t => t !== '一軍固定' && t !== '太客' && t !== 'エース' && t !== 'VIP'); 
+      } else { 
+        newTags.push('一軍固定'); 
+      }
+      await updateCustomerTagsOnly(c.name, newTags, c.memo);
+      closeCardActionModal();
+    }
+
+    async function setHidden() {
+      const c = customerData[actionTargetIndex];
+      let newTags = [...c.tagsArray];
+      if (!newTags.includes('非表示')) newTags.push('非表示');
+      await updateCustomerTagsOnly(c.name, newTags, c.memo);
+      closeCardActionModal();
+    }
+
+    async function updateCustomerTagsOnly(name, tagsArray, memo) {
+      const memoJson = typeof memo === 'string' ? memo : JSON.stringify(memo);
+      const c = customerData.find(cust => cust.name === name);
+      // ダミー顧客の場合は通信せず、変更を一時反映するだけ
+      if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
+        c.tagsArray = tagsArray; 
+        fetchCustomers(); 
+        return; 
+      }
+
+      const payload = { action: "updateCustomer", userId: userId, oldName: name, newName: name, newTags: tagsArray.join(', '), newMemo: memoJson };
+      try {
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+        if((await res.json()).success) { fetchCustomers(); } else { alert("エラーが発生しました。"); }
+      } catch(e) { alert("エラーが発生しました。"); }
+    }
+
+    function openHiddenListModal() {
+        const area = document.getElementById('hiddenCustomersArea');
+        area.innerHTML = '';
+        const hidden = customerData.filter(c => c.tagsArray.includes('非表示'));
+        if (hidden.length === 0) {
+            area.innerHTML = '<p style="text-align:center; color:#9CA3AF; margin-top:40px; font-weight:bold;">非表示の顧客はいません</p>';
+        } else {
+            hidden.forEach((c) => {
+                const memos = parseMemoToJSON(c.memo); 
+                let previewMemo = "メモなし"; 
+                if (memos.length > 0) { 
+                   const lastM = memos[memos.length - 1]; 
+                   previewMemo = lastM.text ? lastM.text.substring(0,30) + "..." : "メモなし"; 
+                }
+                area.innerHTML += `
+                <div class="card compact-view" style="padding:16px 14px !important; margin-bottom:10px !important; background:rgba(255,255,255,0.8); border: 1px solid rgba(229, 231, 235, 0.6); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <div style="flex:1; overflow:hidden; padding-right: 10px;">
+                        <b style="font-size:15px; color:var(--text-main);">${c.name}</b>
+                        <div style="font-size:12px; color:var(--text-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:4px;">${previewMemo}</div>
+                      </div>
+                      <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <button onclick="restoreHidden('${c.name}')" style="background:#10B981; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-weight:bold; font-size:12px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">🟢 復活</button>
+                        <button onclick="deleteHidden('${c.name}')" style="background:#FEE2E2; color:#EF4444; border:none; padding:8px 12px; border-radius:10px; font-weight:bold; font-size:12px;">🗑️ 削除</button>
+                      </div>
+                    </div>
+                </div>`;
+            });
+        }
+        document.getElementById('hiddenListModal').style.display = 'flex';
+    }
+
+    function closeHiddenListModal() { document.getElementById('hiddenListModal').style.display = 'none'; }
+
+    async function restoreHidden(name) {
+        const c = customerData.find(c => c.name === name);
+        if(!c) return;
+        const newTags = c.tagsArray.filter(t => t !== '非表示');
+        await updateCustomerTagsOnly(c.name, newTags, c.memo);
+        setTimeout(() => openHiddenListModal(), 400); 
+    }
+
+    async function deleteHidden(name) {
+        if(!confirm(`「${name}」のデータを完全に削除しますか？\nこの操作は元に戻せません。`)) return;
+        
+        const c = customerData.find(cust => cust.name === name);
+        if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
+          alert("お手本（ダミー）データのため、削除はできません。\n(開発者モード時のみ可能)");
+          return;
         }
 
-        const { error } = await supabase.from('customers')
-          .update({ memo: memoJson, updated_at: new Date() })
-          .eq('user_id', userId)
-          .eq('name', data.name);
-        
-        if (error) throw new Error("Supabaseメモ更新エラー: " + error.message);
+        try {
+            const payload = { action: "deleteCustomer", userId: userId, targetName: name };
+            const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+            if((await res.json()).success) { 
+                customerData = customerData.filter(c => c.name !== name);
+                openHiddenListModal();
+                fetchCustomers(); 
+            } else alert("削除に失敗しました。");
+        } catch(e) { alert("エラーが発生しました。"); }
+    }
+
+    function selectCustomerByIndex(index) {
+      const c = customerData[index], nameInput = document.getElementById('nameInput');
+      if (nameInput.value === c.name) { 
+        nameInput.value = ""; document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)"; currentCustomerTags = []; renderAttributeTags(); clearAutoTags(); renderSelectedEpisodeTags(); renderChips(); return; 
       }
-
-      const difyPayload = {
-        inputs: { 
-          name: data.name || "", episode: data.episode || "", pastMemo: data.pastMemo || "",
-          customerTags: data.customerTags || "", customerRank: data.customerRank || "新規",
-          episodeTags: data.episodeTags || "", style: data.style || "cute", tension: data.tension || "3",
-          emoji: data.emoji || "4", custom_text: data.customText || "", businessType: data.businessType || "",
-          industryPrompt: data.industryPrompt || "", mode: data.mode || "text"
-        },
-        response_mode: "blocking",
-        user: userId
-      };
-
-      if (uploadFileId) {
-        difyPayload.files = [{ type: "image", transfer_method: "local_file", upload_file_id: uploadFileId }];
-        difyPayload.inputs.image_file = { type: "image", transfer_method: "local_file", upload_file_id: uploadFileId };
-      }
-
-      const difyRes = await fetch(process.env.DIFY_API_URL, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${process.env.DIFY_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify(difyPayload)
-      });
       
-      const difyData = await difyRes.json();
-      const aiText = difyData.data?.outputs?.text || difyData.data?.outputs?.answer || difyData.answer || "生成されましたがテキストが空です。";
+      clearAutoTags(); 
+      document.getElementById('nav-create').checked = true; nameInput.value = c.name;
+      const memos = parseMemoToJSON(c.memo); let pastMemoHtml = '';
+      if (memos.length === 0) { pastMemoHtml = '(過去の記録はありません)'; } else {
+          memos.forEach(m => {
+              let tagsHtml = m.tags && m.tags.length > 0 ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">` + m.tags.map(t => `<span style="background:rgba(243,244,246,0.8); color:#4B5563; font-size:10px; padding:3px 8px; border-radius:12px; font-weight:800; backdrop-filter: blur(4px);">${t}</span>`).join('') + `</div>` : '';
+              let photoHtml = m.photoUrl ? `<img src="${m.photoUrl}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid rgba(255,255,255,0.6); flex-shrink: 0; box-shadow: var(--shadow-sm);" onclick="event.stopPropagation(); openPhotoModal('${m.photoUrl}', event)">` : `<div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(255,255,255,0.5); border: 1px dashed #D1D5DB; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #D1D5DB; font-size: 18px;">📷</div>`;
+              pastMemoHtml += `
+                <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border-color); display: flex; gap: 10px; align-items: flex-start;">
+                  <div style="flex: 1;"><div style="font-size:11px; color:var(--active-color); font-weight:800; margin-bottom:4px;">${m.date}</div><div style="font-size:13px;">${m.text}</div>${tagsHtml}</div>${photoHtml}
+                </div>`;
+          });
+      }
+      document.getElementById('pastMemoDisplay').innerHTML = pastMemoHtml;
+      currentCustomerTags = c.tagsArray.filter(t => t !== '非表示' && t !== '一軍固定'); renderAttributeTags(); 
+      if (isAlertCustomer(c) && !c.tagsArray.includes('非表示')) { 
+        const type = localStorage.getItem('businessType') || 'cabaret', autoTag = (type === 'fuzoku') ? '🥺 寂しい' : '🥺 会いたい'; 
+        if (!selectedEpisodeTags.includes(autoTag)) { selectedEpisodeTags.push(autoTag); activeTags = activeTags.filter(t => t !== autoTag); autoAddedTags.push(autoTag); } 
+      }
+      renderSelectedEpisodeTags(); renderChips(); 
+    }
 
-      await fetch("https://api.line.me/v2/bot/message/push", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.LINE_ACCESS_TOKEN}` },
-        body: JSON.stringify({ to: userId, messages: [{ type: "text", text: aiText }] })
+    function resetInputForm() {
+      document.getElementById('nameInput').value = ""; document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)"; document.getElementById('todayEpisodeInput').value = ""; currentCustomerTags = []; renderAttributeTags(); selectedEpisodeTags = []; autoAddedTags = []; renderSelectedEpisodeTags(); renderChips(); currentBase64Image = null; document.getElementById('photoPreview').style.display = 'none'; document.getElementById('uploadText').style.display = 'block'; document.getElementById('inlineResultArea').style.display = 'none';
+    }
+
+    function renderAttributeTags() {
+      const wrapper = document.getElementById('attributeTagsWrapper'), area = document.getElementById('attributeTagsArea');
+      area.innerHTML = currentCustomerTags.map(t => `<div class="attr-chip">#${t}</div>`).join('');
+      wrapper.style.display = currentCustomerTags.length > 0 ? 'block' : 'none';
+    }
+
+    function suggestCustomer() {
+      const text = document.getElementById('nameInput').value, area = document.getElementById('resultArea'); area.innerHTML = "";
+      const matchedCustomer = customerData.find(c => c.name === text);
+      if (!matchedCustomer) { document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; currentCustomerTags = []; renderAttributeTags(); clearAutoTags(); } else { const cIndex = customerData.indexOf(matchedCustomer); selectCustomerByIndex(cIndex); }
+      if (!text) { area.style.display = "none"; return; } let matchCount = 0;
+      customerData.forEach((c, index) => { if (c.name.includes(text) && c.name !== text && !c.tagsArray.includes('非表示')) { matchCount++; const div = document.createElement('div'); div.className = "suggest-item"; div.innerText = c.name; div.onclick = () => { selectCustomerByIndex(index); area.style.display = "none"; }; area.appendChild(div); } });
+      area.style.display = matchCount > 0 ? "block" : "none";
+    }
+
+    // ★FIX: ダミー顧客でも完全にUIを開放する Sandbox化
+    function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "", isExpanded = false) {
+      const area = document.getElementById('editMemoBlocksArea'); 
+      const blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9); 
+      const div = document.createElement('div'); 
+      div.className = 'memo-block' + (isExpanded ? ' expanded' : ''); 
+      div.id = blockId; 
+      div.dataset.tags = JSON.stringify(tags);
+      if (photoUrl) div.dataset.photo = photoUrl;
+
+      // readonly / disabled によるUIのロックを完全撤去
+      const readOnlyAttr = '';
+      const disabledAttr = '';
+
+      const tagsText = tags.length > 0 ? tags.map(t => `#${t}`).join(' ') : '<span style="color:#9CA3AF;">タグなし</span>';
+      const previewText = text ? text.split('\n')[0] : '<span style="color:#9CA3AF;">本文なし</span>';
+      const photoHtmlSummary = photoUrl ? `<img src="${photoUrl}" style="width:32px; height:32px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.5); pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}', event);">` : `<div style="width:32px; height:32px; border-radius:6px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:12px;">📷</div>`;
+
+      const summaryHtml = `
+        <div class="memo-summary" onclick="toggleMemoBlock('${blockId}')" style="cursor:pointer; display: ${isExpanded ? 'none' : 'block'}; padding: 4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><div class="memo-date-text" style="font-size:12px; font-weight:800; color:var(--active-color);">${date}</div><div style="position:relative; z-index:10;">${photoHtmlSummary}</div></div>
+          <div class="memo-tags-text" style="font-size:11px; color:#DB2777; font-weight:700; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tagsText}</div>
+          <div class="memo-preview-text" style="font-size:13px; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8;">${previewText}</div>
+          <div style="text-align:center; margin-top:8px; font-size:10px; color:#9CA3AF; font-weight:bold;">▼ タップして展開</div>
+        </div>`;
+
+      const photoHtmlDetail = photoUrl ? `<img src="${photoUrl}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.8); cursor:pointer; pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}', event);">` : `<div style="width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:14px;">📷</div>`;
+
+      const actionButtons = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(229,231,235,0.6);">
+          <button type="button" onclick="deleteMemoBlock('${blockId}')" style="background:#FEE2E2; color:#EF4444; border:none; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px;">🗑️</button>
+          <button type="button" onclick="quickSaveMemoBlock('${blockId}')" style="background:var(--primary-gradient); color:#FFF; border:none; padding:10px 20px; border-radius:20px; font-weight:800; font-size:13px; box-shadow:var(--shadow-sm);">💾 このまま保存</button>
+        </div>`;
+
+      const detailHtml = `
+        <div class="memo-detail" style="display: ${isExpanded ? 'block' : 'none'};">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px;"><input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr} style="width:fit-content; flex:0 1 auto; padding:4px 0;"><div style="position:relative; z-index:10;">${photoHtmlDetail}</div></div>
+          <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>
+          <div class="memo-tags-area" style="margin-top:8px; position:relative;">
+            <div class="memo-selected-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;"></div>
+            <button type="button" class="memo-add-tag-btn" onclick="toggleMemoTagDropdown('${blockId}')" style="background:rgba(253,242,248,0.7); border:1.5px dashed rgba(251,207,232,0.8); color:#DB2777; font-size:11px; padding:6px 12px; border-radius:14px; font-weight:800; cursor:pointer; transition:0.2s;">＋ エピソードタグを追加</button>
+            <div class="memo-tag-dropdown" style="display:none; background:rgba(255,255,255,0.9); backdrop-filter: blur(10px); border:1.5px solid var(--border-color); border-radius:16px; padding:12px; margin-top:10px; box-shadow: var(--shadow-md); position: absolute; z-index: 20; width: 100%;"><div style="position:absolute; top:-6px; left:20px; width:10px; height:10px; background:#FFF; border-top:1.5px solid var(--border-color); border-left:1.5px solid var(--border-color); transform:rotate(45deg);"></div><div class="memo-tag-dropdown-content" style="display:flex; flex-wrap:wrap; gap:6px; max-height: 120px; overflow-y: auto;"></div><div style="text-align:right; margin-top:8px;"><button type="button" onclick="toggleMemoTagDropdown('${blockId}')" style="background:var(--input-bg); color:var(--text-main); border:none; padding:4px 10px; border-radius:10px; font-size:10px; font-weight:800; cursor:pointer;">閉じる</button></div></div>
+          </div>
+          ${actionButtons}
+          <div onclick="collapseMemoBlock('${blockId}')" style="text-align:center; color:var(--text-sub); font-size:11px; font-weight:800; margin-top:12px; cursor:pointer; padding:8px 0;">▲ 閉じる</div>
+        </div>`;
+
+      div.innerHTML = summaryHtml + detailHtml;
+      area.appendChild(div); renderMemoTags(blockId); 
+      setTimeout(() => { if(text && isExpanded) { const ta = div.querySelector('textarea'); ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; } if(isExpanded) area.scrollTop = area.scrollHeight; }, 50);
+    }
+
+    function toggleMemoBlock(blockId) {
+      const block = document.getElementById(blockId); if (!block) return;
+      block.querySelector('.memo-summary').style.display = 'none'; block.querySelector('.memo-detail').style.display = 'block'; block.classList.add('expanded');
+      const ta = block.querySelector('.memo-text'); if(ta) { ta.style.height=''; ta.style.height=ta.scrollHeight+'px'; }
+    }
+
+    function collapseMemoBlock(blockId) {
+      const block = document.getElementById(blockId); if (!block) return;
+      const date = block.querySelector('.memo-date').value, text = block.querySelector('.memo-text').value.trim(), tags = JSON.parse(block.dataset.tags || "[]");
+      const dateEl = block.querySelector('.memo-summary .memo-date-text'); if(dateEl) dateEl.innerText = date;
+      const tagsEl = block.querySelector('.memo-summary .memo-tags-text'); if(tagsEl) tagsEl.innerHTML = tags.length > 0 ? tags.map(t => `#${t}`).join(' ') : '<span style="color:#9CA3AF;">タグなし</span>';
+      const previewEl = block.querySelector('.memo-summary .memo-preview-text'); if(previewEl) previewEl.innerHTML = text ? text.split('\n')[0] : '<span style="color:#9CA3AF;">本文なし</span>';
+      block.querySelector('.memo-detail').style.display = 'none'; block.querySelector('.memo-summary').style.display = 'block'; block.classList.remove('expanded');
+    }
+
+    function deleteMemoBlock(blockId) {
+      if (confirm("このエピソードを削除しますか？\n（「全体を保存する」を押すまで確定しません）")) {
+        const block = document.getElementById(blockId);
+        block.remove();
+      }
+    }
+
+    function quickSaveMemoBlock(blockId) { collapseMemoBlock(blockId); saveCustomerEdit(); }
+    function addNewMemoBlock() { addMemoBlock(getTodayString(), "", [], "", true); }
+    function renderMemoTags(blockId) { const block = document.getElementById(blockId); if(!block) return; const tags = JSON.parse(block.dataset.tags || "[]"), selectedArea = block.querySelector('.memo-selected-tags'); selectedArea.innerHTML = tags.map((t, index) => `<span style="background:var(--primary-gradient); color:#FFF; font-size:11px; padding:4px 10px; border-radius:14px; font-weight:800; display:flex; align-items:center; gap:4px; box-shadow:var(--shadow-sm);">${t} <span onclick="removeMemoTag('${blockId}', ${index})" style="cursor:pointer; margin-left:2px;">×</span></span>`).join(''); }
+    function removeMemoTag(blockId, index) { const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); tags.splice(index, 1); block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); const dropdown = block.querySelector('.memo-tag-dropdown'); if (dropdown.style.display !== 'none') renderMemoTagDropdownContent(blockId); }
+    function toggleMemoTagDropdown(blockId) { const block = document.getElementById(blockId), dropdown = block.querySelector('.memo-tag-dropdown'); if (dropdown.style.display === 'none') { renderMemoTagDropdownContent(blockId); dropdown.style.display = 'block'; } else { dropdown.style.display = 'none'; } }
+    function renderMemoTagDropdownContent(blockId) { const block = document.getElementById(blockId), tags = JSON.parse(block.dataset.tags || "[]"), content = block.querySelector('.memo-tag-dropdown-content'); content.innerHTML = activeTags.map(t => { const isSelected = tags.includes(t), bg = isSelected ? 'var(--input-bg)' : '#FFF', color = isSelected ? 'var(--text-sub)' : 'var(--text-main)', border = isSelected ? 'transparent' : 'var(--border-color)', opacity = isSelected ? '0.5' : '1'; return `<div onclick="toggleMemoTag('${blockId}', '${t}')" style="background:${bg}; color:${color}; border:1.5px solid ${border}; padding:6px 12px; border-radius:16px; font-size:12px; font-weight:700; cursor:pointer; opacity:${opacity}; transition:0.2s;">${t}</div>`; }).join(''); }
+    function toggleMemoTag(blockId, tag) { const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); if (tags.includes(tag)) { tags = tags.filter(t => t !== tag); } else { tags.push(tag); } block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); renderMemoTagDropdownContent(blockId); }
+    function buildMemoFromBlocks() { const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block')); return JSON.stringify(blocks.map(block => { const d = block.querySelector('.memo-date').value.replace(/-/g, '/'), t = block.querySelector('.memo-text').value.trim(), tags = JSON.parse(block.dataset.tags || "[]"), photoUrl = block.dataset.photo || undefined; if(!t && !d && tags.length === 0 && !photoUrl) return null; return { date: d, text: t, tags: tags, photoUrl: photoUrl }; }).filter(m => m !== null)); }
+    function toggleTagAccordion() { const content = document.getElementById('tagAccordionContent'), icon = document.getElementById('tagAccordionIcon'); content.classList.toggle('open'); icon.innerText = content.classList.contains('open') ? '▲' : '▼'; }
+
+    let editingOriginalName = "";
+    
+    function openCreateModal() {
+      isDemoMode = false; document.getElementById('modalTitle').innerText = "新規顧客の登録"; document.getElementById('isCreateMode').value = "true"; document.getElementById('editCustomerName').value = ""; document.getElementById('editCustomerName').readOnly = false; document.getElementById('customAttrInput').disabled = false; document.getElementById('addAttrBtn').style.display = 'block'; document.getElementById('addMemoBtn').style.display = 'block'; document.getElementById('saveCustomerBtn').style.display = 'block'; document.getElementById('cancelBtn').innerText = "キャンセル";
+      document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
+      document.getElementById('deleteCustomerArea').style.display = 'none'; 
+      
+      document.getElementById('editCustomerArchive').checked = false;
+      document.getElementById('archiveToggleArea').style.display = 'flex';
+
+      tempSelectedAttributes = []; renderEditAttributeTags(); document.getElementById('editMemoBlocksArea').innerHTML = ''; addNewMemoBlock(); document.getElementById('editCustomerModal').style.display = 'flex';
+    }
+
+    // ★FIX: ダミー顧客でもすべてのUIを開放（保存だけさせないSandbox状態）
+    function openEditModal(index) {
+      const c = customerData[index]; 
+      isDemoMode = c.tagsArray.includes("ダミー") && !isDevMode; 
+      
+      document.getElementById('modalTitle').innerText = isDemoMode ? "【お試し】ダミー（保存されません）" : "顧客情報の編集"; 
+      document.getElementById('isCreateMode').value = "false"; 
+      document.getElementById('editCustomerIndex').value = index; 
+      document.getElementById('editCustomerName').value = c.name; 
+      editingOriginalName = c.name; 
+      
+      // 全てのロックを解除
+      document.getElementById('editCustomerName').readOnly = false; 
+      document.getElementById('customAttrInput').disabled = false; 
+      document.getElementById('addAttrBtn').style.display = 'block'; 
+      document.getElementById('addMemoBtn').style.display = 'block'; 
+      document.getElementById('saveCustomerBtn').style.display = 'block'; 
+      document.getElementById('cancelBtn').innerText = "キャンセル";
+      document.getElementById('tagAccordionContent').classList.remove('open'); 
+      document.getElementById('tagAccordionIcon').innerText = '▼';
+      
+      document.getElementById('deleteCustomerArea').style.display = 'block'; 
+
+      document.getElementById('editCustomerArchive').checked = c.tagsArray.includes('非表示');
+      document.getElementById('archiveToggleArea').style.display = 'flex';
+
+      tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
+      const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
+      const memos = parseMemoToJSON(c.memo); 
+      
+      if(memos.length === 0) addNewMemoBlock(); 
+      else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || [], m.photoUrl || "", false));
+      
+      document.getElementById('editCustomerModal').style.display = 'flex'; setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
+    }
+
+    function renderEditAttributeTags() {
+      const area = document.getElementById('editAttributeTagsArea'); area.innerHTML = '';
+      const type = localStorage.getItem('businessType') || 'cabaret', currentPresets = industryAttributeTags[type] || industryAttributeTags['cabaret'];
+      const allTags = Array.from(new Set([...myCustomAttrs, ...currentPresets, ...tempSelectedAttributes]));
+      allTags.forEach(tag => {
+        if (tag === '非表示' || tag === '一軍固定') return; 
+        const isSelected = tempSelectedAttributes.includes(tag), bg = isSelected ? '#DB2777' : '#FDF2F8', color = isSelected ? '#FFF' : '#DB2777', border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
+        area.innerHTML += `<div onclick="toggleAttributeTag('${tag}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; user-select:none;">#${tag}</div>`;
       });
-
-      return res.status(200).json({ success: true, generatedText: aiText });
     }
 
-    // 5. 顧客の削除機能
-    if (action === 'deleteCustomer') {
-      const { error } = await supabase.from('customers')
-        .delete()
-        .eq('user_id', userId)
-        .eq('name', data.targetName);
-        
-      if (error) throw new Error("Supabase削除エラー: " + error.message);
-      return res.status(200).json({ success: true });
+    function toggleAttributeTag(tag) { tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); }
+    function addCustomAttributeTag() { const v = document.getElementById('customAttrInput').value.trim(); if(v) { if(!myCustomAttrs.includes(v)) { myCustomAttrs.unshift(v); localStorage.setItem('myCustomAttrs', JSON.stringify(myCustomAttrs)); } if(!tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); } document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } }
+    function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
+
+    // ★FIX: ダミー顧客の場合は「保存したフリ」をして閉じる
+    async function saveCustomerEdit() {
+      if (isDemoMode) {
+        closeEditModal();
+        return;
+      }
+
+      const isArchiveChecked = document.getElementById('editCustomerArchive').checked;
+      if (isArchiveChecked && !tempSelectedAttributes.includes('非表示')) {
+        tempSelectedAttributes.push('非表示');
+      } else if (!isArchiveChecked && tempSelectedAttributes.includes('非表示')) {
+        tempSelectedAttributes = tempSelectedAttributes.filter(t => t !== '非表示');
+      }
+
+      const isCreate = document.getElementById('isCreateMode').value === "true", newName = document.getElementById('editCustomerName').value.trim(), newMemo = buildMemoFromBlocks(), newTagsStr = tempSelectedAttributes.join(', ');
+      if(!newName) return alert("名前は必須です");
+      const btn = document.getElementById('saveCustomerBtn'); btn.innerText = "保存中..."; btn.disabled = true;
+      try {
+        const payload = { action: isCreate ? "createCustomer" : "updateCustomer", userId: userId, oldName: editingOriginalName, newName: newName, newTags: newTagsStr, newMemo: newMemo };
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+        if((await res.json()).success) { fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
+      } catch(e) { alert("エラーが発生しました。"); }
+      btn.innerText = "全体を保存する"; btn.disabled = false;
     }
 
-  } catch (err) {
-    console.error("バックエンド処理エラー:", err);
-    return res.status(500).json({ success: false, error: err.message });
-  }
-}
+    function openDeleteConfirmModal() {
+      document.getElementById('deleteTargetName').innerText = editingOriginalName;
+      document.getElementById('deleteConfirmModal').style.display = 'flex';
+    }
+    
+    function closeDeleteConfirmModal() {
+      document.getElementById('deleteConfirmModal').style.display = 'none';
+    }
+
+    // ★FIX: ダミー顧客は削除できないように保護
+    async function executeDeleteCustomer() {
+      if (isDemoMode) {
+        alert("お手本（ダミー）データのため、削除はできません。\n(開発者モード時のみ可能)");
+        closeDeleteConfirmModal();
+        return;
+      }
+      const btn = document.getElementById('executeDeleteBtn'); 
+      btn.innerText = "削除中..."; 
+      btn.disabled = true;
+      try {
+        const payload = { action: "deleteCustomer", userId: userId, targetName: editingOriginalName };
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+        if((await res.json()).success) { 
+          closeDeleteConfirmModal();
+          closeEditModal();
+          if (document.getElementById('nameInput').value === editingOriginalName) {
+             resetInputForm();
+          }
+          fetchCustomers(); 
+        } else alert("削除に失敗しました。");
+      } catch(e) { alert("エラーが発生しました。"); }
+      btn.innerText = "削除する"; 
+      btn.disabled = false;
+    }
+
+    function previewPhoto(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { currentBase64Image = e.target.result; document.getElementById('photoPreview').src = e.target.result; document.getElementById('photoPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; }; reader.readAsDataURL(file); }
+    function openStyleModal() { document.getElementById('styleModal').style.display = 'flex'; }
+    function closeStyleModal() { document.getElementById('styleModal').style.display = 'none'; }
+    function autoScrollTextarea() { const el = document.getElementById('todayEpisodeInput'); el.scrollTop = el.scrollHeight; }
+
+    function sortAndSaveTags() {
+      if (selectedEpisodeTags.length > 0) {
+        activeTags = [...selectedEpisodeTags, ...activeTags.filter(t => !selectedEpisodeTags.includes(t))];
+        const type = localStorage.getItem('businessType') || 'cabaret';
+        const isPhoto = document.getElementById('mode-photo').checked;
+        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
+      }
+    }
+
+    function generateDiary() {
+      const name = document.getElementById('nameInput').value, todayEpisode = document.getElementById('todayEpisodeInput').value;
+      const isPhoto = document.getElementById('mode-photo').checked, type = localStorage.getItem('businessType') || 'cabaret';
+      if (!isPhoto && !name) return alert("名前を入れてね");
+
+      sortAndSaveTags();
+
+      showCuteToast(false);
+      document.getElementById('inlineResultArea').style.display = 'none';
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "執筆中...";
+
+      const targetCustomer = customerData.find(c => c.name === name);
+      let customerRank = '新規'; 
+      if (targetCustomer) {
+        const stats = getCustomerStats(targetCustomer);
+        if (stats.isVip) customerRank = 'VIP'; else if (stats.count === 1) customerRank = '新規'; else if (stats.count === 2) customerRank = '2回目'; else customerRank = '常連';
+      }
+
+      const forbiddenTags = ['新規', '初回', '初回来店', '初めて', '一見', '常連', 'リピーター', '2回目', '二回目', '3回目', '三回目', '1回目', '一回目'];
+      const cleanedCustomerTags = currentCustomerTags.filter(tag => !forbiddenTags.some(forbidden => tag.includes(forbidden)));
+
+      const memos = parseMemoToJSON(targetCustomer ? targetCustomer.memo : "");
+      const filteredMemosStr = memos.map(m => {
+          const filteredTags = (m.tags || []).filter(tag => !isEmotionTag(tag)), tagsStr = filteredTags.length > 0 ? `(タグ: ${filteredTags.join(', ')})` : ''; return `${m.date}: ${m.text} ${tagsStr}`.trim();
+      }).join('\n---\n');
+
+      let newCombinedMemo = "";
+      if (todayEpisode || selectedEpisodeTags.length > 0 || (isPhoto && currentBase64Image)) { 
+        const newEpisodeObj = { date: getTodayFormatted(), text: todayEpisode, tags: [...selectedEpisodeTags] }; 
+        memos.push(newEpisodeObj); 
+      }
+      newCombinedMemo = JSON.stringify(memos);
+
+      const payload = { action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: filteredMemosStr, combinedMemoToSave: newCombinedMemo, style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, customerTags: cleanedCustomerTags.join(', '), customerRank: customerRank, episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" };
+      
+      resetInputForm(); 
+
+      fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(data => { 
+           showCuteToast(true); 
+           submitBtn.disabled = false;
+           submitBtn.innerText = "✨ AIで作成する";
+
+           if(data.success) { 
+              fetchCustomers(); 
+              const resultText = data.generatedText || "（テキストがありません）";
+              
+              document.getElementById('inlineResultText').value = resultText;
+              document.getElementById('inlineResultArea').style.display = 'block';
+              
+              setTimeout(() => {
+                const scrollArea = document.querySelector('.scroll-area');
+                scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
+              }, 100);
+
+           } else { alert("エラーが発生しました: " + (data.error || "不明なエラー")); }
+        })
+        .catch(e => { 
+           console.error("Vercelエラー", e); 
+           document.getElementById('cuteToastText').innerText = "❌ エラー発生";
+           document.getElementById('cuteToastIcon').innerText = "💦";
+           setTimeout(() => { document.getElementById('cuteToast').style.right = '-250px'; }, 3000);
+           submitBtn.disabled = false;
+           submitBtn.innerText = "✨ AIで作成する";
+        });
+    }
+  </script>
+</body>
+</html>
