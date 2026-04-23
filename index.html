@@ -778,33 +778,53 @@
     
     function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); updateAlertBadge(); }
 
-    async function fetchCustomers() {
+    async function fetchCustomers(options = {}) {
+      const {
+        retryIfTestUser = false,
+        retryCount = 0,
+        retryDelay = 800
+      } = options;
       const fallbackRender = () => {
         customerData = [];
         try { renderCustomerList(); } catch (err) { console.error('renderCustomerList fallback error:', err); }
         try { renderQuickAccess(); } catch (err) { console.error('renderQuickAccess fallback error:', err); }
         try { updateAlertBadge(); } catch (err) { console.error('updateAlertBadge fallback error:', err); }
       };
-
       try {
+        // ★最重要:
+        // 初回起動時に userId がまだ test-user のままなら、
+        // すぐ「顧客データがありません」で確定させず、少し待って再試行する
+        if (userId === 'test-user' && retryIfTestUser && retryCount > 0) {
+          console.warn(`userId が test-user のため再試行します。残り: ${retryCount}`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          try {
+            if (typeof liff !== 'undefined' && liff.isLoggedIn()) {
+              const profile = await liff.getProfile();
+              if (profile?.userId) userId = profile.userId;
+            }
+          } catch (e) {
+            console.error('Retry profile fetch error:', e);
+          }
+          return fetchCustomers({
+            retryIfTestUser: true,
+            retryCount: retryCount - 1,
+            retryDelay
+          });
+        }
         const res = await fetch(GAS_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "getCustomers", userId })
         });
-
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
-
         const contentType = res.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
           const text = await res.text();
           throw new Error(`Unexpected response: ${text.slice(0, 120)}`);
         }
-
         const data = await res.json();
-
         customerData = data?.success && Array.isArray(data.customers)
           ? data.customers.map(c => ({
               ...c,
@@ -813,11 +833,10 @@
               tagsArray: c?.tags ? String(c.tags).split(',').map(t => t.trim()).filter(Boolean) : []
             }))
           : [];
-
         renderCustomerList();
         renderQuickAccess();
         updateAlertBadge();
-      } catch (e) { 
+      } catch (e) {
         console.error("fetchCustomers Error:", e);
         fallbackRender();
       }
