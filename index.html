@@ -938,7 +938,8 @@
     }
 
     function openEditModal(index) {
-      const c = customerData[index]; isDemoMode = c.tagsArray.includes("ダミー"); 
+      const c = customerData[index]; 
+      isDemoMode = false; // ★一時的にダミー保護ロックを強制解除！
       document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】ダミー（閲覧）" : "顧客情報の編集"; document.getElementById('isCreateMode').value = "false"; document.getElementById('editCustomerIndex').value = index; document.getElementById('editCustomerName').value = c.name; editingOriginalName = c.name; 
       document.getElementById('editCustomerName').readOnly = isDemoMode; document.getElementById('customAttrInput').disabled = isDemoMode; document.getElementById('addAttrBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('addMemoBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('saveCustomerBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('cancelBtn').innerText = isDemoMode ? "閉じる" : "キャンセル";
       document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
