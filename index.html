@@ -1036,6 +1036,23 @@
       color: #DB2777;
     }
 
+    #actionToast {
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17, 24, 39, 0.9);
+      color: #FFF;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 800;
+      font-size: 14px;
+      z-index: 11000;
+      transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      pointer-events: none;
+    }
+
     @keyframes bounce-icon {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-4px); }
@@ -1043,6 +1060,9 @@
   </style>
 </head>
 <body>
+
+  <!-- サクサクUI用トースト -->
+  <div id="actionToast">完了しました</div>
 
   <div id="cuteToast">
     <span id="cuteToastIcon" style="font-size: 18px; display:inline-block;">🐰</span>
@@ -1070,12 +1090,13 @@
     <div class="half-modal-handle"></div>
     <h3 id="actionModalName" style="margin: 0 0 16px; font-weight: 900; text-align: center; color: var(--text-main);"></h3>
     <button id="btnToggleVip" onclick="toggleVipPin()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:16px; font-weight:800; font-size:15px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"></button>
-    <button onclick="setHidden()" style="width:100%; background:#FEE2E2; color:#EF4444; border:none; padding:16px; border-radius:16px; font-weight:800; font-size:15px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">🗑️ 削除する（ゴミ箱へ）</button>
+    <button onclick="setHidden()" style="width:100%; background:#FEE2E2; color:#EF4444; border:none; padding:16px; border-radius:16px; font-weight:800; font-size:15px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">💤 非表示にする</button>
   </div>
 
   <div id="hiddenListModal" class="modal-overlay" style="z-index: 10005;">
     <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
-      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🗑️ 削除した顧客</h2>
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">💤 非表示にした顧客</h2>
+      <p style="text-align:center; font-size:12px; color:var(--text-sub); margin-top:-10px; margin-bottom:16px; font-weight:bold;">カードを長押しして記録を確認</p>
       <div id="hiddenCustomersArea" style="overflow-y: auto; flex: 1; padding-bottom: 20px; margin: -10px;"></div>
       <button onclick="closeHiddenListModal()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 20px;">閉じる</button>
     </div>
@@ -1151,12 +1172,8 @@
       <span class="label">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
 
-      <div id="archiveToggleArea" style="display: none !important;">
-        <input type="checkbox" id="editCustomerArchive">
-      </div>
-
       <div class="accordion-header" onclick="toggleTagAccordion()">
-        <span>🏷️ 属性タグ（設定・追加）</span><span id="tagAccordionIcon">▼</span>
+        <span>🏷️ 属性タグ</span><span id="tagAccordionIcon">▼</span>
       </div>
       <div class="accordion-content" id="tagAccordionContent">
         <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
@@ -1170,13 +1187,18 @@
       <div class="memo-blocks-wrapper"><div id="editMemoBlocksArea"></div></div>
       <div class="add-memo-btn" id="addMemoBtn" onclick="addNewMemoBlock()">＋ 日付とエピソードを追加</div>
 
-      <div id="deleteCustomerArea" style="display:none !important; margin-bottom:16px;">
-        <button onclick="openDeleteConfirmModal()" style="width:100%; background:#FEE2E2; color:#EF4444; border:none; padding:14px; border-radius:16px; font-weight:800;">🗑️ この顧客を削除する</button>
-      </div>
-
-      <div style="display:flex; gap:10px;">
+      <div id="editActionArea" style="display:flex; gap:10px;">
         <button onclick="closeEditModal()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800;" id="cancelBtn">閉じる</button>
         <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">全体を保存する</button>
+      </div>
+
+      <!-- 閲覧（非表示解除・削除用）エリア -->
+      <div id="readOnlyActionArea" style="display:none; gap:10px; margin-top:16px; flex-direction:column;">
+        <div style="display:flex; gap:10px;">
+          <button onclick="restoreHiddenFromModal()" style="flex:1; background:#10B981; color:#FFF; border:none; padding:16px; border-radius:16px; font-weight:800;">🟢 非表示を解除</button>
+          <button onclick="openDeleteConfirmModal()" style="flex:1; background:#FEE2E2; color:#EF4444; border:none; padding:16px; border-radius:16px; font-weight:800;">🗑️ 完全に削除</button>
+        </div>
+        <button onclick="closeEditModal()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:16px; font-weight:800;">閉じる</button>
       </div>
     </div>
   </div>
@@ -1322,13 +1344,13 @@
         </div>
 
         <div class="settings-list">
-          <div class="settings-item" onclick="openHiddenListModal()"><span>🗑️ 削除した顧客（ゴミ箱）</span><span style="color:var(--border-color);">▶</span></div>
+          <div class="settings-item" onclick="openHiddenListModal()"><span>💤 非表示にした顧客</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="openHelpModal()"><span>📖 アプリの使い方と仕様（必読）</span><span style="color:var(--border-color);">▶</span></div>
         </div>
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.6.0 (Stable)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.7.0 (Stable)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
@@ -1352,8 +1374,8 @@
         sections: [
           { icon: "👑", title: "自動ランク付け", content: "過去のエピソード数を自動カウントし、「🔰新規」「✌️2回目」「👑常連」バッジを付与。" },
           { icon: "🚨", title: "放置アラート", content: "設定日数以上来店がないと「🚨◯日放置」と表示。「会いたい」タグが自動追加されます。" },
-          { icon: "💎", title: "VIP（一軍）", content: "「太客」「VIP」等のタグで金枠・最上位表示。カード長押しで「💎一軍に固定」も可能。" },
-          { icon: "🗑️", title: "長押しで削除", content: "カードを長押しすると顧客を削除（ゴミ箱へ移動）できます。設定の「削除した顧客」から復元・完全削除が可能です。" }
+          { icon: "💎", title: "一軍・非表示の長押し", content: "顧客カードを長押しすると、最上位に固定する「💎一軍固定」や、リストから隠す「💤非表示」が選べます。" },
+          { icon: "💤", title: "非表示リストと削除", content: "設定タブの「非表示にした顧客」から、非表示カードを長押しすると、記録を確認した上で「復活」か「完全削除」が行えます。" }
         ]
       },
       styleModal: {
@@ -1437,6 +1459,13 @@
           <p>${section.content}</p>
         </div>
       `).join('');
+    }
+
+    function showActionToast(msg) {
+      const toast = document.getElementById('actionToast');
+      toast.innerText = msg;
+      toast.style.top = 'env(safe-area-inset-top, 20px)';
+      setTimeout(() => { toast.style.top = '-100px'; }, 2500);
     }
 
     function showCuteToast(isComplete) {
@@ -2168,21 +2197,34 @@
     async function toggleVipPin() {
       const c = customerData[actionTargetIndex];
       let newTags = [...c.tagsArray];
+      let isAdded = false;
       if (newTags.includes('一軍固定')) {
         newTags = newTags.filter(t => t !== '一軍固定' && t !== '太客' && t !== 'エース' && t !== 'VIP');
       } else {
         newTags.push('一軍固定');
+        isAdded = true;
       }
-      await updateCustomerTagsOnly(c.name, newTags, c.memo);
       closeCardActionModal();
+      showActionToast(isAdded ? '💎 一軍に固定しました' : '❄️ 一軍固定を解除しました');
+      
+      c.tagsArray = newTags;
+      renderCustomerList(document.getElementById('customerSearch').value);
+      
+      await updateCustomerTagsOnly(c.name, newTags, c.memo);
     }
 
     async function setHidden() {
       const c = customerData[actionTargetIndex];
       let newTags = [...c.tagsArray];
       if (!newTags.includes('非表示')) newTags.push('非表示');
-      await updateCustomerTagsOnly(c.name, newTags, c.memo);
+      
       closeCardActionModal();
+      showActionToast('💤 非表示にしました');
+
+      c.tagsArray = newTags;
+      renderCustomerList(document.getElementById('customerSearch').value);
+
+      await updateCustomerTagsOnly(c.name, newTags, c.memo);
     }
 
     async function updateCustomerTagsOnly(name, tagsArray, memo) {
@@ -2227,27 +2269,34 @@
       const hidden = customerData.filter(c => c.tagsArray.includes('非表示'));
 
       if (hidden.length === 0) {
-        area.innerHTML = '<p style="text-align:center; color:#9CA3AF; margin-top:40px; font-weight:bold;">削除された顧客はいません</p>';
+        area.innerHTML = '<p style="text-align:center; color:#9CA3AF; margin-top:40px; font-weight:bold;">非表示の顧客はいません</p>';
       } else {
         hidden.forEach((c) => {
+          const index = customerData.indexOf(c);
           const memos = parseMemoToJSON(c.memo);
           let previewMemo = "メモなし";
           if (memos.length > 0) {
             const lastM = memos[memos.length - 1];
             previewMemo = lastM.text ? lastM.text.substring(0,30) + "..." : "メモなし";
           }
-          const safeName = c.name.replace(/'/g, "\\'");
+          
+          const visibleTags = c.tagsArray.filter(t => t !== 'ダミー' && t !== '非表示' && t !== '一軍固定');
+          const tagHtml = visibleTags.length > 0
+            ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">${visibleTags.map(t => `<span style="background:rgba(252,231,243,0.8); color:#DB2777; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; backdrop-filter: blur(4px);">#${t}</span>`).join('')}</div>`
+            : '';
 
           area.innerHTML += `
-            <div class="card compact-view" style="padding:16px 14px !important; margin-bottom:10px !important; background:rgba(255,255,255,0.8); border: 1px solid rgba(229, 231, 235, 0.6); box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor:pointer;" onclick="promptDeleteHidden('${safeName}')">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="flex:1; overflow:hidden; padding-right: 10px;">
-                  <b style="font-size:15px; color:var(--text-main);">${c.name}</b>
-                  <div style="font-size:12px; color:var(--text-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:4px;">${previewMemo}</div>
-                </div>
-                <div style="display:flex; gap:6px; flex-shrink:0;">
-                  <button type="button" onclick="event.stopPropagation(); restoreHidden('${safeName}')" style="background:#10B981; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-weight:bold; font-size:12px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">🟢 復活</button>
-                </div>
+            <div class="card compact-view" style="padding:12px 14px !important; margin-bottom:10px !important; background:rgba(255,255,255,0.8); border: 1px solid rgba(229, 231, 235, 0.6); box-shadow: 0 2px 8px rgba(0,0,0,0.03);"
+                 ontouchstart="handleHiddenTouchStart(event, this, ${index})"
+                 ontouchmove="handleTouchMove(event, this)"
+                 ontouchend="handleTouchEnd(event, this)"
+                 onmousedown="handleHiddenTouchStart(event, this, ${index})"
+                 onmouseup="handleTouchEnd(event, this)"
+                 onmouseleave="handleTouchEnd(event, this)">
+              <div style="display:flex; flex-direction:column;">
+                <b style="font-size:15px; color:var(--text-main); margin-bottom:4px;">${c.name}</b>
+                <div class="card-tags" style="margin-top:2px; margin-bottom:4px;">${tagHtml}</div>
+                <div style="font-size:12px; color:var(--text-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${previewMemo}</div>
               </div>
             </div>`;
         });
@@ -2259,18 +2308,34 @@
       document.getElementById('hiddenListModal').style.display = 'none';
     }
 
-    function promptDeleteHidden(name) {
-      editingOriginalName = name; 
-      document.getElementById('deleteTargetName').innerText = name;
-      document.getElementById('deleteConfirmModal').style.display = 'flex';
+    function handleHiddenTouchStart(e, el, index) {
+      if (e.type === 'mousedown' && e.button !== 0) return;
+      el.classList.add('pressing');
+      if (e.touches && e.touches.length > 0) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }
+      pressTimer = setTimeout(() => {
+        if (navigator.vibrate) navigator.vibrate(50);
+        openEditModal(index, true); 
+      }, 550);
     }
 
-    async function restoreHidden(name) {
-      const c = customerData.find(item => item.name === name);
+    async function restoreHiddenFromModal() {
+      const c = customerData.find(item => item.name === editingOriginalName);
       if (!c) return;
       const newTags = c.tagsArray.filter(t => t !== '非表示');
+      
+      closeEditModal();
+      showActionToast('🟢 非表示を解除しました');
+      c.tagsArray = newTags;
+      
+      if(document.getElementById('hiddenListModal').style.display === 'flex') {
+        openHiddenListModal();
+      }
+      renderCustomerList(document.getElementById('customerSearch').value);
+      
       await updateCustomerTagsOnly(c.name, newTags, c.memo);
-      setTimeout(() => openHiddenListModal(), 400);
     }
 
     function selectCustomerByIndex(index) {
@@ -2289,7 +2354,9 @@
       }
 
       clearAutoTags();
+      document.getElementById('mode-text').checked = true;
       document.getElementById('nav-create').checked = true;
+      updateChips(); 
       nameInput.value = c.name;
 
       const memos = parseMemoToJSON(c.memo);
@@ -2399,20 +2466,21 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "", isExpanded = false) {
+    function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "", isExpanded = false, isReadOnly = false) {
       const area = document.getElementById('editMemoBlocksArea');
       const blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9);
       const div = document.createElement('div');
       div.className = 'memo-block' + (isExpanded ? ' expanded' : '');
       div.id = blockId;
       div.dataset.tags = JSON.stringify(tags);
+      div.dataset.readonly = isReadOnly;
       if (photoUrl) div.dataset.photo = photoUrl;
 
       const tagsText = tags.length > 0 ? tags.map(t => `#${t}`).join(' ') : '<span style="color:#9CA3AF;">タグなし</span>';
       const previewText = text ? text.split('\n')[0] : '<span style="color:#9CA3AF;">本文なし</span>';
       const photoHtmlSummary = photoUrl
         ? `<img src="${photoUrl}" style="width:32px; height:32px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.5); pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}', event);">`
-        : `<div style="width:32px; height:32px; border-radius:6px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:12px;">📷</div>`;
+        : (isReadOnly ? '' : `<div style="width:32px; height:32px; border-radius:6px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:12px;">📷</div>`);
 
       const summaryHtml = `
         <div class="memo-summary" onclick="toggleMemoBlock('${blockId}')" style="cursor:pointer; display: ${isExpanded ? 'none' : 'block'}; padding: 4px;">
@@ -2427,24 +2495,32 @@
 
       const photoHtmlDetail = photoUrl
         ? `<img src="${photoUrl}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.8); cursor:pointer; pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}', event);">`
-        : `<div style="width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:14px;">📷</div>`;
+        : (isReadOnly ? '' : `<div style="width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:14px;">📷</div>`);
 
-      const actionButtons = `
+      const actionButtons = isReadOnly ? '' : `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(229,231,235,0.6);">
           <button type="button" onclick="deleteMemoBlock('${blockId}')" style="background:#FEE2E2; color:#EF4444; border:none; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px;">🗑️</button>
           <button type="button" onclick="quickSaveMemoBlock('${blockId}')" style="background:var(--primary-gradient); color:#FFF; border:none; padding:10px 20px; border-radius:20px; font-weight:800; font-size:13px; box-shadow:var(--shadow-sm);">💾 このまま保存</button>
         </div>`;
 
+      const textareaHtml = isReadOnly 
+        ? `<div style="font-size:14px; color:var(--text-main); line-height:1.6; margin-top:4px; padding:8px; background:rgba(243,244,246,0.5); border-radius:8px;">${text.replace(/\n/g, '<br>') || '<span style="color:#9CA3AF;">（本文なし）</span>'}</div>`
+        : `<textarea class="memo-text" rows="2" placeholder="エピソードを入力..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>`;
+      
+      const tagAddBtn = isReadOnly ? '' : `<button type="button" class="memo-add-tag-btn" onclick="toggleMemoTagDropdown('${blockId}')" style="background:rgba(253,242,248,0.7); border:1.5px dashed rgba(251,207,232,0.8); color:#DB2777; font-size:11px; padding:6px 12px; border-radius:14px; font-weight:800; cursor:pointer; transition:0.2s;">＋ エピソードタグを追加</button>`;
+      
+      const dateInput = isReadOnly ? `<div style="font-weight:800; color:var(--active-color); font-size:13px; padding:4px 0;">${date}</div>` : `<input type="date" class="memo-date" value="${date}" style="width:fit-content; flex:0 1 auto; padding:4px 0;">`;
+
       const detailHtml = `
         <div class="memo-detail" style="display: ${isExpanded ? 'block' : 'none'};">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px;">
-            <input type="date" class="memo-date" value="${date}" style="width:fit-content; flex:0 1 auto; padding:4px 0;">
+            ${dateInput}
             <div style="position:relative; z-index:10;">${photoHtmlDetail}</div>
           </div>
-          <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>
+          ${textareaHtml}
           <div class="memo-tags-area" style="margin-top:8px; position:relative;">
             <div class="memo-selected-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;"></div>
-            <button type="button" class="memo-add-tag-btn" onclick="toggleMemoTagDropdown('${blockId}')" style="background:rgba(253,242,248,0.7); border:1.5px dashed rgba(251,207,232,0.8); color:#DB2777; font-size:11px; padding:6px 12px; border-radius:14px; font-weight:800; cursor:pointer; transition:0.2s;">＋ エピソードタグを追加</button>
+            ${tagAddBtn}
             <div class="memo-tag-dropdown" style="display:none; background:rgba(255,255,255,0.9); backdrop-filter: blur(10px); border:1.5px solid var(--border-color); border-radius:16px; padding:12px; margin-top:10px; box-shadow: var(--shadow-md); position: absolute; z-index: 20; width: 100%;">
               <div style="position:absolute; top:-6px; left:20px; width:10px; height:10px; background:#FFF; border-top:1.5px solid var(--border-color); border-left:1.5px solid var(--border-color); transform:rotate(45deg);"></div>
               <div class="memo-tag-dropdown-content" style="display:flex; flex-wrap:wrap; gap:6px; max-height: 120px; overflow-y: auto;"></div>
@@ -2462,10 +2538,12 @@
       renderMemoTags(blockId);
 
       setTimeout(() => {
-        if (text && isExpanded) {
+        if (text && isExpanded && !isReadOnly) {
           const ta = div.querySelector('textarea');
-          ta.style.height = '';
-          ta.style.height = ta.scrollHeight + 'px';
+          if(ta) {
+            ta.style.height = '';
+            ta.style.height = ta.scrollHeight + 'px';
+          }
         }
         if (isExpanded) area.scrollTop = area.scrollHeight;
       }, 50);
@@ -2487,11 +2565,15 @@
     function collapseMemoBlock(blockId) {
       const block = document.getElementById(blockId);
       if (!block) return;
-      const date = block.querySelector('.memo-date').value;
-      const text = block.querySelector('.memo-text').value.trim();
+      const isReadOnly = block.dataset.readonly === 'true';
+      const dateEl = block.querySelector(isReadOnly ? '.memo-detail div' : '.memo-date');
+      const date = isReadOnly ? dateEl.innerText : dateEl.value;
+      const textEl = block.querySelector(isReadOnly ? '.memo-detail div[style*="font-size:14px"]' : '.memo-text');
+      const text = isReadOnly ? (textEl.innerText.includes('本文なし') ? '' : textEl.innerText) : textEl.value.trim();
       const tags = JSON.parse(block.dataset.tags || "[]");
-      const dateEl = block.querySelector('.memo-summary .memo-date-text');
-      if (dateEl) dateEl.innerText = date;
+      
+      const summaryDateEl = block.querySelector('.memo-summary .memo-date-text');
+      if (summaryDateEl) summaryDateEl.innerText = date;
       const tagsEl = block.querySelector('.memo-summary .memo-tags-text');
       if (tagsEl) tagsEl.innerHTML = tags.length > 0 ? tags.map(t => `#${t}`).join(' ') : '<span style="color:#9CA3AF;">タグなし</span>';
       const previewEl = block.querySelector('.memo-summary .memo-preview-text');
@@ -2514,15 +2596,19 @@
     }
 
     function addNewMemoBlock() {
-      addMemoBlock(getTodayString(), "", [], "", true);
+      addMemoBlock(getTodayString(), "", [], "", true, false);
     }
 
     function renderMemoTags(blockId) {
       const block = document.getElementById(blockId);
       if (!block) return;
+      const isReadOnly = block.dataset.readonly === 'true';
       const tags = JSON.parse(block.dataset.tags || "[]");
       const selectedArea = block.querySelector('.memo-selected-tags');
-      selectedArea.innerHTML = tags.map((t, index) => `<span style="background:var(--primary-gradient); color:#FFF; font-size:11px; padding:4px 10px; border-radius:14px; font-weight:800; display:flex; align-items:center; gap:4px; box-shadow:var(--shadow-sm);">${t} <span onclick="removeMemoTag('${blockId}', ${index})" style="cursor:pointer; margin-left:2px;">×</span></span>`).join('');
+      selectedArea.innerHTML = tags.map((t, index) => {
+        const cross = isReadOnly ? '' : `<span onclick="removeMemoTag('${blockId}', ${index})" style="cursor:pointer; margin-left:2px;">×</span>`;
+        return `<span style="background:var(--primary-gradient); color:#FFF; font-size:11px; padding:4px 10px; border-radius:14px; font-weight:800; display:flex; align-items:center; gap:4px; box-shadow:var(--shadow-sm);">${t} ${cross}</span>`;
+      }).join('');
     }
 
     function removeMemoTag(blockId, index) {
@@ -2576,6 +2662,9 @@
     function buildMemoFromBlocks() {
       const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block'));
       return JSON.stringify(blocks.map(block => {
+        const isReadOnly = block.dataset.readonly === 'true';
+        if(isReadOnly) return null; 
+        
         const d = block.querySelector('.memo-date').value.replace(/-/g, '/');
         const t = block.querySelector('.memo-text').value.trim();
         const tags = JSON.parse(block.dataset.tags || "[]");
@@ -2597,55 +2686,64 @@
       document.getElementById('modalTitle').innerText = "新規顧客の登録";
       document.getElementById('isCreateMode').value = "true";
       document.getElementById('editCustomerName').value = "";
+      
       document.getElementById('editCustomerName').readOnly = false;
       document.getElementById('customAttrInput').disabled = false;
       document.getElementById('addAttrBtn').style.display = 'block';
+      document.getElementById('customAttrInput').style.display = 'block';
       document.getElementById('addMemoBtn').style.display = 'block';
-      document.getElementById('saveCustomerBtn').style.display = 'block';
-      document.getElementById('cancelBtn').innerText = "キャンセル";
+      document.getElementById('editActionArea').style.display = 'flex';
+      document.getElementById('readOnlyActionArea').style.display = 'none';
+
       document.getElementById('tagAccordionContent').classList.remove('open');
       document.getElementById('tagAccordionIcon').innerText = '▼';
       
       tempSelectedAttributes = [];
-      renderEditAttributeTags();
+      renderEditAttributeTags(false);
       document.getElementById('editMemoBlocksArea').innerHTML = '';
       addNewMemoBlock();
       document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
-    function openEditModal(index) {
+    function openEditModal(index, isReadOnly = false) {
       const c = customerData[index];
       isDemoMode = c.tagsArray.includes("ダミー") && !isDevMode;
 
-      document.getElementById('modalTitle').innerText = isDemoMode ? "【お試し】ダミー（保存されません）" : "顧客情報の編集";
+      document.getElementById('modalTitle').innerText = isReadOnly ? "🗂️ 顧客記録の確認" : (isDemoMode ? "【お試し】ダミー（保存されません）" : "顧客情報の編集");
       document.getElementById('isCreateMode').value = "false";
       document.getElementById('editCustomerIndex').value = index;
       document.getElementById('editCustomerName').value = c.name;
       editingOriginalName = c.name;
 
-      document.getElementById('editCustomerName').readOnly = false;
-      document.getElementById('customAttrInput').disabled = false;
-      document.getElementById('addAttrBtn').style.display = 'block';
-      document.getElementById('addMemoBtn').style.display = 'block';
-      document.getElementById('saveCustomerBtn').style.display = 'block';
-      document.getElementById('cancelBtn').innerText = "キャンセル";
+      document.getElementById('editCustomerName').readOnly = isReadOnly;
+      document.getElementById('customAttrInput').disabled = isReadOnly;
+      
+      document.getElementById('addAttrBtn').style.display = isReadOnly ? 'none' : 'block';
+      document.getElementById('customAttrInput').style.display = isReadOnly ? 'none' : 'block';
+      document.getElementById('addMemoBtn').style.display = isReadOnly ? 'none' : 'block';
+      document.getElementById('editActionArea').style.display = isReadOnly ? 'none' : 'flex';
+      document.getElementById('readOnlyActionArea').style.display = isReadOnly ? 'flex' : 'none';
+
       document.getElementById('tagAccordionContent').classList.remove('open');
       document.getElementById('tagAccordionIcon').innerText = '▼';
 
       tempSelectedAttributes = [...c.tagsArray];
-      renderEditAttributeTags();
+      renderEditAttributeTags(isReadOnly);
 
       const area = document.getElementById('editMemoBlocksArea');
       area.innerHTML = '';
       const memos = parseMemoToJSON(c.memo);
-      if (memos.length === 0) addNewMemoBlock();
-      else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || [], m.photoUrl || "", false));
+      if (memos.length === 0 && !isReadOnly) addNewMemoBlock();
+      else if (memos.length === 0 && isReadOnly) {
+        area.innerHTML = '<p style="text-align:center; color:#9CA3AF; font-weight:bold; padding:20px;">過去の記録がありません</p>';
+      }
+      else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || [], m.photoUrl || "", false, isReadOnly));
 
       document.getElementById('editCustomerModal').style.display = 'flex';
       setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
     }
 
-    function renderEditAttributeTags() {
+    function renderEditAttributeTags(isReadOnly = false) {
       const area = document.getElementById('editAttributeTagsArea');
       area.innerHTML = '';
       const type = localStorage.getItem('businessType') || 'cabaret';
@@ -2658,7 +2756,9 @@
         const bg = isSelected ? '#DB2777' : '#FDF2F8';
         const color = isSelected ? '#FFF' : '#DB2777';
         const border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
-        area.innerHTML += `<div onclick="toggleAttributeTag('${tag.replace(/'/g, "\\'")}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; user-select:none;">#${tag}</div>`;
+        const clickHandler = isReadOnly ? '' : `onclick="toggleAttributeTag('${tag.replace(/'/g, "\\'")}')"`;
+        const cursor = isReadOnly ? 'default' : 'pointer';
+        area.innerHTML += `<div ${clickHandler} style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:${cursor}; user-select:none;">#${tag}</div>`;
       });
     }
 
@@ -2666,7 +2766,7 @@
       tempSelectedAttributes = tempSelectedAttributes.includes(tag)
         ? tempSelectedAttributes.filter(t => t !== tag)
         : [...tempSelectedAttributes, tag];
-      renderEditAttributeTags();
+      renderEditAttributeTags(false);
     }
 
     function addCustomAttributeTag() {
@@ -2680,7 +2780,7 @@
           tempSelectedAttributes.push(v);
         }
         document.getElementById('customAttrInput').value = '';
-        renderEditAttributeTags();
+        renderEditAttributeTags(false);
       }
     }
 
@@ -2765,6 +2865,8 @@
           customerData = customerData.filter(cust => cust.name !== editingOriginalName);
           closeDeleteConfirmModal();
           closeEditModal();
+          
+          showActionToast("🗑️ 完全に削除しました");
 
           if(document.getElementById('hiddenListModal').style.display === 'flex') {
             openHiddenListModal();
@@ -2793,12 +2895,43 @@
     function previewPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
+
       const reader = new FileReader();
       reader.onload = e => {
-        currentBase64Image = e.target.result;
-        document.getElementById('photoPreview').src = e.target.result;
-        document.getElementById('photoPreview').style.display = 'block';
-        document.getElementById('uploadText').style.display = 'none';
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // 軽量化した画像をBase64で取得
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          currentBase64Image = dataUrl;
+          
+          document.getElementById('photoPreview').src = dataUrl;
+          document.getElementById('photoPreview').style.display = 'block';
+          document.getElementById('uploadText').style.display = 'none';
+        };
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
