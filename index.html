@@ -1489,7 +1489,18 @@
 
     async function init() {
       renderTexts();
+      
+      const savedDraft = localStorage.getItem('diaryDraft');
+      if (savedDraft) {
+        document.getElementById('inlineResultText').value = savedDraft;
+        document.getElementById('inlineResultArea').style.display = 'block';
+      }
 
+      // テキストエリアを手動編集した際もバックアップを更新
+      document.getElementById('inlineResultText').addEventListener('input', (e) => {
+        localStorage.setItem('diaryDraft', e.target.value);
+      });
+      
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) {
         const pageEl = document.getElementById('nav-' + params.get('page'));
@@ -3011,7 +3022,10 @@
       sortAndSaveTags();
 
       showCuteToast(false);
+      
+      // 生成開始時に前回の結果をクリア
       document.getElementById('inlineResultArea').style.display = 'none';
+      document.getElementById('inlineResultText').value = "";
 
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
@@ -3077,7 +3091,12 @@
           if (data.success) {
             await fetchCustomers();
             const resultText = data.generatedText || "（テキストがありません）";
+            
+            // --- ここでバックアップを保存 ---
             document.getElementById('inlineResultText').value = resultText;
+            localStorage.setItem('diaryDraft', resultText);
+            // -----------------------------
+            
             document.getElementById('inlineResultArea').style.display = 'block';
 
             setTimeout(() => {
