@@ -60,28 +60,33 @@ export default async function handler(req, res) {
 
     // 4. AI日記生成
     if (action === 'generate') {
-      // ★修正: テスト環境の場合は、DBへの保存処理を行う前にここで完全にブロックする！
       if (userId === "test-user") {
         return res.status(200).json({ success: true, generatedText: "※テスト環境のためAI生成と保存はスキップされました。\n\n【送ろうとしたエピソード】\n" + data.episode });
       }
 
-      // 接客メモの更新（本番ユーザーのみ）
-      if (data.combinedMemoToSave) {
-        const memoJson = JSON.parse(data.combinedMemoToSave);
-        const { error } = await supabase.from('customers')
-          .update({ memo: memoJson, updated_at: new Date() })
-          .eq('user_id', userId)
-          .eq('name', data.name);
-        
-        if (error) throw new Error("Supabaseメモ更新エラー: " + error.message);
-      }
-
       let uploadFileId = null;
+      let photoUrl = null;
+
+      // 写真がある場合はDifyへの送信とSupabaseへの保存を両方行う
       if (data.mode === "photo" && data.image) {
         const base64Data = data.image.replace(/^data:image\/\w+;base64,/, "");
         const buffer = Buffer.from(base64Data, 'base64');
+
+        // ★NEW: 1. Supabase Storage へ写真を保存してURLを取得する
+        const fileName = `${userId}/${Date.now()}.jpg`;
+        const { error: storageError } = await supabase.storage
+          .from('photos')
+          .upload(fileName, buffer, { contentType: 'image/jpeg', upsert: false });
+
+        if (!storageError) {
+          const { data: publicUrlData } = supabase.storage.from('photos').getPublicUrl(fileName);
+          photoUrl = publicUrlData.publicUrl;
+        } else {
+          console.error("Storage upload error:", storageError);
+        }
+
+        // 2. Dify 用アップロード
         const blob = new Blob([buffer], { type: 'image/jpeg' });
-        
         const formData = new FormData();
         formData.append('file', blob, 'image.jpg');
         formData.append('user', userId);
@@ -93,6 +98,23 @@ export default async function handler(req, res) {
         });
         const uploadJson = await uploadRes.json();
         if (uploadJson.id) uploadFileId = uploadJson.id;
+      }
+
+      // 接客メモの更新（本番ユーザーのみ）
+      if (data.combinedMemoToSave) {
+        const memoJson = JSON.parse(data.combinedMemoToSave);
+        
+        // ★NEW: 写真をアップロードできていれば、最後のエピソード（今回の記録）にURLを付与する
+        if (photoUrl && memoJson.length > 0) {
+          memoJson[memoJson.length - 1].photoUrl = photoUrl;
+        }
+
+        const { error } = await supabase.from('customers')
+          .update({ memo: memoJson, updated_at: new Date() })
+          .eq('user_id', userId)
+          .eq('name', data.name);
+        
+        if (error) throw new Error("Supabaseメモ更新エラー: " + error.message);
       }
 
       const difyPayload = {
