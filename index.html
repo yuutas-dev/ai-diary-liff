@@ -79,7 +79,6 @@
     .story-inner { width: 100%; height: 100%; border-radius: 50%; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: var(--active-color); border: 2px solid #FFF; }
     .story-name { font-size: 11px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
     .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 1.5px solid #FFF; z-index: 5; }
-
     .story-alert-badge { position: absolute; bottom: -2px; right: -4px; background: #EF4444; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 9px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
 
     .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 24px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
@@ -102,9 +101,11 @@
     .memo-block { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 12px; margin-bottom: 10px; position: relative; transition: 0.3s; }
     .memo-block.dimmed { opacity: 0.5; background: #FFF; border-color: transparent; }
     .memo-block.dimmed:focus-within { opacity: 1; background: var(--bg-color); border: 1px solid #F472B6; }
-    .memo-date { font-weight: 800; color: var(--active-color); border: none; background: transparent; font-size: 12px; margin-bottom: 4px; outline: none; font-family: inherit; width: 100%; }
-    .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
     
+    /* ★修正: width: 100% を削除して当たり判定を最小化 */
+    .memo-date { font-weight: 800; color: var(--active-color); border: none; background: transparent; font-size: 12px; margin-bottom: 4px; outline: none; font-family: inherit; }
+    
+    .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
     .memo-tag-dropdown { animation: fadeInTab 0.2s ease-out; }
 
     .add-memo-btn { width: 100%; text-align: center; border: 2px dashed #FBCFE8; color: #DB2777; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; margin-bottom: 20px; background: #FFF; transition: 0.2s; }
@@ -179,6 +180,19 @@
     </div>
   </div>
 
+  <!-- ★NEW: 顧客削除の確認モーダル -->
+  <div id="deleteConfirmModal" class="modal-overlay" style="z-index: 10005;">
+    <div class="modal-content" style="text-align: center;">
+      <div style="width: 48px; height: 48px; background: #FEE2E2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">⚠️</div>
+      <h2 style="margin: 0 0 12px; font-weight: 900; color: #1F2937;">本当に削除しますか？</h2>
+      <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 24px;">顧客「<span id="deleteTargetName" style="font-weight: 800; color: #EF4444;"></span>」のすべてのデータ（メモ・写真含む）が完全に削除されます。<br>この操作は元に戻せません。</p>
+      <div style="display:flex; gap:10px;">
+        <button onclick="closeDeleteConfirmModal()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800;">キャンセル</button>
+        <button onclick="executeDeleteCustomer()" id="executeDeleteBtn" style="flex:1; background:#EF4444; color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">削除する</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 初期設定モーダル -->
   <div id="setupModal" class="modal-overlay">
     <div class="modal-content" style="text-align: center;">
@@ -242,9 +256,14 @@
       <div class="memo-blocks-wrapper"><div id="editMemoBlocksArea"></div></div>
       <div class="add-memo-btn" id="addMemoBtn" onclick="addMemoBlock()">＋ 日付とエピソードを追加</div>
       
-      <div style="display:flex; gap:10px;">
+      <div style="display:flex; gap:10px; margin-bottom: 16px;">
         <button onclick="closeEditModal()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800;" id="cancelBtn">キャンセル</button>
         <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">保存する</button>
+      </div>
+
+      <!-- ★NEW: 顧客削除リンク（新規の時は隠れます） -->
+      <div id="deleteCustomerArea" style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border-color);">
+        <span onclick="openDeleteConfirmModal()" style="color: #9CA3AF; font-size: 12px; font-weight: 800; text-decoration: underline; cursor: pointer;">🗑️ この顧客データを削除する</span>
       </div>
     </div>
   </div>
@@ -334,7 +353,6 @@
           <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
         </div>
         
-        <!-- ★NEW: 検索欄とクリアボタン -->
         <div style="position: relative; margin-bottom:12px;">
           <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="padding-right: 36px;">
           <div id="clearSearchBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: #E5E7EB; color: #9CA3AF; width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer;" onclick="clearSearch()">×</div>
@@ -398,7 +416,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">4.0.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">4.1.0</span></div>
         </div>
       </div>
     </main>
@@ -468,7 +486,7 @@
     const stylePlaceholders = { cabaret: "（例）昨日はお店来てくれて本当にありがとう🥺✨\n久しぶりに〇〇くんの顔見れて、めちゃくちゃ楽しかったよ💗", fuzoku: "（例）今日は指名してくれてありがとう🧸💓\n〇〇さんと一緒にいる時間、すごく落ち着くし癒されちゃった🛁✨", host: "（例）今日はお店来てくれてありがとな🍾✨\n最近会えてなかったから、〇〇の顔見れて普通にテンション上がったわ😎" };
     const industryAttributeTags = { cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'], fuzoku: ['M気質', 'S気質', '常連', '新規', 'キモい', '優しい', '痛客', '匂いキツめ', 'マナー良', '本番要求', 'おじさん', '若者', 'イケメン', 'デブ', 'ハゲ'], host: ['太客', '細客', 'エース', '痛客', '常連', '新規', 'メンヘラ', '金持ち', 'ケチ', '酒癖悪い', 'マナー良', '独身', '既婚', '若者', 'おばさん'] };
     let tempSelectedAttributes = [];
-    const industryConfigs = { cabaret: { prompt: "", tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラீரல்', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '📱 LINE嬉しい', '💤 おやすみ'] }, fuzoku: { prompt: "", tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長', '🌹 夢心地'] }, host: { prompt: "", tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '🤐 誰にも内緒', '🖤 独占'] } };
+    const industryConfigs = { cabaret: { prompt: "", tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '📱 LINE嬉しい', '💤 おやすみ'] }, fuzoku: { prompt: "", tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長', '🌹 夢心地'] }, host: { prompt: "", tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '🤐 誰にも内緒', '🖤 独占'] } };
     const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯', '🤳 自撮り', '🛏️ 寝起き', '🏠 お家', '🛍️ お買い物'];
 
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
@@ -723,7 +741,7 @@
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
-    // ★NEW: 写真拡大モーダルの操作
+    // 写真拡大モーダルの操作
     function openPhotoModal(url) {
       document.getElementById('expandedPhoto').src = url;
       document.getElementById('photoModal').style.display = 'flex';
@@ -840,8 +858,10 @@
           memos.forEach(m => {
               let tagsHtml = m.tags && m.tags.length > 0 ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">` + m.tags.map(t => `<span style="background:#F3F4F6; color:#4B5563; font-size:10px; padding:3px 8px; border-radius:12px; font-weight:800;">${t}</span>`).join('') + `</div>` : '';
               
-              // ★NEW: 過去ログ用の写真サムネイル
-              let photoHtml = m.photoUrl ? `<img src="${m.photoUrl}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0; box-shadow: var(--shadow-sm);" onclick="openPhotoModal('${m.photoUrl}')">` : '';
+              // ★NEW: 写真が無い場合は白い四角のプレースホルダーを表示
+              let photoHtml = m.photoUrl 
+                ? `<img src="${m.photoUrl}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0; box-shadow: var(--shadow-sm);" onclick="openPhotoModal('${m.photoUrl}')">` 
+                : `<div style="width: 44px; height: 44px; border-radius: 8px; background: #FFF; border: 1px dashed #D1D5DB; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #D1D5DB; font-size: 18px;">📷</div>`;
 
               pastMemoHtml += `
                 <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border-color); display: flex; gap: 10px; align-items: flex-start;">
@@ -883,18 +903,21 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    // ★NEW: addMemoBlockに photoUrl 引数を追加し、サムネイルを表示
     function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "") {
       const area = document.getElementById('editMemoBlocksArea'), blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9), div = document.createElement('div'); div.className = 'memo-block'; div.id = blockId; div.dataset.tags = JSON.stringify(tags);
-      if (photoUrl) div.dataset.photo = photoUrl; // 保存用にURLを保持
+      if (photoUrl) div.dataset.photo = photoUrl;
 
       const readOnlyAttr = isDemoMode ? 'readonly' : '', disabledAttr = isDemoMode ? 'disabled' : '';
 
-      const photoHtml = photoUrl ? `<img src="${photoUrl}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0;" onclick="openPhotoModal('${photoUrl}')">` : '';
+      // ★NEW: 写真が無い場合は白いプレースホルダーを表示
+      const photoHtml = photoUrl 
+        ? `<img src="${photoUrl}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0;" onclick="openPhotoModal('${photoUrl}')">` 
+        : `<div style="width: 38px; height: 38px; border-radius: 8px; background: #FFF; border: 1px dashed #D1D5DB; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #D1D5DB; font-size: 14px;">📷</div>`;
 
+      // ★NEW: 日付の幅を縮小して当たり判定を狭く
       div.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-          <input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr}>
+          <input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr} style="width: fit-content; flex: 0 1 auto; margin-right: auto; padding-right: 0;">
           ${photoHtml}
         </div>
         <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>
@@ -916,7 +939,6 @@
     function renderMemoTagDropdownContent(blockId) { const block = document.getElementById(blockId), tags = JSON.parse(block.dataset.tags || "[]"), content = block.querySelector('.memo-tag-dropdown-content'); content.innerHTML = activeTags.map(t => { const isSelected = tags.includes(t), bg = isSelected ? 'var(--input-bg)' : '#FFF', color = isSelected ? 'var(--text-sub)' : 'var(--text-main)', border = isSelected ? 'transparent' : 'var(--border-color)', opacity = isSelected ? '0.5' : '1'; return `<div onclick="toggleMemoTag('${blockId}', '${t}')" style="background:${bg}; color:${color}; border:1.5px solid ${border}; padding:6px 12px; border-radius:16px; font-size:12px; font-weight:700; cursor:pointer; opacity:${opacity}; transition:0.2s;">${t}</div>`; }).join(''); }
     function toggleMemoTag(blockId, tag) { const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); if (tags.includes(tag)) { tags = tags.filter(t => t !== tag); } else { tags.push(tag); } block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); renderMemoTagDropdownContent(blockId); }
     
-    // ★NEW: メモ保存時に dataset.photo からURLを回収する
     function buildMemoFromBlocks() { 
       const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block')); 
       return JSON.stringify(blocks.map(block => { 
@@ -934,20 +956,23 @@
     function openCreateModal() {
       isDemoMode = false; document.getElementById('modalTitle').innerText = "新規顧客の登録"; document.getElementById('isCreateMode').value = "true"; document.getElementById('editCustomerName').value = ""; document.getElementById('editCustomerName').readOnly = false; document.getElementById('customAttrInput').disabled = false; document.getElementById('addAttrBtn').style.display = 'block'; document.getElementById('addMemoBtn').style.display = 'block'; document.getElementById('saveCustomerBtn').style.display = 'block'; document.getElementById('cancelBtn').innerText = "キャンセル";
       document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
+      document.getElementById('deleteCustomerArea').style.display = 'none'; // ★新規作成時は削除リンクを隠す
+      
       tempSelectedAttributes = []; renderEditAttributeTags(); document.getElementById('editMemoBlocksArea').innerHTML = ''; addMemoBlock(); document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
     function openEditModal(index) {
-      const c = customerData[index]; 
-      isDemoMode = false; // ★一時的にダミー保護ロックを強制解除！
+      const c = customerData[index]; isDemoMode = c.tagsArray.includes("ダミー"); 
       document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】ダミー（閲覧）" : "顧客情報の編集"; document.getElementById('isCreateMode').value = "false"; document.getElementById('editCustomerIndex').value = index; document.getElementById('editCustomerName').value = c.name; editingOriginalName = c.name; 
       document.getElementById('editCustomerName').readOnly = isDemoMode; document.getElementById('customAttrInput').disabled = isDemoMode; document.getElementById('addAttrBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('addMemoBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('saveCustomerBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('cancelBtn').innerText = isDemoMode ? "閉じる" : "キャンセル";
       document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
+      
+      document.getElementById('deleteCustomerArea').style.display = isDemoMode ? 'none' : 'block'; // ★ダミー以外の編集時に削除リンクを表示
+
       tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
       const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
       const memos = parseMemoToJSON(c.memo); 
       
-      // ★NEW: 編集画面を開く時も photoUrl を渡して描画する
       if(memos.length === 0) addMemoBlock(); 
       else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || [], m.photoUrl || ""));
       
@@ -979,6 +1004,38 @@
         if((await res.json()).success) { fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
       } catch(e) { alert("エラーが発生しました。"); }
       btn.innerText = "保存する"; btn.disabled = false;
+    }
+
+    // ★NEW: 顧客削除処理の実行
+    function openDeleteConfirmModal() {
+      document.getElementById('deleteTargetName').innerText = editingOriginalName;
+      document.getElementById('deleteConfirmModal').style.display = 'flex';
+    }
+    
+    function closeDeleteConfirmModal() {
+      document.getElementById('deleteConfirmModal').style.display = 'none';
+    }
+
+    async function executeDeleteCustomer() {
+      if (isDemoMode) return;
+      const btn = document.getElementById('executeDeleteBtn'); 
+      btn.innerText = "削除中..."; 
+      btn.disabled = true;
+      try {
+        const payload = { action: "deleteCustomer", userId: userId, targetName: editingOriginalName };
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+        if((await res.json()).success) { 
+          closeDeleteConfirmModal();
+          closeEditModal();
+          // もし作成画面で今削除した顧客を選んでいたらクリアする
+          if (document.getElementById('nameInput').value === editingOriginalName) {
+             resetInputForm();
+          }
+          fetchCustomers(); 
+        } else alert("削除に失敗しました。");
+      } catch(e) { alert("エラーが発生しました。"); }
+      btn.innerText = "削除する"; 
+      btn.disabled = false;
     }
 
     function previewPhoto(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { currentBase64Image = e.target.result; document.getElementById('photoPreview').src = e.target.result; document.getElementById('photoPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; }; reader.readAsDataURL(file); }
@@ -1043,7 +1100,6 @@
 
       let newCombinedMemo = "";
       if (todayEpisode || selectedEpisodeTags.length > 0 || (isPhoto && currentBase64Image)) { 
-        // 🚨 ここではphotoUrlはまだ空。バックエンドでURLを取得してから追加してもらう。
         const newEpisodeObj = { date: getTodayFormatted(), text: todayEpisode, tags: [...selectedEpisodeTags] }; 
         memos.push(newEpisodeObj); 
       }
