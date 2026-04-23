@@ -100,7 +100,6 @@
     .compact-view .card-memo { display: none !important; }
     .compact-view .card-tags { margin-top: 6px; }
 
-    /* ★FIX: スケルトン（ローディング）を薄いグレーに修正 */
     .skeleton { 
       background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%); 
       background-size: 200% 100%; 
@@ -339,6 +338,10 @@
         <button onclick="closeEditModal()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800;" id="cancelBtn">閉じる</button>
         <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">全体を保存する</button>
       </div>
+
+      <div id="deleteCustomerArea" style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border-color);">
+        <span onclick="openDeleteConfirmModal()" style="color: #9CA3AF; font-size: 12px; font-weight: 800; text-decoration: underline; cursor: pointer;">🗑️ この顧客データを完全に削除する</span>
+      </div>
     </div>
   </div>
 
@@ -498,7 +501,7 @@
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.0.0 (Clean)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.5.0 (Sandbox)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
@@ -557,27 +560,6 @@
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function getTodayFormatted() { return getTodayString().replace(/-/g, '/'); }
 
-    // ★FIX: UIのセットアップ
-    function renderTexts() {
-      document.getElementById('setup-title').innerText = AppTexts.setupModal.title;
-      document.getElementById('setup-desc').innerText = AppTexts.setupModal.desc;
-      document.getElementById('text-style-cute').innerText = AppTexts.styleModal.cute;
-      document.getElementById('text-style-neat').innerText = AppTexts.styleModal.neat;
-      document.getElementById('text-style-custom').innerText = AppTexts.styleModal.custom;
-      document.getElementById('help-title').innerText = AppTexts.helpModal.title;
-      const helpContainer = document.getElementById('help-sections-container');
-      helpContainer.innerHTML = AppTexts.helpModal.sections.map(sec => `
-        <div style="margin-bottom: 24px;">
-          <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
-            <span>${sec.icon}</span> ${sec.title}
-          </h3>
-          <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
-            ${sec.content}
-          </p>
-        </div>
-      `).join('');
-    }
-
     function showCuteToast(isComplete) {
       const toast = document.getElementById('cuteToast');
       const icon = document.getElementById('cuteToastIcon');
@@ -634,13 +616,13 @@
         });
       });
 
-      // ★FIX: LIFF初期化を待たずにフェッチを開始し、初期表示を爆速化
+      // ★FIX: LIFF初期化を待たずに即座にフェッチを開始する
       liff.init({ liffId: LIFF_ID }).then(async () => { 
         if (liff.isLoggedIn()) {
           userId = (await liff.getProfile()).userId;
-          fetchCustomers(); 
+          fetchCustomers(); // 正式なIDが取れたら再取得
         }
-      }).catch(e => console.error(e));
+      }).catch(e => console.error("LIFF Init Error:", e));
 
       if (localStorage.getItem('myCustomAttrs')) myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
       const savedType = localStorage.getItem('businessType');
@@ -648,7 +630,9 @@
       if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
       
       loadStyleSettings(); loadAlertSettings(); updateChips(); 
-      fetchCustomers(); // 初期ロード用に実行
+      
+      // テストユーザーとして即座にリストを描画
+      fetchCustomers(); 
     }
     window.onload = init;
 
@@ -657,7 +641,7 @@
       const pass = prompt("開発者パスワードを入力してください:");
       if (pass === "0804") {
         isDevMode = true;
-        alert("開発者モードを有効にしました。ダミー顧客の編集が可能です。");
+        alert("開発者モードを有効にしました。ダミー顧客（テストユーザー）の裏側への保存・削除が可能になります。");
       } else if (pass !== null) { alert("パスワードが違います。"); }
     }
 
@@ -791,7 +775,10 @@
         const data = await res.json();
         customerData = data.success ? data.customers.map(c => ({ ...c, name: String(c.name || "名前なし"), memo: String(c.memo || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : [] })) : [];
         renderCustomerList(); renderQuickAccess(); updateAlertBadge();
-      } catch (e) { alert("データ読み込みエラーの詳細:\n" + e.message); console.error(e); }
+      } catch (e) { 
+        // ★FIX: ロードエラーのアラートを非表示にし、コンソールのみに出力
+        console.error("fetchCustomers Error:", e); 
+      }
     }
 
     function parseMemoToJSON(memoStr) {
@@ -926,7 +913,6 @@
       });
     }
 
-    // 長押し判定処理（引数を修正し、エラーを防止）
     let pressTimer;
     let startX = 0; let startY = 0;
 
@@ -1059,8 +1045,15 @@
 
     async function updateCustomerTagsOnly(name, tagsArray, memo) {
       const memoJson = typeof memo === 'string' ? memo : JSON.stringify(memo);
+      const c = customerData.find(cust => cust.name === name);
+      // ★FIX: ダミー顧客の場合は通信せず、変更を一時反映するだけ
+      if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
+        c.tagsArray = tagsArray; 
+        fetchCustomers(); // 再描画
+        return; 
+      }
+
       const payload = { action: "updateCustomer", userId: userId, oldName: name, newName: name, newTags: tagsArray.join(', '), newMemo: memoJson };
-      
       try {
         const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
         if((await res.json()).success) { fetchCustomers(); } else { alert("エラーが発生しました。"); }
@@ -1111,6 +1104,14 @@
 
     async function deleteHidden(name) {
         if(!confirm(`「${name}」のデータを完全に削除しますか？\nこの操作は元に戻せません。`)) return;
+        
+        // ★FIX: ダミーは削除できないように保護
+        const c = customerData.find(cust => cust.name === name);
+        if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
+          alert("お手本（ダミー）データのため、削除はできません。\n(開発者モード時のみ可能)");
+          return;
+        }
+
         try {
             const payload = { action: "deleteCustomer", userId: userId, targetName: name };
             const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
@@ -1169,6 +1170,7 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
+    // ★FIX: ダミーでも編集できる完全なSandbox化（引数のreadonlyなどを撤廃）
     function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "", isExpanded = false) {
       const area = document.getElementById('editMemoBlocksArea'); 
       const blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9); 
@@ -1178,8 +1180,8 @@
       div.dataset.tags = JSON.stringify(tags);
       if (photoUrl) div.dataset.photo = photoUrl;
 
-      const readOnlyAttr = isDemoMode ? 'readonly' : '';
-      const disabledAttr = isDemoMode ? 'disabled' : '';
+      const readOnlyAttr = '';
+      const disabledAttr = '';
 
       const tagsText = tags.length > 0 ? tags.map(t => `#${t}`).join(' ') : '<span style="color:#9CA3AF;">タグなし</span>';
       const previewText = text ? text.split('\n')[0] : '<span style="color:#9CA3AF;">本文なし</span>';
@@ -1195,7 +1197,7 @@
 
       const photoHtmlDetail = photoUrl ? `<img src="${photoUrl}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.8); cursor:pointer; pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}', event);">` : `<div style="width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:14px;">📷</div>`;
 
-      const actionButtons = isDemoMode ? '' : `
+      const actionButtons = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(229,231,235,0.6);">
           <button type="button" onclick="deleteMemoBlock('${blockId}')" style="background:#FEE2E2; color:#EF4444; border:none; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px;">🗑️</button>
           <button type="button" onclick="quickSaveMemoBlock('${blockId}')" style="background:var(--primary-gradient); color:#FFF; border:none; padding:10px 20px; border-radius:20px; font-weight:800; font-size:13px; box-shadow:var(--shadow-sm);">💾 このまま保存</button>
@@ -1207,7 +1209,7 @@
           <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>
           <div class="memo-tags-area" style="margin-top:8px; position:relative;">
             <div class="memo-selected-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;"></div>
-            ${isDemoMode ? '' : `<button type="button" class="memo-add-tag-btn" onclick="toggleMemoTagDropdown('${blockId}')" style="background:rgba(253,242,248,0.7); border:1.5px dashed rgba(251,207,232,0.8); color:#DB2777; font-size:11px; padding:6px 12px; border-radius:14px; font-weight:800; cursor:pointer; transition:0.2s;">＋ エピソードタグを追加</button>`}
+            <button type="button" class="memo-add-tag-btn" onclick="toggleMemoTagDropdown('${blockId}')" style="background:rgba(253,242,248,0.7); border:1.5px dashed rgba(251,207,232,0.8); color:#DB2777; font-size:11px; padding:6px 12px; border-radius:14px; font-weight:800; cursor:pointer; transition:0.2s;">＋ エピソードタグを追加</button>
             <div class="memo-tag-dropdown" style="display:none; background:rgba(255,255,255,0.9); backdrop-filter: blur(10px); border:1.5px solid var(--border-color); border-radius:16px; padding:12px; margin-top:10px; box-shadow: var(--shadow-md); position: absolute; z-index: 20; width: 100%;"><div style="position:absolute; top:-6px; left:20px; width:10px; height:10px; background:#FFF; border-top:1.5px solid var(--border-color); border-left:1.5px solid var(--border-color); transform:rotate(45deg);"></div><div class="memo-tag-dropdown-content" style="display:flex; flex-wrap:wrap; gap:6px; max-height: 120px; overflow-y: auto;"></div><div style="text-align:right; margin-top:8px;"><button type="button" onclick="toggleMemoTagDropdown('${blockId}')" style="background:var(--input-bg); color:var(--text-main); border:none; padding:4px 10px; border-radius:10px; font-size:10px; font-weight:800; cursor:pointer;">閉じる</button></div></div>
           </div>
           ${actionButtons}
@@ -1244,7 +1246,7 @@
     function quickSaveMemoBlock(blockId) { collapseMemoBlock(blockId); saveCustomerEdit(); }
     function addNewMemoBlock() { addMemoBlock(getTodayString(), "", [], "", true); }
     function renderMemoTags(blockId) { const block = document.getElementById(blockId); if(!block) return; const tags = JSON.parse(block.dataset.tags || "[]"), selectedArea = block.querySelector('.memo-selected-tags'); selectedArea.innerHTML = tags.map((t, index) => `<span style="background:var(--primary-gradient); color:#FFF; font-size:11px; padding:4px 10px; border-radius:14px; font-weight:800; display:flex; align-items:center; gap:4px; box-shadow:var(--shadow-sm);">${t} <span onclick="removeMemoTag('${blockId}', ${index})" style="cursor:pointer; margin-left:2px;">×</span></span>`).join(''); }
-    function removeMemoTag(blockId, index) { if(isDemoMode) return; const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); tags.splice(index, 1); block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); const dropdown = block.querySelector('.memo-tag-dropdown'); if (dropdown.style.display !== 'none') renderMemoTagDropdownContent(blockId); }
+    function removeMemoTag(blockId, index) { const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); tags.splice(index, 1); block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); const dropdown = block.querySelector('.memo-tag-dropdown'); if (dropdown.style.display !== 'none') renderMemoTagDropdownContent(blockId); }
     function toggleMemoTagDropdown(blockId) { const block = document.getElementById(blockId), dropdown = block.querySelector('.memo-tag-dropdown'); if (dropdown.style.display === 'none') { renderMemoTagDropdownContent(blockId); dropdown.style.display = 'block'; } else { dropdown.style.display = 'none'; } }
     function renderMemoTagDropdownContent(blockId) { const block = document.getElementById(blockId), tags = JSON.parse(block.dataset.tags || "[]"), content = block.querySelector('.memo-tag-dropdown-content'); content.innerHTML = activeTags.map(t => { const isSelected = tags.includes(t), bg = isSelected ? 'var(--input-bg)' : '#FFF', color = isSelected ? 'var(--text-sub)' : 'var(--text-main)', border = isSelected ? 'transparent' : 'var(--border-color)', opacity = isSelected ? '0.5' : '1'; return `<div onclick="toggleMemoTag('${blockId}', '${t}')" style="background:${bg}; color:${color}; border:1.5px solid ${border}; padding:6px 12px; border-radius:16px; font-size:12px; font-weight:700; cursor:pointer; opacity:${opacity}; transition:0.2s;">${t}</div>`; }).join(''); }
     function toggleMemoTag(blockId, tag) { const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); if (tags.includes(tag)) { tags = tags.filter(t => t !== tag); } else { tags.push(tag); } block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); renderMemoTagDropdownContent(blockId); }
@@ -1256,16 +1258,38 @@
     function openCreateModal() {
       isDemoMode = false; document.getElementById('modalTitle').innerText = "新規顧客の登録"; document.getElementById('isCreateMode').value = "true"; document.getElementById('editCustomerName').value = ""; document.getElementById('editCustomerName').readOnly = false; document.getElementById('customAttrInput').disabled = false; document.getElementById('addAttrBtn').style.display = 'block'; document.getElementById('addMemoBtn').style.display = 'block'; document.getElementById('saveCustomerBtn').style.display = 'block'; document.getElementById('cancelBtn').innerText = "キャンセル";
       document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
+      document.getElementById('deleteCustomerArea').style.display = 'none'; 
+      
+      document.getElementById('editCustomerArchive').checked = false;
+      document.getElementById('archiveToggleArea').style.display = 'flex';
+
       tempSelectedAttributes = []; renderEditAttributeTags(); document.getElementById('editMemoBlocksArea').innerHTML = ''; addNewMemoBlock(); document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
+    // ★FIX: ダミー顧客を開いた時も、本物の客と100%同じUI（Sandbox）にする
     function openEditModal(index) {
       const c = customerData[index]; 
       isDemoMode = c.tagsArray.includes("ダミー") && !isDevMode; 
       
-      document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】ダミー（閲覧）" : "顧客情報の編集"; document.getElementById('isCreateMode').value = "false"; document.getElementById('editCustomerIndex').value = index; document.getElementById('editCustomerName').value = c.name; editingOriginalName = c.name; 
-      document.getElementById('editCustomerName').readOnly = isDemoMode; document.getElementById('customAttrInput').disabled = isDemoMode; document.getElementById('addAttrBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('addMemoBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('saveCustomerBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('cancelBtn').innerText = isDemoMode ? "閉じる" : "キャンセル";
-      document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
+      document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】ダミー（保存されません）" : "顧客情報の編集"; 
+      document.getElementById('isCreateMode').value = "false"; 
+      document.getElementById('editCustomerIndex').value = index; 
+      document.getElementById('editCustomerName').value = c.name; 
+      editingOriginalName = c.name; 
+      
+      document.getElementById('editCustomerName').readOnly = false; 
+      document.getElementById('customAttrInput').disabled = false; 
+      document.getElementById('addAttrBtn').style.display = 'block'; 
+      document.getElementById('addMemoBtn').style.display = 'block'; 
+      document.getElementById('saveCustomerBtn').style.display = 'block'; 
+      document.getElementById('cancelBtn').innerText = "キャンセル";
+      document.getElementById('tagAccordionContent').classList.remove('open'); 
+      document.getElementById('tagAccordionIcon').innerText = '▼';
+      
+      document.getElementById('deleteCustomerArea').style.display = 'block'; 
+
+      document.getElementById('editCustomerArchive').checked = c.tagsArray.includes('非表示');
+      document.getElementById('archiveToggleArea').style.display = 'flex';
 
       tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
       const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
@@ -1284,16 +1308,28 @@
       allTags.forEach(tag => {
         if (tag === '非表示' || tag === '一軍固定') return; 
         const isSelected = tempSelectedAttributes.includes(tag), bg = isSelected ? '#DB2777' : '#FDF2F8', color = isSelected ? '#FFF' : '#DB2777', border = isSelected ? '1px solid #DB2777' : '1px solid #FBCFE8';
-        area.innerHTML += `<div onclick="toggleAttributeTag('${tag}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:${isDemoMode ? 'default' : 'pointer'}; user-select:none;">#${tag}</div>`;
+        area.innerHTML += `<div onclick="toggleAttributeTag('${tag}')" style="background:${bg}; color:${color}; border:${border}; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; user-select:none;">#${tag}</div>`;
       });
     }
 
-    function toggleAttributeTag(tag) { if (isDemoMode) return; tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); }
+    function toggleAttributeTag(tag) { tempSelectedAttributes = tempSelectedAttributes.includes(tag) ? tempSelectedAttributes.filter(t => t !== tag) : [...tempSelectedAttributes, tag]; renderEditAttributeTags(); }
     function addCustomAttributeTag() { const v = document.getElementById('customAttrInput').value.trim(); if(v) { if(!myCustomAttrs.includes(v)) { myCustomAttrs.unshift(v); localStorage.setItem('myCustomAttrs', JSON.stringify(myCustomAttrs)); } if(!tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); } document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } }
     function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
 
+    // ★FIX: ダミー顧客の場合は保存したフリをして閉じる
     async function saveCustomerEdit() {
-      if (isDemoMode) return closeEditModal();
+      if (isDemoMode) {
+        closeEditModal();
+        return;
+      }
+
+      const isArchiveChecked = document.getElementById('editCustomerArchive').checked;
+      if (isArchiveChecked && !tempSelectedAttributes.includes('非表示')) {
+        tempSelectedAttributes.push('非表示');
+      } else if (!isArchiveChecked && tempSelectedAttributes.includes('非表示')) {
+        tempSelectedAttributes = tempSelectedAttributes.filter(t => t !== '非表示');
+      }
+
       const isCreate = document.getElementById('isCreateMode').value === "true", newName = document.getElementById('editCustomerName').value.trim(), newMemo = buildMemoFromBlocks(), newTagsStr = tempSelectedAttributes.join(', ');
       if(!newName) return alert("名前は必須です");
       const btn = document.getElementById('saveCustomerBtn'); btn.innerText = "保存中..."; btn.disabled = true;
@@ -1303,6 +1339,41 @@
         if((await res.json()).success) { fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
       } catch(e) { alert("エラーが発生しました。"); }
       btn.innerText = "全体を保存する"; btn.disabled = false;
+    }
+
+    function openDeleteConfirmModal() {
+      document.getElementById('deleteTargetName').innerText = editingOriginalName;
+      document.getElementById('deleteConfirmModal').style.display = 'flex';
+    }
+    
+    function closeDeleteConfirmModal() {
+      document.getElementById('deleteConfirmModal').style.display = 'none';
+    }
+
+    // ★FIX: ダミー顧客は削除できないようにガード
+    async function executeDeleteCustomer() {
+      if (isDemoMode) {
+        alert("お手本（ダミー）データのため、削除はできません。\n(開発者モード時のみ可能)");
+        closeDeleteConfirmModal();
+        return;
+      }
+      const btn = document.getElementById('executeDeleteBtn'); 
+      btn.innerText = "削除中..."; 
+      btn.disabled = true;
+      try {
+        const payload = { action: "deleteCustomer", userId: userId, targetName: editingOriginalName };
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+        if((await res.json()).success) { 
+          closeDeleteConfirmModal();
+          closeEditModal();
+          if (document.getElementById('nameInput').value === editingOriginalName) {
+             resetInputForm();
+          }
+          fetchCustomers(); 
+        } else alert("削除に失敗しました。");
+      } catch(e) { alert("エラーが発生しました。"); }
+      btn.innerText = "削除する"; 
+      btn.disabled = false;
     }
 
     function previewPhoto(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { currentBase64Image = e.target.result; document.getElementById('photoPreview').src = e.target.result; document.getElementById('photoPreview').style.display = 'block'; document.getElementById('uploadText').style.display = 'none'; }; reader.readAsDataURL(file); }
