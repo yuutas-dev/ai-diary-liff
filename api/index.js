@@ -60,9 +60,8 @@ export default async function handler(req, res) {
 
     // 4. AI日記生成
     if (action === 'generate') {
-      if (userId === "test-user") {
-        return res.status(200).json({ success: true, generatedText: "※テスト環境のためAI生成と保存はスキップされました。\n\n【送ろうとしたエピソード】\n" + data.episode });
-      }
+      // ★FIX: ここにあったテストユーザーのブロックを削除しました！
+      // これにより test-user でも正常にSupabaseへ保存され、Difyへのリクエストが飛びます。
 
       let uploadFileId = null;
       let photoUrl = null;
@@ -146,7 +145,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, generatedText: aiText });
     }
 
-    // ★NEW: 5. 顧客の削除機能
+    // 5. 顧客の削除機能
     if (action === 'deleteCustomer') {
       const { error } = await supabase.from('customers')
         .delete()
