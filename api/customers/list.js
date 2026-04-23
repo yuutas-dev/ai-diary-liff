@@ -20,42 +20,81 @@ export default async function handler(req, res) {
     if (typeof req.body === 'string') data = JSON.parse(req.body);
     const userId = data?.userId || 'test-user';
 
-    const supabaseUrl = (process.env.SUPABASE_URL || 'https://fdlfwtlzphntfontwcfa.supabase.co').trim();
+    const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
     const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
     if (!supabaseUrl || !supabaseKey) throw new Error('Vercelの環境変数が読み込めていません');
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const [userRes, dummyRes] = await Promise.all([
-      supabase.from('customers').select('name, memo, tags').eq('user_id', userId),
-      supabase.from('customers').select('name, memo, tags').contains('tags', ['ダミー'])
+    // 1. customers 取得 (自身 + ダミー)
+    const [userCustRes, dummyCustRes] = await Promise.all([
+      supabase.from('customers').select('*').eq('user_id', userId),
+      supabase.from('customers').select('*').contains('tags', ['ダミー'])
     ]);
 
-    if (userRes.error) throw new Error('Supabaseユーザーデータ取得エラー: ' + userRes.error.message);
+    if (userCustRes.error) throw new Error('Supabaseユーザーデータ取得エラー: ' + userCustRes.error.message);
 
-    let dummyData = [];
-    if (dummyRes.error) {
-      const fallbackRes = await supabase.from('customers').select('name, memo, tags').ilike('tags', '%ダミー%');
-      if (!fallbackRes.error) dummyData = fallbackRes.data || [];
-    } else {
-      dummyData = dummyRes.data || [];
+    let dummyCustomers = dummyCustRes.data || [];
+    if (dummyCustRes.error) {
+      // jsonb非対応フォールバック
+      const fallbackRes = await supabase.from('customers').select('*').ilike('tags', '%ダミー%');
+      if (!fallbackRes.error) dummyCustomers = fallbackRes.data || [];
     }
 
-    const userData = userRes.data || [];
-    const combinedMap = new Map();
+    const userData = userCustRes.data || [];
+    const combinedCustMap = new Map();
 
-    dummyData.forEach(r => {
-      const tagsArray = normalizeTags(r.tags);
-      if (tagsArray.includes('ダミー')) combinedMap.set(r.name, r);
+    dummyCustomers.forEach(c => {
+      if (normalizeTags(c.tags).includes('ダミー')) combinedCustMap.set(c.id, c);
+    });
+    userData.forEach(c => combinedCustMap.set(c.id, c));
+    const finalCustomers = Array.from(combinedCustMap.values());
+
+    const customerIds = finalCustomers.map(c => c.id);
+
+    // 2. customer_entries 取得
+    const { data: entriesData, error: entriesError } = await supabase
+      .from('customer_entries')
+      .select('*')
+      .in('customer_id', customerIds)
+      .order('entry_date', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (entriesError) throw new Error('エントリ取得エラー: ' + entriesError.message);
+
+    const entriesMap = {};
+    (entriesData || []).forEach(e => {
+      if (!entriesMap[e.customer_id]) entriesMap[e.customer_id] = [];
+      entriesMap[e.customer_id].push(e);
     });
 
-    userData.forEach(r => combinedMap.set(r.name, r));
+    // 3. マッピング (フロントとの互換性を維持したmemo再構築)
+    const customers = finalCustomers.map(c => {
+      const entries = entriesMap[c.id];
+      let reconstructedMemo;
 
-    const customers = Array.from(combinedMap.values()).map(r => ({
-      name: r.name,
-      memo: typeof r.memo === 'string' ? r.memo : JSON.stringify(r.memo || []),
-      tags: normalizeTags(r.tags).join(', ')
-    }));
+      if (entries && entries.length > 0) {
+        // 新テーブルのデータから旧互換のJSONを再構築
+        const memoArr = entries.map(e => ({
+          date: e.entry_date,
+          text: e.input_memo || '',
+          tags: e.input_tags || [],
+          photoUrl: e.photo_url || undefined,
+          type: e.entry_type, // 'visit' or 'sales' をフロントへ渡す
+          status: e.delivery_status
+        }));
+        reconstructedMemo = JSON.stringify(memoArr);
+      } else {
+        // フォールバック (未移行やダミーなど)
+        reconstructedMemo = typeof c.memo === 'string' ? c.memo : JSON.stringify(c.memo || []);
+      }
+
+      return {
+        name: c.name,
+        memo: reconstructedMemo,
+        tags: normalizeTags(c.tags).join(', ')
+      };
+    });
 
     return sendJson(res, 200, { success: true, customers });
   } catch (err) {
