@@ -566,83 +566,93 @@
       }
     }
 
-    async function init() {
-      renderTexts();
-      const params = new URLSearchParams(window.location.search);
-      const pageParam = params.get('page');
-      const modeParam = params.get('mode');
-      if (pageParam) {
-        const pageRadio = document.getElementById('nav-' + pageParam);
-        if (pageRadio) pageRadio.checked = true;
-      }
-      if (modeParam) {
-        const modeRadio = document.getElementById('mode-' + modeParam);
-        if (modeRadio) modeRadio.checked = true;
-      }
-      const scrollArea = document.querySelector('.scroll-area');
-      const searchContainer = document.getElementById('searchContainer');
-      let lastScrollTop = 0;
-      let currentSearchOffset = 0;
-      if (scrollArea) {
-        scrollArea.addEventListener('scroll', () => {
-          const navData = document.getElementById('nav-data');
-          if (!navData || !navData.checked) return;
-          const st = scrollArea.scrollTop;
-          const diff = st - lastScrollTop;
-          if (st > 30) {
-            currentSearchOffset -= diff;
-            if (currentSearchOffset < -60) currentSearchOffset = -60;
-            if (currentSearchOffset > 0) currentSearchOffset = 0;
-          } else {
-            currentSearchOffset = 0;
+  async function init() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
+    if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
+    
+    document.getElementById('nav-data').addEventListener('change', (e) => {
+      if (e.target.checked && !isFilterScrolled) {
+        setTimeout(() => {
+          const container = document.querySelector('.filter-container');
+          const allTab = document.getElementById('filter-btn-all');
+          if (container && allTab) {
+            container.scrollTo({ left: allTab.offsetLeft - 20, behavior: 'smooth' });
+            isFilterScrolled = true;
           }
-          if (searchContainer) {
-            searchContainer.style.transform = `translateY(${currentSearchOffset}px)`;
-            searchContainer.style.marginBottom = `${currentSearchOffset}px`;
-          }
-          lastScrollTop = st <= 0 ? 0 : st;
-        }, { passive: true });
+        }, 50);
       }
-      document.querySelectorAll('input[name="nav"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-          const area = document.querySelector('.scroll-area');
-          if (area) area.scrollTop = 0;
-        });
-      });
-      try {
-        await liff.init({ liffId: LIFF_ID });
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          if (profile?.userId) userId = profile.userId;
-        } else {
-          // LIFF外ブラウザ対策
-          console.warn('LIFF未ログインのため test-user を使用します');
+    });
+
+    const scrollArea = document.querySelector('.scroll-area');
+    let lastScrollTop = 0;
+    let isSearchHidden = false;
+
+    scrollArea.addEventListener('scroll', () => {
+      if (document.getElementById('nav-data').checked) {
+        let st = scrollArea.scrollTop;
+        const searchContainer = document.getElementById('searchContainer');
+
+        if (st > lastScrollTop && st > 50) {
+          if (!isSearchHidden) {
+            searchContainer.style.maxHeight = '0px';
+            searchContainer.style.opacity = '0';
+            searchContainer.style.marginBottom = '0px';
+            isSearchHidden = true;
+          }
+        } else if (st < lastScrollTop - 10) {
+          if (isSearchHidden) {
+            searchContainer.style.maxHeight = '60px';
+            searchContainer.style.opacity = '1';
+            searchContainer.style.marginBottom = '12px';
+            isSearchHidden = false;
+          }
         }
-      } catch (e) {
-        console.error("LIFF Init Error:", e);
+        lastScrollTop = st <= 0 ? 0 : st;
       }
-      try {
-        const savedAttrs = localStorage.getItem('myCustomAttrs');
-        if (savedAttrs) myCustomAttrs = JSON.parse(savedAttrs);
-      } catch (e) {
-        console.error('myCustomAttrs parse error:', e);
-        myCustomAttrs = [];
-      }
-      const savedType = localStorage.getItem('businessType');
-      if (!savedType) {
-        document.getElementById('setupModal').style.display = 'flex';
-      } else {
-        document.getElementById('businessType').value = savedType;
-      }
-      if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
-      loadStyleSettings();
-      loadAlertSettings();
-      updateChips();
-      // ★重要:
-      // 初回起動直後は LIFF / LINE内ブラウザの通信が不安定なことがあるため、
-      // test-user のときは空表示で確定せず、少し待って再試行する
-      await fetchCustomers({ retryIfTestUser: true, retryCount: 3 });
+    }, { passive: true });
+
+    document.querySelectorAll('input[name="nav"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.querySelector('.scroll-area').scrollTop = 0;
+      });
+    });
+
+    try {
+      await liff.init({ liffId: LIFF_ID });
+      if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId;
+    } catch (e) {}
+
+    if (localStorage.getItem('myCustomAttrs')) {
+      myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
     }
+
+    const savedType = localStorage.getItem('businessType');
+    if (!savedType) {
+      document.getElementById('setupModal').style.display = 'flex';
+    } else {
+      document.getElementById('businessType').value = savedType;
+    }
+
+    if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
+    
+    loadStyleSettings();
+    loadAlertSettings();
+    updateChips();
+    fetchCustomers();
+
+    if (document.getElementById('nav-data').checked && !isFilterScrolled) {
+      setTimeout(() => {
+        const container = document.querySelector('.filter-container');
+        const allTab = document.getElementById('filter-btn-all');
+        if (container && allTab) {
+          container.scrollTo({ left: allTab.offsetLeft - 20, behavior: 'smooth' });
+          isFilterScrolled = true;
+        }
+      }, 300);
+    }
+  }
+    
     window.onload = init;
 
     function promptDevMode() {
