@@ -748,26 +748,26 @@
     .help-section {
       background: rgba(253, 242, 248, 0.7);
       border: 1px solid rgba(251, 207, 232, 0.9);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 12px;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
     }
 
     .help-section h4 {
-      margin: 0 0 8px;
-      font-size: 14px;
+      margin: 0 0 4px;
+      font-size: 13px;
       font-weight: 900;
       color: #831843;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .help-section p {
       margin: 0;
       color: #4B5563;
-      font-size: 13px;
-      line-height: 1.7;
+      font-size: 11px;
+      line-height: 1.5;
       font-weight: 700;
     }
 
@@ -1070,12 +1070,12 @@
     <div class="half-modal-handle"></div>
     <h3 id="actionModalName" style="margin: 0 0 16px; font-weight: 900; text-align: center; color: var(--text-main);"></h3>
     <button id="btnToggleVip" onclick="toggleVipPin()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:16px; font-weight:800; font-size:15px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"></button>
-    <button onclick="setHidden()" style="width:100%; background:#FEE2E2; color:#EF4444; border:none; padding:16px; border-radius:16px; font-weight:800; font-size:15px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">💤 非表示にする</button>
+    <button onclick="setHidden()" style="width:100%; background:#FEE2E2; color:#EF4444; border:none; padding:16px; border-radius:16px; font-weight:800; font-size:15px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">🗑️ 削除する（ゴミ箱へ）</button>
   </div>
 
   <div id="hiddenListModal" class="modal-overlay" style="z-index: 10005;">
     <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
-      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">💤 非表示にした顧客</h2>
+      <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;">🗑️ 削除した顧客</h2>
       <div id="hiddenCustomersArea" style="overflow-y: auto; flex: 1; padding-bottom: 20px; margin: -10px;"></div>
       <button onclick="closeHiddenListModal()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 20px;">閉じる</button>
     </div>
@@ -1132,7 +1132,7 @@
 
   <div id="deleteConfirmModal" class="modal-overlay" style="z-index:10006;">
     <div class="modal-content" style="max-width:360px; text-align:center;">
-      <h3 style="margin:0 0 12px; font-weight:900; color:#111827;">顧客を削除しますか？</h3>
+      <h3 style="margin:0 0 12px; font-weight:900; color:#111827;">顧客を完全に削除しますか？</h3>
       <p style="margin:0 0 8px; font-size:14px; color:#6B7280; font-weight:700;">この操作は元に戻せません。</p>
       <p style="margin:0 0 20px; font-size:15px; color:#DB2777; font-weight:900;" id="deleteTargetName"></p>
       <div style="display:flex; gap:10px;">
@@ -1151,12 +1151,8 @@
       <span class="label">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
 
-      <div id="archiveToggleArea" style="background: #F3F4F6; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 13px; font-weight: 800; color: #4B5563;">💤 この顧客を非表示にする</span>
-        <label class="switch">
-          <input type="checkbox" id="editCustomerArchive">
-          <span class="slider"></span>
-        </label>
+      <div id="archiveToggleArea" style="display: none !important;">
+        <input type="checkbox" id="editCustomerArchive">
       </div>
 
       <div class="accordion-header" onclick="toggleTagAccordion()">
@@ -1174,7 +1170,7 @@
       <div class="memo-blocks-wrapper"><div id="editMemoBlocksArea"></div></div>
       <div class="add-memo-btn" id="addMemoBtn" onclick="addNewMemoBlock()">＋ 日付とエピソードを追加</div>
 
-      <div id="deleteCustomerArea" style="display:none; margin-bottom:16px;">
+      <div id="deleteCustomerArea" style="display:none !important; margin-bottom:16px;">
         <button onclick="openDeleteConfirmModal()" style="width:100%; background:#FEE2E2; color:#EF4444; border:none; padding:14px; border-radius:16px; font-weight:800;">🗑️ この顧客を削除する</button>
       </div>
 
@@ -1213,7 +1209,7 @@
 
         <div class="card mode-photo-ui">
           <span class="label">📷 写真を選ぶ</span>
-          <input type="file" id="photoUpload" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto(event)">
+          <input type="file" id="photoUpload" accept="image/*" style="display:none;" onchange="previewPhoto(event)">
           <div id="uploadArea" class="upload-area" onclick="triggerPhotoUpload()">
             <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
             <img id="photoPreview" alt="">
@@ -1326,7 +1322,7 @@
         </div>
 
         <div class="settings-list">
-          <div class="settings-item" onclick="openHiddenListModal()"><span>💤 非表示にした顧客</span><span style="color:var(--border-color);">▶</span></div>
+          <div class="settings-item" onclick="openHiddenListModal()"><span>🗑️ 削除した顧客（ゴミ箱）</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="openHelpModal()"><span>📖 アプリの使い方と仕様（必読）</span><span style="color:var(--border-color);">▶</span></div>
         </div>
         <div class="settings-list" style="margin-bottom: 40px;">
@@ -1354,9 +1350,10 @@
       helpModal: {
         title: "📖 アプリの使い方と仕様",
         sections: [
-          { icon: "👑", title: "自動ランク付け", content: "過去の接客エピソード数をシステムが自動カウントし、名前に<strong>「🔰新規」「✌️2回目」「👑常連」</strong>のバッジを付与します。" },
-          { icon: "🚨", title: "放置アラート（呼び戻し）", content: "設定日数以上来店がないお客様には、名前横に<strong>「🚨◯日放置」</strong>と表示されます。「要連絡」タブを開くと対象者が優先表示され、AIが自動で「会いたい」感情タグを組み込みます。" },
-          { icon: "💎", title: "VIP（一軍）の特別扱い", content: "顧客のタグに<strong>「太客」「エース」「VIP」</strong>等を設定すると、AIが「VIP客」と認識し、リストで常に金枠で最上位に表示されます。また、顧客カードを長押しすることで「💎一軍に固定」することも可能です。" }
+          { icon: "👑", title: "自動ランク付け", content: "過去のエピソード数を自動カウントし、「🔰新規」「✌️2回目」「👑常連」バッジを付与。" },
+          { icon: "🚨", title: "放置アラート", content: "設定日数以上来店がないと「🚨◯日放置」と表示。「会いたい」タグが自動追加されます。" },
+          { icon: "💎", title: "VIP（一軍）", content: "「太客」「VIP」等のタグで金枠・最上位表示。カード長押しで「💎一軍に固定」も可能。" },
+          { icon: "🗑️", title: "長押しで削除", content: "カードを長押しすると顧客を削除（ゴミ箱へ移動）できます。設定の「削除した顧客」から復元・完全削除が可能です。" }
         ]
       },
       styleModal: {
@@ -2148,7 +2145,8 @@
       if (isCompactMode) area.classList.add('compact-view');
       else area.classList.remove('compact-view');
     }
-        function openCardActionModal(index) {
+
+    function openCardActionModal(index) {
       actionTargetIndex = index;
       const c = customerData[index];
       const isPinned = c.tagsArray.includes('一軍固定');
@@ -2229,7 +2227,7 @@
       const hidden = customerData.filter(c => c.tagsArray.includes('非表示'));
 
       if (hidden.length === 0) {
-        area.innerHTML = '<p style="text-align:center; color:#9CA3AF; margin-top:40px; font-weight:bold;">非表示の顧客はいません</p>';
+        area.innerHTML = '<p style="text-align:center; color:#9CA3AF; margin-top:40px; font-weight:bold;">削除された顧客はいません</p>';
       } else {
         hidden.forEach((c) => {
           const memos = parseMemoToJSON(c.memo);
@@ -2238,17 +2236,17 @@
             const lastM = memos[memos.length - 1];
             previewMemo = lastM.text ? lastM.text.substring(0,30) + "..." : "メモなし";
           }
+          const safeName = c.name.replace(/'/g, "\\'");
 
           area.innerHTML += `
-            <div class="card compact-view" style="padding:16px 14px !important; margin-bottom:10px !important; background:rgba(255,255,255,0.8); border: 1px solid rgba(229, 231, 235, 0.6); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+            <div class="card compact-view" style="padding:16px 14px !important; margin-bottom:10px !important; background:rgba(255,255,255,0.8); border: 1px solid rgba(229, 231, 235, 0.6); box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor:pointer;" onclick="promptDeleteHidden('${safeName}')">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="flex:1; overflow:hidden; padding-right: 10px;">
                   <b style="font-size:15px; color:var(--text-main);">${c.name}</b>
                   <div style="font-size:12px; color:var(--text-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:4px;">${previewMemo}</div>
                 </div>
                 <div style="display:flex; gap:6px; flex-shrink:0;">
-                  <button type="button" onclick="restoreHidden('${c.name.replace(/'/g, "\\'")}')" style="background:#10B981; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-weight:bold; font-size:12px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">🟢 復活</button>
-                  <button type="button" onclick="deleteHidden('${c.name.replace(/'/g, "\\'")}')" style="background:#FEE2E2; color:#EF4444; border:none; padding:8px 12px; border-radius:10px; font-weight:bold; font-size:12px;">🗑️ 削除</button>
+                  <button type="button" onclick="event.stopPropagation(); restoreHidden('${safeName}')" style="background:#10B981; color:#fff; border:none; padding:8px 12px; border-radius:10px; font-weight:bold; font-size:12px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">🟢 復活</button>
                 </div>
               </div>
             </div>`;
@@ -2261,41 +2259,18 @@
       document.getElementById('hiddenListModal').style.display = 'none';
     }
 
+    function promptDeleteHidden(name) {
+      editingOriginalName = name; 
+      document.getElementById('deleteTargetName').innerText = name;
+      document.getElementById('deleteConfirmModal').style.display = 'flex';
+    }
+
     async function restoreHidden(name) {
       const c = customerData.find(item => item.name === name);
       if (!c) return;
       const newTags = c.tagsArray.filter(t => t !== '非表示');
       await updateCustomerTagsOnly(c.name, newTags, c.memo);
       setTimeout(() => openHiddenListModal(), 400);
-    }
-
-    async function deleteHidden(name) {
-      if (!confirm(`「${name}」のデータを完全に削除しますか？\nこの操作は元に戻せません。`)) return;
-
-      const c = customerData.find(cust => cust.name === name);
-      if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
-        alert("お手本（ダミー）データのため、削除はできません。\n(開発者モード時のみ可能)");
-        return;
-      }
-
-      try {
-        const payload = { action: "deleteCustomer", userId, targetName: name };
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload)
-        });
-        const json = await res.json();
-        if (json.success) {
-          customerData = customerData.filter(cust => cust.name !== name);
-          openHiddenListModal();
-          await fetchCustomers();
-        } else {
-          alert("削除に失敗しました。");
-        }
-      } catch (e) {
-        alert("エラーが発生しました。");
-      }
     }
 
     function selectCustomerByIndex(index) {
@@ -2630,9 +2605,7 @@
       document.getElementById('cancelBtn').innerText = "キャンセル";
       document.getElementById('tagAccordionContent').classList.remove('open');
       document.getElementById('tagAccordionIcon').innerText = '▼';
-      document.getElementById('deleteCustomerArea').style.display = 'none';
-      document.getElementById('editCustomerArchive').checked = false;
-      document.getElementById('archiveToggleArea').style.display = 'flex';
+      
       tempSelectedAttributes = [];
       renderEditAttributeTags();
       document.getElementById('editMemoBlocksArea').innerHTML = '';
@@ -2658,10 +2631,6 @@
       document.getElementById('cancelBtn').innerText = "キャンセル";
       document.getElementById('tagAccordionContent').classList.remove('open');
       document.getElementById('tagAccordionIcon').innerText = '▼';
-      document.getElementById('deleteCustomerArea').style.display = 'block';
-
-      document.getElementById('editCustomerArchive').checked = c.tagsArray.includes('非表示');
-      document.getElementById('archiveToggleArea').style.display = 'flex';
 
       tempSelectedAttributes = [...c.tagsArray];
       renderEditAttributeTags();
@@ -2723,13 +2692,6 @@
       if (isDemoMode) {
         closeEditModal();
         return;
-      }
-
-      const isArchiveChecked = document.getElementById('editCustomerArchive').checked;
-      if (isArchiveChecked && !tempSelectedAttributes.includes('非表示')) {
-        tempSelectedAttributes.push('非表示');
-      } else if (!isArchiveChecked && tempSelectedAttributes.includes('非表示')) {
-        tempSelectedAttributes = tempSelectedAttributes.filter(t => t !== '非表示');
       }
 
       const isCreate = document.getElementById('isCreateMode').value === "true";
@@ -2800,8 +2762,14 @@
         });
         const json = await res.json();
         if (json.success) {
+          customerData = customerData.filter(cust => cust.name !== editingOriginalName);
           closeDeleteConfirmModal();
           closeEditModal();
+
+          if(document.getElementById('hiddenListModal').style.display === 'flex') {
+            openHiddenListModal();
+          }
+
           if (document.getElementById('nameInput').value === editingOriginalName) {
             resetInputForm();
           }
