@@ -102,9 +102,7 @@
     .memo-block.dimmed { opacity: 0.5; background: #FFF; border-color: transparent; }
     .memo-block.dimmed:focus-within { opacity: 1; background: var(--bg-color); border: 1px solid #F472B6; }
     
-    /* ★修正: width: 100% を削除して当たり判定を最小化 */
     .memo-date { font-weight: 800; color: var(--active-color); border: none; background: transparent; font-size: 12px; margin-bottom: 4px; outline: none; font-family: inherit; }
-    
     .memo-text { width: 100%; border: none; background: transparent; font-size: 14px; resize: none; outline: none; line-height: 1.6; color: var(--text-main); font-family: inherit; margin-top: 4px; }
     .memo-tag-dropdown { animation: fadeInTab 0.2s ease-out; }
 
@@ -172,15 +170,15 @@
   <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
   <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
 
-  <!-- 写真拡大用モーダル -->
+  <!-- ★FIX: 写真拡大用モーダルのバグ修正 -->
   <div id="photoModal" class="modal-overlay" style="z-index: 10005;" onclick="closePhotoModal(event)">
-    <div style="position: relative; max-width: 90%; max-height: 90%; margin: auto;" onclick="event.stopPropagation()">
+    <div style="position: relative; max-width: 90%; max-height: 90%; margin: auto; display: flex; flex-direction: column; justify-content: center; align-items: center;" onclick="event.stopPropagation()">
       <img id="expandedPhoto" src="" style="width: 100%; height: auto; max-height: 80vh; object-fit: contain; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
-      <div onclick="closePhotoModal()" style="position: absolute; top: -12px; right: -12px; background: #FFF; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 16px; color: #1F2937; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">×</div>
+      <div onclick="closePhotoModal(event)" style="position: absolute; top: -12px; right: -12px; background: #FFF; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 16px; color: #1F2937; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">×</div>
     </div>
   </div>
 
-  <!-- ★NEW: 顧客削除の確認モーダル -->
+  <!-- 顧客削除の確認モーダル -->
   <div id="deleteConfirmModal" class="modal-overlay" style="z-index: 10005;">
     <div class="modal-content" style="text-align: center;">
       <div style="width: 48px; height: 48px; background: #FEE2E2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">⚠️</div>
@@ -261,7 +259,6 @@
         <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">保存する</button>
       </div>
 
-      <!-- ★NEW: 顧客削除リンク（新規の時は隠れます） -->
       <div id="deleteCustomerArea" style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border-color);">
         <span onclick="openDeleteConfirmModal()" style="color: #9CA3AF; font-size: 12px; font-weight: 800; text-decoration: underline; cursor: pointer;">🗑️ この顧客データを削除する</span>
       </div>
@@ -377,7 +374,8 @@
         <div class="fab" onclick="openCreateModal()">＋</div>
       </div>
 
-      <div class="page page-settings">
+      <!-- ★NEW: 秘密の開発者ボタンを右下に配置 -->
+      <div class="page page-settings" style="position: relative;">
         <h2 style="margin:0 0 16px; font-weight:900;">設定・情報</h2>
 
         <div class="settings-list">
@@ -413,11 +411,13 @@
         <div class="settings-list">
           <div class="settings-item" onclick="openHelpModal()"><span>📖 アプリの使い方と仕様（必読）</span><span style="color:var(--border-color);">▶</span></div>
         </div>
-        <div class="settings-list">
+        <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">4.1.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">4.2.0</span></div>
         </div>
+
+        <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
       </div>
     </main>
 
@@ -473,8 +473,10 @@
     let activeTags = []; 
     let currentCustomerTags = []; 
     let selectedEpisodeTags = []; 
+    let autoAddedTags = []; // ★NEW: 自動付与されたタグを記憶
     let currentBase64Image = null;
     let isDemoMode = false;
+    let isDevMode = false; // ★NEW: 開発者モード判定
     let myCustomAttrs = []; 
     let currentListFilter = 'all'; 
     let isCompactMode = false;
@@ -552,6 +554,27 @@
       }
     }
     window.onload = init;
+
+    // ★NEW: 開発者モード（ダミー編集ロックの解除）
+    function promptDevMode() {
+      if (isDevMode) { alert("既に開発者モードです。"); return; }
+      const pass = prompt("開発者パスワードを入力してください:");
+      if (pass === "0804") {
+        isDevMode = true;
+        alert("開発者モードを有効にしました。ダミー顧客（テストユーザー）の編集が可能です。");
+      } else if (pass !== null) { alert("パスワードが違います。"); }
+    }
+
+    // ★NEW: 自動付与された感情タグをクリアする
+    function clearAutoTags() {
+      if (autoAddedTags.length > 0) {
+        selectedEpisodeTags = selectedEpisodeTags.filter(tag => !autoAddedTags.includes(tag));
+        autoAddedTags.forEach(tag => {
+          if (!activeTags.includes(tag)) activeTags.unshift(tag);
+        });
+        autoAddedTags = [];
+      }
+    }
 
     function saveInitialSetup() {
       const type = document.getElementById('initialBusinessType').value;
@@ -635,7 +658,14 @@
       });
     }
 
-    function removeEpisodeTag(index) { selectedEpisodeTags.splice(index, 1); renderSelectedEpisodeTags(); renderChips(); }
+    // ★FIX: 手動で削除した時、autoAddedTags に入っていればそれも消す
+    function removeEpisodeTag(index) { 
+      const tag = selectedEpisodeTags[index];
+      autoAddedTags = autoAddedTags.filter(t => t !== tag);
+      selectedEpisodeTags.splice(index, 1); 
+      renderSelectedEpisodeTags(); 
+      renderChips(); 
+    }
     
     function addCustomTag() { 
       const input = document.getElementById('customTagInput'); 
@@ -648,12 +678,14 @@
       } 
     }
 
+    // ★FIX: クリア時に自動付与タグの記憶もリセット
     function clearEpisodeInput() {
       if (document.getElementById('todayEpisodeInput').value || selectedEpisodeTags.length > 0) {
         if (!confirm("入力中のエピソードとタグをクリアしますか？")) return;
       }
       document.getElementById('todayEpisodeInput').value = "";
       selectedEpisodeTags = [];
+      autoAddedTags = [];
       updateChips();
       renderSelectedEpisodeTags();
     }
@@ -741,12 +773,14 @@
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
-    // 写真拡大モーダルの操作
-    function openPhotoModal(url) {
+    // ★FIX: 写真拡大モーダルの操作（eventのバブリングを防止）
+    function openPhotoModal(url, e) {
+      if(e) e.stopPropagation();
       document.getElementById('expandedPhoto').src = url;
       document.getElementById('photoModal').style.display = 'flex';
     }
     function closePhotoModal(e) {
+      if(e) e.stopPropagation();
       document.getElementById('photoModal').style.display = 'none';
       document.getElementById('expandedPhoto').src = '';
     }
@@ -849,8 +883,13 @@
         document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
         currentCustomerTags = []; 
         renderAttributeTags();
+        clearAutoTags(); // ★選択解除時に自動タグを消去
+        renderSelectedEpisodeTags(); 
+        renderChips();
         return; 
       }
+      
+      clearAutoTags(); // ★別の顧客を選ぶ前に前の自動タグを消去
       
       document.getElementById('nav-create').checked = true; nameInput.value = c.name;
       const memos = parseMemoToJSON(c.memo); let pastMemoHtml = '';
@@ -858,9 +897,9 @@
           memos.forEach(m => {
               let tagsHtml = m.tags && m.tags.length > 0 ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">` + m.tags.map(t => `<span style="background:#F3F4F6; color:#4B5563; font-size:10px; padding:3px 8px; border-radius:12px; font-weight:800;">${t}</span>`).join('') + `</div>` : '';
               
-              // ★NEW: 写真が無い場合は白い四角のプレースホルダーを表示
+              // ★FIX: onclick に event を渡す
               let photoHtml = m.photoUrl 
-                ? `<img src="${m.photoUrl}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0; box-shadow: var(--shadow-sm);" onclick="openPhotoModal('${m.photoUrl}')">` 
+                ? `<img src="${m.photoUrl}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0; box-shadow: var(--shadow-sm);" onclick="openPhotoModal('${m.photoUrl}', event)">` 
                 : `<div style="width: 44px; height: 44px; border-radius: 8px; background: #FFF; border: 1px dashed #D1D5DB; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #D1D5DB; font-size: 18px;">📷</div>`;
 
               pastMemoHtml += `
@@ -878,13 +917,21 @@
       
       currentCustomerTags = c.tagsArray; renderAttributeTags(); 
       
-      if (isAlertCustomer(c)) { const type = localStorage.getItem('businessType') || 'cabaret', autoTag = (type === 'fuzoku') ? '🥺 寂しい' : '🥺 会いたい'; if (!selectedEpisodeTags.includes(autoTag)) { selectedEpisodeTags.push(autoTag); activeTags = activeTags.filter(t => t !== autoTag); } }
+      if (isAlertCustomer(c)) { 
+        const type = localStorage.getItem('businessType') || 'cabaret', autoTag = (type === 'fuzoku') ? '🥺 寂しい' : '🥺 会いたい'; 
+        if (!selectedEpisodeTags.includes(autoTag)) { 
+          selectedEpisodeTags.push(autoTag); 
+          activeTags = activeTags.filter(t => t !== autoTag); 
+          autoAddedTags.push(autoTag); // ★自動追加を記録
+        } 
+      }
       renderSelectedEpisodeTags(); renderChips(); 
     }
 
+    // ★FIX: クリア時に自動付与タグの記憶もリセット
     function resetInputForm() {
       document.getElementById('nameInput').value = ""; document.getElementById('pastMemoDisplay').innerHTML = "(顧客を選択するか、過去の記録がありません)";
-      document.getElementById('todayEpisodeInput').value = ""; currentCustomerTags = []; renderAttributeTags(); selectedEpisodeTags = []; renderSelectedEpisodeTags(); renderChips();
+      document.getElementById('todayEpisodeInput').value = ""; currentCustomerTags = []; renderAttributeTags(); selectedEpisodeTags = []; autoAddedTags = []; renderSelectedEpisodeTags(); renderChips();
       currentBase64Image = null; document.getElementById('photoPreview').style.display = 'none'; document.getElementById('uploadText').style.display = 'block';
     }
 
@@ -897,7 +944,7 @@
     function suggestCustomer() {
       const text = document.getElementById('nameInput').value, area = document.getElementById('resultArea'); area.innerHTML = "";
       const matchedCustomer = customerData.find(c => c.name === text);
-      if (!matchedCustomer) { document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; currentCustomerTags = []; renderAttributeTags(); } else { const cIndex = customerData.indexOf(matchedCustomer); selectCustomerByIndex(cIndex); }
+      if (!matchedCustomer) { document.getElementById('pastMemoDisplay').innerText = "(顧客を選択するか、過去の記録がありません)"; currentCustomerTags = []; renderAttributeTags(); clearAutoTags(); } else { const cIndex = customerData.indexOf(matchedCustomer); selectCustomerByIndex(cIndex); }
       if (!text) { area.style.display = "none"; return; } let matchCount = 0;
       customerData.forEach((c, index) => { if (c.name.includes(text) && c.name !== text) { matchCount++; const div = document.createElement('div'); div.className = "suggest-item"; div.innerText = c.name; div.onclick = () => { selectCustomerByIndex(index); area.style.display = "none"; }; area.appendChild(div); } });
       area.style.display = matchCount > 0 ? "block" : "none";
@@ -909,12 +956,11 @@
 
       const readOnlyAttr = isDemoMode ? 'readonly' : '', disabledAttr = isDemoMode ? 'disabled' : '';
 
-      // ★NEW: 写真が無い場合は白いプレースホルダーを表示
+      // ★FIX: onclick に event を渡す
       const photoHtml = photoUrl 
-        ? `<img src="${photoUrl}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0;" onclick="openPhotoModal('${photoUrl}')">` 
+        ? `<img src="${photoUrl}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0;" onclick="openPhotoModal('${photoUrl}', event)">` 
         : `<div style="width: 38px; height: 38px; border-radius: 8px; background: #FFF; border: 1px dashed #D1D5DB; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #D1D5DB; font-size: 14px;">📷</div>`;
 
-      // ★NEW: 日付の幅を縮小して当たり判定を狭く
       div.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
           <input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr} style="width: fit-content; flex: 0 1 auto; margin-right: auto; padding-right: 0;">
@@ -956,18 +1002,21 @@
     function openCreateModal() {
       isDemoMode = false; document.getElementById('modalTitle').innerText = "新規顧客の登録"; document.getElementById('isCreateMode').value = "true"; document.getElementById('editCustomerName').value = ""; document.getElementById('editCustomerName').readOnly = false; document.getElementById('customAttrInput').disabled = false; document.getElementById('addAttrBtn').style.display = 'block'; document.getElementById('addMemoBtn').style.display = 'block'; document.getElementById('saveCustomerBtn').style.display = 'block'; document.getElementById('cancelBtn').innerText = "キャンセル";
       document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
-      document.getElementById('deleteCustomerArea').style.display = 'none'; // ★新規作成時は削除リンクを隠す
+      document.getElementById('deleteCustomerArea').style.display = 'none'; 
       
       tempSelectedAttributes = []; renderEditAttributeTags(); document.getElementById('editMemoBlocksArea').innerHTML = ''; addMemoBlock(); document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
     function openEditModal(index) {
-      const c = customerData[index]; isDemoMode = c.tagsArray.includes("ダミー"); 
+      const c = customerData[index]; 
+      // ★NEW: 開発者モードならダミー保護ロックを解除
+      isDemoMode = c.tagsArray.includes("ダミー") && !isDevMode; 
+      
       document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】ダミー（閲覧）" : "顧客情報の編集"; document.getElementById('isCreateMode').value = "false"; document.getElementById('editCustomerIndex').value = index; document.getElementById('editCustomerName').value = c.name; editingOriginalName = c.name; 
       document.getElementById('editCustomerName').readOnly = isDemoMode; document.getElementById('customAttrInput').disabled = isDemoMode; document.getElementById('addAttrBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('addMemoBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('saveCustomerBtn').style.display = isDemoMode ? 'none' : 'block'; document.getElementById('cancelBtn').innerText = isDemoMode ? "閉じる" : "キャンセル";
       document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
       
-      document.getElementById('deleteCustomerArea').style.display = isDemoMode ? 'none' : 'block'; // ★ダミー以外の編集時に削除リンクを表示
+      document.getElementById('deleteCustomerArea').style.display = isDemoMode ? 'none' : 'block'; 
 
       tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
       const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
@@ -1006,7 +1055,6 @@
       btn.innerText = "保存する"; btn.disabled = false;
     }
 
-    // ★NEW: 顧客削除処理の実行
     function openDeleteConfirmModal() {
       document.getElementById('deleteTargetName').innerText = editingOriginalName;
       document.getElementById('deleteConfirmModal').style.display = 'flex';
@@ -1027,7 +1075,6 @@
         if((await res.json()).success) { 
           closeDeleteConfirmModal();
           closeEditModal();
-          // もし作成画面で今削除した顧客を選んでいたらクリアする
           if (document.getElementById('nameInput').value === editingOriginalName) {
              resetInputForm();
           }
@@ -1060,6 +1107,7 @@
       
       document.getElementById('todayEpisodeInput').value = ""; 
       selectedEpisodeTags = []; 
+      autoAddedTags = []; // ★リセット
       currentBase64Image = null; 
       document.getElementById('photoPreview').style.display = 'none'; 
       document.getElementById('uploadText').style.display = 'block';
