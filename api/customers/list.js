@@ -80,12 +80,12 @@ export default async function handler(req, res) {
           text: e.input_memo || '',
           tags: e.input_tags || [],
           photoUrl: e.photo_url || undefined,
-          type: e.entry_type, // 'visit' or 'sales' をフロントへ渡す
+          type: e.entry_type, // 'visit' or 'sales'
           status: e.delivery_status
         }));
         reconstructedMemo = JSON.stringify(memoArr);
       } else {
-        // フォールバック (未移行やダミーなど)
+        // フォールバック (未移行や手動旧データなど)
         reconstructedMemo = typeof c.memo === 'string' ? c.memo : JSON.stringify(c.memo || []);
       }
 
