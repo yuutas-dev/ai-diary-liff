@@ -338,19 +338,6 @@
         <button onclick="closeEditModal()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:30px; font-weight:800;" id="cancelBtn">閉じる</button>
         <button onclick="saveCustomerEdit()" id="saveCustomerBtn" style="flex:1; background:var(--primary-gradient); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800;">全体を保存する</button>
       </div>
-
-      <div id="deleteCustomerArea" style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border-color);">
-        <span onclick="openDeleteConfirmModal()" style="color: #9CA3AF; font-size: 12px; font-weight: 800; text-decoration: underline; cursor: pointer;">🗑️ この顧客データを完全に削除する</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ヘルプ（必読）モーダル -->
-  <div id="helpModal" class="modal-overlay">
-    <div class="modal-content" style="max-height: 85vh; overflow-y: auto;">
-      <h2 id="help-title" style="margin: 0 0 20px; font-weight: 900; text-align: center;"></h2>
-      <div id="help-sections-container"></div>
-      <button onclick="closeHelpModal()" style="width:100%; background:var(--text-main); color:#FFF; border:none; padding:16px; border-radius:30px; font-weight:800; margin-top: 10px;">閉じる</button>
     </div>
   </div>
 
@@ -501,7 +488,7 @@
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.5.0 (Sandbox)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.6.0 (Stable)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
@@ -547,6 +534,7 @@
     let myCustomAttrs = []; 
     let currentListFilter = 'all'; 
     let isCompactMode = false;
+    let isFilterScrolled = false;
 
     const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
     function isEmotionTag(tag) { return EMOTION_TAG_KEYWORDS.some(keyword => tag.includes(keyword)); }
@@ -616,13 +604,13 @@
         });
       });
 
-      // ★FIX: LIFF初期化を待たずに即座にフェッチを開始する
-      liff.init({ liffId: LIFF_ID }).then(async () => { 
-        if (liff.isLoggedIn()) {
-          userId = (await liff.getProfile()).userId;
-          fetchCustomers(); // 正式なIDが取れたら再取得
-        }
-      }).catch(e => console.error("LIFF Init Error:", e));
+      // ★FIX: ここにあったliff.initとfetchの競合を解消し、安全な順番（直列）に戻しました
+      try { 
+        await liff.init({ liffId: LIFF_ID }); 
+        if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; 
+      } catch (e) {
+        console.error("LIFF Init Error:", e);
+      }
 
       if (localStorage.getItem('myCustomAttrs')) myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
       const savedType = localStorage.getItem('businessType');
@@ -631,7 +619,7 @@
       
       loadStyleSettings(); loadAlertSettings(); updateChips(); 
       
-      // テストユーザーとして即座にリストを描画
+      // 直列で1回だけ呼ばれるのでエラーが起きない
       fetchCustomers(); 
     }
     window.onload = init;
@@ -776,7 +764,6 @@
         customerData = data.success ? data.customers.map(c => ({ ...c, name: String(c.name || "名前なし"), memo: String(c.memo || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : [] })) : [];
         renderCustomerList(); renderQuickAccess(); updateAlertBadge();
       } catch (e) { 
-        // ★FIX: ロードエラーのアラートを非表示にし、コンソールのみに出力
         console.error("fetchCustomers Error:", e); 
       }
     }
@@ -1046,10 +1033,10 @@
     async function updateCustomerTagsOnly(name, tagsArray, memo) {
       const memoJson = typeof memo === 'string' ? memo : JSON.stringify(memo);
       const c = customerData.find(cust => cust.name === name);
-      // ★FIX: ダミー顧客の場合は通信せず、変更を一時反映するだけ
+      // ダミー顧客の場合は通信せず、変更を一時反映するだけ
       if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
         c.tagsArray = tagsArray; 
-        fetchCustomers(); // 再描画
+        fetchCustomers(); 
         return; 
       }
 
@@ -1105,7 +1092,6 @@
     async function deleteHidden(name) {
         if(!confirm(`「${name}」のデータを完全に削除しますか？\nこの操作は元に戻せません。`)) return;
         
-        // ★FIX: ダミーは削除できないように保護
         const c = customerData.find(cust => cust.name === name);
         if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
           alert("お手本（ダミー）データのため、削除はできません。\n(開発者モード時のみ可能)");
@@ -1170,7 +1156,7 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    // ★FIX: ダミーでも編集できる完全なSandbox化（引数のreadonlyなどを撤廃）
+    // ★FIX: ダミー顧客でも完全にUIを開放する Sandbox化
     function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "", isExpanded = false) {
       const area = document.getElementById('editMemoBlocksArea'); 
       const blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9); 
@@ -1180,6 +1166,7 @@
       div.dataset.tags = JSON.stringify(tags);
       if (photoUrl) div.dataset.photo = photoUrl;
 
+      // readonly / disabled によるUIのロックを完全撤去
       const readOnlyAttr = '';
       const disabledAttr = '';
 
@@ -1266,17 +1253,18 @@
       tempSelectedAttributes = []; renderEditAttributeTags(); document.getElementById('editMemoBlocksArea').innerHTML = ''; addNewMemoBlock(); document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
-    // ★FIX: ダミー顧客を開いた時も、本物の客と100%同じUI（Sandbox）にする
+    // ★FIX: ダミー顧客でもすべてのUIを開放（保存だけさせないSandbox状態）
     function openEditModal(index) {
       const c = customerData[index]; 
       isDemoMode = c.tagsArray.includes("ダミー") && !isDevMode; 
       
-      document.getElementById('modalTitle').innerText = isDemoMode ? "【お手本】ダミー（保存されません）" : "顧客情報の編集"; 
+      document.getElementById('modalTitle').innerText = isDemoMode ? "【お試し】ダミー（保存されません）" : "顧客情報の編集"; 
       document.getElementById('isCreateMode').value = "false"; 
       document.getElementById('editCustomerIndex').value = index; 
       document.getElementById('editCustomerName').value = c.name; 
       editingOriginalName = c.name; 
       
+      // 全てのロックを解除
       document.getElementById('editCustomerName').readOnly = false; 
       document.getElementById('customAttrInput').disabled = false; 
       document.getElementById('addAttrBtn').style.display = 'block'; 
@@ -1316,7 +1304,7 @@
     function addCustomAttributeTag() { const v = document.getElementById('customAttrInput').value.trim(); if(v) { if(!myCustomAttrs.includes(v)) { myCustomAttrs.unshift(v); localStorage.setItem('myCustomAttrs', JSON.stringify(myCustomAttrs)); } if(!tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); } document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } }
     function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
 
-    // ★FIX: ダミー顧客の場合は保存したフリをして閉じる
+    // ★FIX: ダミー顧客の場合は「保存したフリ」をして閉じる
     async function saveCustomerEdit() {
       if (isDemoMode) {
         closeEditModal();
@@ -1350,7 +1338,7 @@
       document.getElementById('deleteConfirmModal').style.display = 'none';
     }
 
-    // ★FIX: ダミー顧客は削除できないようにガード
+    // ★FIX: ダミー顧客は削除できないように保護
     async function executeDeleteCustomer() {
       if (isDemoMode) {
         alert("お手本（ダミー）データのため、削除はできません。\n(開発者モード時のみ可能)");
