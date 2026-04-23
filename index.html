@@ -312,6 +312,14 @@
       <span class="label">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
       
+      <div id="archiveToggleArea" style="background: #F3F4F6; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 13px; font-weight: 800; color: #4B5563;">💤 この顧客を非表示にする</span>
+        <label class="switch">
+          <input type="checkbox" id="editCustomerArchive">
+          <span class="slider"></span>
+        </label>
+      </div>
+      
       <div class="accordion-header" onclick="toggleTagAccordion()">
         <span>🏷️ 属性タグ（設定・追加）</span><span id="tagAccordionIcon">▼</span>
       </div>
@@ -490,7 +498,7 @@
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">8.0.0 (Clean)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.0.0 (Clean)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
@@ -536,7 +544,6 @@
     let myCustomAttrs = []; 
     let currentListFilter = 'all'; 
     let isCompactMode = false;
-    let isFilterScrolled = false;
 
     const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
     function isEmotionTag(tag) { return EMOTION_TAG_KEYWORDS.some(keyword => tag.includes(keyword)); }
@@ -549,6 +556,27 @@
 
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function getTodayFormatted() { return getTodayString().replace(/-/g, '/'); }
+
+    // ★FIX: UIのセットアップ
+    function renderTexts() {
+      document.getElementById('setup-title').innerText = AppTexts.setupModal.title;
+      document.getElementById('setup-desc').innerText = AppTexts.setupModal.desc;
+      document.getElementById('text-style-cute').innerText = AppTexts.styleModal.cute;
+      document.getElementById('text-style-neat').innerText = AppTexts.styleModal.neat;
+      document.getElementById('text-style-custom').innerText = AppTexts.styleModal.custom;
+      document.getElementById('help-title').innerText = AppTexts.helpModal.title;
+      const helpContainer = document.getElementById('help-sections-container');
+      helpContainer.innerHTML = AppTexts.helpModal.sections.map(sec => `
+        <div style="margin-bottom: 24px;">
+          <h3 style="font-size: 15px; color: #DB2777; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+            <span>${sec.icon}</span> ${sec.title}
+          </h3>
+          <p style="font-size: 13px; color: var(--text-sub); line-height: 1.6; margin: 0;">
+            ${sec.content}
+          </p>
+        </div>
+      `).join('');
+    }
 
     function showCuteToast(isComplete) {
       const toast = document.getElementById('cuteToast');
@@ -606,15 +634,24 @@
         });
       });
 
-      try { await liff.init({ liffId: LIFF_ID }); if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; } catch (e) {}
+      // ★FIX: LIFF初期化を待たずにフェッチを開始し、初期表示を爆速化
+      liff.init({ liffId: LIFF_ID }).then(async () => { 
+        if (liff.isLoggedIn()) {
+          userId = (await liff.getProfile()).userId;
+          fetchCustomers(); 
+        }
+      }).catch(e => console.error(e));
+
       if (localStorage.getItem('myCustomAttrs')) myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
       const savedType = localStorage.getItem('businessType');
       if (!savedType) { document.getElementById('setupModal').style.display = 'flex'; } else { document.getElementById('businessType').value = savedType; }
       if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
       
-      loadStyleSettings(); loadAlertSettings(); updateChips(); fetchCustomers();
+      loadStyleSettings(); loadAlertSettings(); updateChips(); 
+      fetchCustomers(); // 初期ロード用に実行
     }
-    
+    window.onload = init;
+
     function promptDevMode() {
       if (isDevMode) { alert("既に開発者モードです。"); return; }
       const pass = prompt("開発者パスワードを入力してください:");
@@ -889,6 +926,7 @@
       });
     }
 
+    // 長押し判定処理（引数を修正し、エラーを防止）
     let pressTimer;
     let startX = 0; let startY = 0;
 
