@@ -109,6 +109,17 @@
       filter: grayscale(80%);
     }
 
+    /* 新規: 来店あり/なし切り替え用 */
+    #visit-yes:checked ~ .app-container .visit-label-yes,
+    #visit-no:checked ~ .app-container .visit-label-no {
+      background: #FFF;
+      color: var(--active-color);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .mode-text-only { display: block; }
+    #mode-photo:checked ~ .app-container .mode-text-only { display: none !important; }
+
     .style-content-wrapper {
       min-height: 340px;
       position: relative;
@@ -1072,8 +1083,14 @@
   <input type="radio" name="nav" id="nav-create" class="ui-state" checked>
   <input type="radio" name="nav" id="nav-data" class="ui-state">
   <input type="radio" name="nav" id="nav-settings" class="ui-state">
+  
   <input type="radio" name="mode" id="mode-text" class="ui-state" checked onchange="updateChips()">
   <input type="radio" name="mode" id="mode-photo" class="ui-state" onchange="updateChips()">
+  
+  <!-- 新規: 来店あり/なし 状態管理 -->
+  <input type="radio" name="visit" id="visit-yes" class="ui-state" checked>
+  <input type="radio" name="visit" id="visit-no" class="ui-state">
+  
   <input type="radio" name="style" id="style-cute" class="ui-state" checked onchange="saveStyleSettings()">
   <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
   <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
@@ -1198,7 +1215,7 @@
           <button onclick="restoreHiddenFromModal()" style="flex:1; background:#10B981; color:#FFF; border:none; padding:16px; border-radius:16px; font-weight:800;">🟢 非表示を解除</button>
           <button onclick="openDeleteConfirmModal()" style="flex:1; background:#FEE2E2; color:#EF4444; border:none; padding:16px; border-radius:16px; font-weight:800;">🗑️ 完全に削除</button>
         </div>
-        <button onclick="closeEditModal()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:16px; font-weight:800;">閉じる</button>
+        <button onclick="closeEditModal()" stylewidth:100%; background:var(--input-bg); color:var(--text-main); border:none; padding:16px; border-radius:16px; font-weight:800;">閉じる</button>
       </div>
     </div>
   </div>
@@ -1240,6 +1257,14 @@
 
         <div class="card">
           <span class="label">📝 エピソード作成</span>
+
+          <!-- 新規: 来店あり/なしトグル -->
+          <div class="mode-text-only" style="margin-bottom: 16px; display:flex; justify-content:center;">
+            <div class="toggle-container" style="width: 100%; max-width: 260px; padding: 3px;">
+              <label for="visit-yes" class="toggle-label visit-label-yes" style="padding: 8px 0; font-size:12px;">🚶‍♀️ 来店あり</label>
+              <label for="visit-no" class="toggle-label visit-label-no" style="padding: 8px 0; font-size:12px;">📱 来店なし(営業)</label>
+            </div>
+          </div>
 
           <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 12px;">
             <div class="tags-scroll-container" id="attributeTagsArea"></div>
@@ -1350,7 +1375,7 @@
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.7.3 (Stable)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.8.0 (Stable)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
@@ -1379,7 +1404,6 @@
           { icon: "🗑️", title: "非表示リストと削除", content: "設定タブの「非表示にした顧客」から、非表示カードを長押しすると、記録を確認した上で「復活」か「完全削除」が行えます。" }
         ]
       },
-      // ... (styleModal, setupModal はそのまま)
       styleModal: {
         cute: "🎀 可愛らしく、絵文字を多用した親しみやすい文体。",
         neat: "💎 上品で丁寧な言葉遣い。落ち着いた大人っぽい文体。",
@@ -1489,18 +1513,18 @@
 
     async function init() {
       renderTexts();
-      
+
+      // 下書きの復元
       const savedDraft = localStorage.getItem('diaryDraft');
       if (savedDraft) {
         document.getElementById('inlineResultText').value = savedDraft;
         document.getElementById('inlineResultArea').style.display = 'block';
       }
 
-      // テキストエリアを手動編集した際もバックアップを更新
       document.getElementById('inlineResultText').addEventListener('input', (e) => {
         localStorage.setItem('diaryDraft', e.target.value);
       });
-      
+
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) {
         const pageEl = document.getElementById('nav-' + params.get('page'));
@@ -2352,6 +2376,8 @@
         clearAutoTags();
         renderSelectedEpisodeTags();
         renderChips();
+        const visitYes = document.getElementById('visit-yes');
+        if (visitYes) visitYes.checked = true;
         return;
       }
 
@@ -2402,6 +2428,9 @@
 
       renderSelectedEpisodeTags();
       renderChips();
+
+      const visitYes = document.getElementById('visit-yes');
+      if (visitYes) visitYes.checked = true;
     }
 
     function resetInputForm() {
@@ -2420,6 +2449,9 @@
       document.getElementById('inlineResultArea').style.display = 'none';
       const fileInput = document.getElementById('photoUpload');
       if (fileInput) fileInput.value = '';
+      
+      const visitYes = document.getElementById('visit-yes');
+      if (visitYes) visitYes.checked = true;
     }
 
     function renderAttributeTags() {
@@ -2908,16 +2940,10 @@
       btn.disabled = false;
     }
 
-    function triggerPhotoUpload() {
-      const input = document.getElementById('photoUpload');
-      if (input) input.click();
-    }
-
     function previewPhoto(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      // 画像ファイルかどうかのチェック
       if (!file.type.match(/^image\//)) {
         alert("画像ファイルを選択してください。");
         return;
@@ -2934,7 +2960,6 @@
           let width = img.width;
           let height = img.height;
 
-          // 長辺を最大 1024px にリサイズ
           if (width > height) {
             if (width > MAX_SIZE) {
               height *= MAX_SIZE / width;
@@ -2958,7 +2983,6 @@
           ctx.drawImage(img, 0, 0, width, height);
 
           try {
-            // 品質0.75でJPEG圧縮して取得
             const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
             currentBase64Image = dataUrl;
             
@@ -3015,6 +3039,7 @@
       const name = document.getElementById('nameInput').value;
       const todayEpisode = document.getElementById('todayEpisodeInput').value;
       const isPhoto = document.getElementById('mode-photo').checked;
+      const isVisitYes = document.getElementById('visit-yes').checked;
       const type = localStorage.getItem('businessType') || 'cabaret';
 
       if (!isPhoto && !name) return alert("名前を入れてね");
@@ -3022,8 +3047,6 @@
       sortAndSaveTags();
 
       showCuteToast(false);
-      
-      // 生成開始時に前回の結果をクリア
       document.getElementById('inlineResultArea').style.display = 'none';
       document.getElementById('inlineResultText').value = "";
 
@@ -3051,9 +3074,13 @@
         return `${m.date}: ${m.text} ${tagsStr}`.trim();
       }).join('\n---\n');
 
-      if (todayEpisode || selectedEpisodeTags.length > 0 || (isPhoto && currentBase64Image)) {
-        const newEpisodeObj = { date: getTodayFormatted(), text: todayEpisode, tags: [...selectedEpisodeTags] };
-        memos.push(newEpisodeObj);
+      let shouldSaveMemo = false;
+      if (!isPhoto && isVisitYes) {
+        if (todayEpisode || selectedEpisodeTags.length > 0) {
+          const newEpisodeObj = { date: getTodayFormatted(), text: todayEpisode, tags: [...selectedEpisodeTags] };
+          memos.push(newEpisodeObj);
+          shouldSaveMemo = true;
+        }
       }
 
       const payload = {
@@ -3061,7 +3088,7 @@
         name,
         episode: todayEpisode,
         pastMemo: filteredMemosStr,
-        combinedMemoToSave: JSON.stringify(memos),
+        combinedMemoToSave: shouldSaveMemo ? JSON.stringify(memos) : null,
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
         tension: document.getElementById('tensionSlider').value,
         emoji: document.getElementById('emojiSlider').value,
@@ -3089,14 +3116,12 @@
           submitBtn.innerText = "✨ AIで作成する";
 
           if (data.success) {
-            await fetchCustomers();
+            if (shouldSaveMemo) {
+              await fetchCustomers();
+            }
             const resultText = data.generatedText || "（テキストがありません）";
-            
-            // --- ここでバックアップを保存 ---
             document.getElementById('inlineResultText').value = resultText;
             localStorage.setItem('diaryDraft', resultText);
-            // -----------------------------
-            
             document.getElementById('inlineResultArea').style.display = 'block';
 
             setTimeout(() => {
