@@ -70,7 +70,6 @@
       user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
     }
     
-    /* ★NEW: 長押し時の凹みアニメーション */
     .card.pressing {
       transform: scale(0.96);
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -101,7 +100,13 @@
     .compact-view .card-memo { display: none !important; }
     .compact-view .card-tags { margin-top: 6px; }
 
-    .skeleton { background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 24px; }
+    /* ★FIX: スケルトン（ローディング）を薄いグレーに修正 */
+    .skeleton { 
+      background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%); 
+      background-size: 200% 100%; 
+      animation: shimmer 1.5s infinite; 
+      border-radius: 24px; 
+    }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
@@ -200,10 +205,8 @@
     input:checked + .slider { background-color: #10B981; }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* ★NEW: 検索欄のヌルヌル追従用CSS（transitionを削除してJSと直結させる） */
     #searchContainer { position: relative; height: 60px; z-index: 5; margin-bottom: 12px; }
 
-    /* ★NEW: 可愛いトースト通知 */
     #cuteToast {
       position: fixed; bottom: calc(env(safe-area-inset-bottom, 12px) + 80px); right: -250px; 
       background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); 
@@ -211,7 +214,7 @@
       box-shadow: -4px 4px 20px rgba(236, 72, 153, 0.15); 
       border: 2px solid #FBCFE8; border-right: none; 
       display: flex; align-items: center; gap: 8px; z-index: 9999; 
-      transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* ちょっと弾むアニメーション */
+      transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       font-weight: 800; font-size: 13px; color: #DB2777;
     }
     @keyframes bounce-icon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
@@ -299,6 +302,7 @@
     </div>
   </div>
 
+  <!-- 顧客編集モーダル -->
   <div id="editCustomerModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;" id="modalTitle">顧客情報の編集</h2>
@@ -307,14 +311,6 @@
       
       <span class="label">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px;">
-      
-      <div id="archiveToggleArea" style="background: #F3F4F6; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 13px; font-weight: 800; color: #4B5563;">💤 この顧客を非表示にする</span>
-        <label class="switch">
-          <input type="checkbox" id="editCustomerArchive">
-          <span class="slider"></span>
-        </label>
-      </div>
       
       <div class="accordion-header" onclick="toggleTagAccordion()">
         <span>🏷️ 属性タグ（設定・追加）</span><span id="tagAccordionIcon">▼</span>
@@ -408,7 +404,7 @@
           <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
         </div>
 
-        <!-- ★NEW: インラインの生成結果エリア -->
+        <!-- インラインの生成結果エリア -->
         <div id="inlineResultArea" class="card" style="display: none; border: 2px solid #F472B6; margin-top: 0;">
           <h3 style="margin: 0 0 12px; font-weight: 900; text-align: center; color: #DB2777;">✨ 執筆完了！</h3>
           <textarea id="inlineResultText" class="input-field" style="height: 180px; margin-bottom: 12px; font-size: 14px; line-height: 1.6;" placeholder="ここに生成された文章が表示されます。自由に修正できます。"></textarea>
@@ -494,7 +490,7 @@
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">7.0.0</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">8.0.0 (Clean)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
@@ -540,6 +536,7 @@
     let myCustomAttrs = []; 
     let currentListFilter = 'all'; 
     let isCompactMode = false;
+    let isFilterScrolled = false;
 
     const EMOTION_TAG_KEYWORDS = ['会いたい', '逢いたい', '逢い', '寂しい', 'さみしい', 'さびしい', '愛して', '好き', '秘密', '内緒', 'おやすみ', '嬉しい', 'うれしい', '夢心地', '待ってる', '独占', '枕', '病み', 'メンヘラ'];
     function isEmotionTag(tag) { return EMOTION_TAG_KEYWORDS.some(keyword => tag.includes(keyword)); }
@@ -553,7 +550,6 @@
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     function getTodayFormatted() { return getTodayString().replace(/-/g, '/'); }
 
-    // ★NEW: 可愛いトースト通知の表示関数
     function showCuteToast(isComplete) {
       const toast = document.getElementById('cuteToast');
       const icon = document.getElementById('cuteToastIcon');
@@ -578,7 +574,6 @@
       if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
       if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
 
-      // ★FIX: 検索欄のヌルヌルスクロール同期
       const scrollArea = document.querySelector('.scroll-area');
       const searchContainer = document.getElementById('searchContainer');
       let lastScrollTop = 0;
@@ -591,15 +586,16 @@
           
           if (st > 30) {
             currentSearchOffset -= diff;
-            if (currentSearchOffset < -60) currentSearchOffset = -60; // Max hide height
+            if (currentSearchOffset < -60) currentSearchOffset = -60; 
             if (currentSearchOffset > 0) currentSearchOffset = 0;
           } else {
             currentSearchOffset = 0;
           }
           
-          searchContainer.style.transform = `translateY(${currentSearchOffset}px)`;
-          searchContainer.style.marginBottom = `${currentSearchOffset}px`;
-          
+          if(searchContainer) {
+            searchContainer.style.transform = `translateY(${currentSearchOffset}px)`;
+            searchContainer.style.marginBottom = `${currentSearchOffset}px`;
+          }
           lastScrollTop = st <= 0 ? 0 : st;
         }
       }, { passive: true });
@@ -618,14 +614,13 @@
       
       loadStyleSettings(); loadAlertSettings(); updateChips(); fetchCustomers();
     }
-    window.onload = init;
-
+    
     function promptDevMode() {
       if (isDevMode) { alert("既に開発者モードです。"); return; }
       const pass = prompt("開発者パスワードを入力してください:");
       if (pass === "0804") {
         isDevMode = true;
-        alert("開発者モードを有効にしました。ダミー顧客（テストユーザー）の編集が可能です。");
+        alert("開発者モードを有効にしました。ダミー顧客の編集が可能です。");
       } else if (pass !== null) { alert("パスワードが違います。"); }
     }
 
@@ -808,7 +803,7 @@
     function filterCustomerList() { 
       const searchInput = document.getElementById('customerSearch');
       const clearBtn = document.getElementById('clearSearchBtn');
-      clearBtn.style.display = searchInput.value ? 'flex' : 'none';
+      if(clearBtn) clearBtn.style.display = searchInput.value ? 'flex' : 'none';
       renderCustomerList(searchInput.value); 
     }
 
@@ -824,7 +819,16 @@
       filters.forEach(f => {
         const el = document.getElementById(`filter-btn-${f}`);
         if(el) { 
-            if (currentListFilter === f) { el.classList.add('active-filter'); const container = document.querySelector('.filter-container'); if (container) { const scrollPos = el.offsetLeft - (container.offsetWidth / 2) + (el.offsetWidth / 2); container.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' }); } } else { el.classList.remove('active-filter'); }
+            if (currentListFilter === f) { 
+              el.classList.add('active-filter'); 
+              const container = document.querySelector('.filter-container'); 
+              if (container) { 
+                const scrollPos = el.offsetLeft - (container.offsetWidth / 2) + (el.offsetWidth / 2); 
+                container.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' }); 
+              } 
+            } else { 
+              el.classList.remove('active-filter'); 
+            }
         }
       });
       filterCustomerList();
@@ -848,7 +852,6 @@
       document.getElementById('expandedPhoto').src = '';
     }
 
-    // ★FIX: モーダルの結果表示機能を廃止（インラインに置き換え）
     function copyInlineResult() {
       const text = document.getElementById('inlineResultText').value;
       navigator.clipboard.writeText(text).then(() => { alert("コピーしました！"); }).catch(err => { alert("コピーに失敗しました: " + err); });
@@ -886,11 +889,9 @@
       });
     }
 
-    // 長押し判定処理
     let pressTimer;
     let startX = 0; let startY = 0;
 
-    // ★変更：引数に el（要素自身）を追加し、確実にクラスを操作できるようにする
     function handleTouchStart(e, el, index) {
       el.classList.add('pressing');
       if (e.touches && e.touches.length > 0) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
@@ -970,13 +971,15 @@
                 <div style="display:flex; align-items:flex-start;">${alertBadgeHtml}${sysBadgeHtml}<b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b></div>
                 <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${previewMemo}</small>
                 <div class="card-tags" style="margin-top:6px;">${tagHtml}</div>
+              </div>
+              <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0; position:relative; z-index:10;">
+                <button class="action-btn" onclick="event.stopPropagation(); selectCustomerByIndex(${index})" style="background:rgba(252,231,243,0.8); color:#DB2777; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon1}</span><span class="action-text">${actionText1}</span></button>
+                <button class="action-btn" onclick="event.stopPropagation(); openEditModal(${index})" style="background:rgba(243,232,255,0.8); color:#9333EA; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon2}</span><span class="action-text">${actionText2}</span></button>
+              </div>
             </div>
-            <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0; position:relative; z-index:10;">
-              <button class="action-btn" onclick="event.stopPropagation(); selectCustomerByIndex(${index})" style="background:rgba(252,231,243,0.8); color:#DB2777; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon1}</span><span class="action-text">${actionText1}</span></button>
-              <button class="action-btn" onclick="event.stopPropagation(); openEditModal(${index})" style="background:rgba(243,232,255,0.8); color:#9333EA; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon2}</span><span class="action-text">${actionText2}</span></button>
-            </div>
-          </div>
-        </div>`;
+          </div>`;
+      });
+    }
 
     let actionTargetIndex = -1;
 
@@ -996,7 +999,6 @@
       setTimeout(() => { document.getElementById('cardActionModalBackdrop').classList.remove('show'); }, 300);
     }
 
-    // ★FIX: 一軍固定解除時に付随するVIPタグも削除
     async function toggleVipPin() {
       const c = customerData[actionTargetIndex];
       let newTags = [...c.tagsArray];
@@ -1027,7 +1029,6 @@
       } catch(e) { alert("エラーが発生しました。"); }
     }
 
-    // ★FIX: 非表示リストをコンパクトカード化
     function openHiddenListModal() {
         const area = document.getElementById('hiddenCustomersArea');
         area.innerHTML = '';
@@ -1144,7 +1145,7 @@
 
       const tagsText = tags.length > 0 ? tags.map(t => `#${t}`).join(' ') : '<span style="color:#9CA3AF;">タグなし</span>';
       const previewText = text ? text.split('\n')[0] : '<span style="color:#9CA3AF;">本文なし</span>';
-      const photoHtmlSummary = photoUrl ? `<img src="${photoUrl}" style="width:32px; height:32px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.5); pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}');">` : `<div style="width:32px; height:32px; border-radius:6px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:12px;">📷</div>`;
+      const photoHtmlSummary = photoUrl ? `<img src="${photoUrl}" style="width:32px; height:32px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.5); pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}', event);">` : `<div style="width:32px; height:32px; border-radius:6px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:12px;">📷</div>`;
 
       const summaryHtml = `
         <div class="memo-summary" onclick="toggleMemoBlock('${blockId}')" style="cursor:pointer; display: ${isExpanded ? 'none' : 'block'}; padding: 4px;">
@@ -1154,7 +1155,7 @@
           <div style="text-align:center; margin-top:8px; font-size:10px; color:#9CA3AF; font-weight:bold;">▼ タップして展開</div>
         </div>`;
 
-      const photoHtmlDetail = photoUrl ? `<img src="${photoUrl}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.8); cursor:pointer; pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}');">` : `<div style="width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:14px;">📷</div>`;
+      const photoHtmlDetail = photoUrl ? `<img src="${photoUrl}" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,0.8); cursor:pointer; pointer-events:auto;" onclick="event.stopPropagation(); openPhotoModal('${photoUrl}', event);">` : `<div style="width:40px; height:40px; border-radius:8px; background:rgba(255,255,255,0.5); border:1px dashed #D1D5DB; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:14px;">📷</div>`;
 
       const actionButtons = isDemoMode ? '' : `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(229,231,235,0.6);">
@@ -1195,7 +1196,6 @@
       block.querySelector('.memo-detail').style.display = 'none'; block.querySelector('.memo-summary').style.display = 'block'; block.classList.remove('expanded');
     }
 
-    // ★FIX: キャンセル可能にするため、DOMから消すだけに変更
     function deleteMemoBlock(blockId) {
       if (confirm("このエピソードを削除しますか？\n（「全体を保存する」を押すまで確定しません）")) {
         const block = document.getElementById(blockId);
@@ -1288,7 +1288,6 @@
 
       sortAndSaveTags();
 
-      // ★NEW: 可愛いトースト通知を表示
       showCuteToast(false);
       document.getElementById('inlineResultArea').style.display = 'none';
       
@@ -1320,12 +1319,12 @@
 
       const payload = { action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: filteredMemosStr, combinedMemoToSave: newCombinedMemo, style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, customerTags: cleanedCustomerTags.join(', '), customerRank: customerRank, episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" };
       
-      resetInputForm(); // 送信内容をクリア
+      resetInputForm(); 
 
       fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
         .then(res => res.json())
         .then(data => { 
-           showCuteToast(true); // ★完了通知
+           showCuteToast(true); 
            submitBtn.disabled = false;
            submitBtn.innerText = "✨ AIで作成する";
 
@@ -1333,11 +1332,9 @@
               fetchCustomers(); 
               const resultText = data.generatedText || "（テキストがありません）";
               
-              // ★FIX: モーダルではなくインラインで表示
               document.getElementById('inlineResultText').value = resultText;
               document.getElementById('inlineResultArea').style.display = 'block';
               
-              // スクロールして結果を見せる
               setTimeout(() => {
                 const scrollArea = document.querySelector('.scroll-area');
                 scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
