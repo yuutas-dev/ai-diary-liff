@@ -45,18 +45,51 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 1. 顧客リスト取得
+    // 1. 顧客リスト取得 (最適化版)
     if (action === 'getCustomers') {
-      const { data: rows, error } = await supabase.from('customers').select('*');
-      if (error) throw new Error('Supabase取得エラー: ' + error.message);
+      // ユーザー自身のデータとダミーデータをDB側で絞り込んで並列取得
+      const [userRes, dummyRes] = await Promise.all([
+        supabase.from('customers').select('name, memo, tags').eq('user_id', userId),
+        // tagsが配列やJSONB型と想定した検索
+        supabase.from('customers').select('name, memo, tags').contains('tags', ['ダミー'])
+      ]);
 
-      const customers = (rows || [])
-        .filter(r => r.user_id === userId || normalizeTags(r.tags).includes('ダミー'))
-        .map(r => ({
-          name: r.name,
-          memo: typeof r.memo === 'string' ? r.memo : JSON.stringify(r.memo || []),
-          tags: normalizeTags(r.tags).join(', ')
-        }));
+      if (userRes.error) {
+        throw new Error('Supabaseユーザーデータ取得エラー: ' + userRes.error.message);
+      }
+
+      let dummyData = [];
+      if (dummyRes.error) {
+        console.warn('ダミーデータ取得エラー(フォールバックでilikeを試行):', dummyRes.error.message);
+        // tagsがtext型だった場合のフォールバック
+        const fallbackRes = await supabase.from('customers').select('name, memo, tags').ilike('tags', '%ダミー%');
+        if (!fallbackRes.error) dummyData = fallbackRes.data || [];
+      } else {
+        dummyData = dummyRes.data || [];
+      }
+
+      const userData = userRes.data || [];
+      const combinedMap = new Map();
+
+      // ダミーデータを先にマップにセット (JS側で念のためタグの完全一致をチェック)
+      dummyData.forEach(r => {
+        const tagsArray = normalizeTags(r.tags);
+        if (tagsArray.includes('ダミー')) {
+          combinedMap.set(r.name, r);
+        }
+      });
+
+      // ユーザーデータを後にセット（同名の場合はユーザー自身のデータを優先して上書き）
+      userData.forEach(r => {
+        combinedMap.set(r.name, r);
+      });
+
+      // 既存のフロントエンドと互換性のある形式に変換
+      const customers = Array.from(combinedMap.values()).map(r => ({
+        name: r.name,
+        memo: typeof r.memo === 'string' ? r.memo : JSON.stringify(r.memo || []),
+        tags: normalizeTags(r.tags).join(', ')
+      }));
 
       return sendJson(res, 200, { success: true, customers });
     }
