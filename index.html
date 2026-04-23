@@ -101,7 +101,7 @@
     .compact-view .card-memo { display: none !important; }
     .compact-view .card-tags { margin-top: 6px; }
 
-    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.2) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.2) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 24px; }
+    .skeleton { background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 24px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     .fade-scroll-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
@@ -889,27 +889,25 @@
     // 長押し判定処理
     let pressTimer;
     let startX = 0; let startY = 0;
-    
-    function handleTouchStart(e, index) {
-      const card = e.currentTarget;
-      card.classList.add('pressing');
+
+    // ★変更：引数に el（要素自身）を追加し、確実にクラスを操作できるようにする
+    function handleTouchStart(e, el, index) {
+      el.classList.add('pressing');
       if (e.touches && e.touches.length > 0) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
       pressTimer = setTimeout(() => {
         if (navigator.vibrate) navigator.vibrate(50);
         openCardActionModal(index);
       }, 550);
     }
-    function handleTouchMove(e) {
-      const card = e.currentTarget;
-      card.classList.remove('pressing');
+    function handleTouchMove(e, el) {
+      el.classList.remove('pressing');
       if (e.touches && e.touches.length > 0) {
         const touch = e.touches[0];
         if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) clearTimeout(pressTimer);
       }
     }
-    function handleTouchEnd(e) { 
-      const card = e.currentTarget;
-      card.classList.remove('pressing');
+    function handleTouchEnd(e, el) { 
+      el.classList.remove('pressing');
       clearTimeout(pressTimer); 
     }
 
@@ -961,26 +959,24 @@
 
         area.innerHTML += `
           <div class="${cardClass}"
-               ontouchstart="handleTouchStart(event, ${index})" 
-               ontouchmove="handleTouchMove(event)" 
-               ontouchend="handleTouchEnd(event)" 
-               onmousedown="handleTouchStart(event, ${index})" 
-               onmouseup="handleTouchEnd(event)" 
-               onmouseleave="handleTouchEnd(event)">
+               ontouchstart="handleTouchStart(event, this, ${index})" 
+               ontouchmove="handleTouchMove(event, this)" 
+               ontouchend="handleTouchEnd(event, this)" 
+               onmousedown="handleTouchStart(event, this, ${index})" 
+               onmouseup="handleTouchEnd(event, this)" 
+               onmouseleave="handleTouchEnd(event, this)">
             <div class="card-inner" style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div style="flex:1; margin-right:10px; overflow:hidden; position:relative;">
                 <div style="display:flex; align-items:flex-start;">${alertBadgeHtml}${sysBadgeHtml}<b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b></div>
                 <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${previewMemo}</small>
                 <div class="card-tags" style="margin-top:6px;">${tagHtml}</div>
-              </div>
-              <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0; position:relative; z-index:10;">
-                <button class="action-btn" onclick="event.stopPropagation(); selectCustomerByIndex(${index})" style="background:rgba(252,231,243,0.8); color:#DB2777; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon1}</span><span class="action-text">${actionText1}</span></button>
-                <button class="action-btn" onclick="event.stopPropagation(); openEditModal(${index})" style="background:rgba(243,232,255,0.8); color:#9333EA; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon2}</span><span class="action-text">${actionText2}</span></button>
-              </div>
             </div>
-          </div>`;
-      });
-    }
+            <div class="card-actions" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0; position:relative; z-index:10;">
+              <button class="action-btn" onclick="event.stopPropagation(); selectCustomerByIndex(${index})" style="background:rgba(252,231,243,0.8); color:#DB2777; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon1}</span><span class="action-text">${actionText1}</span></button>
+              <button class="action-btn" onclick="event.stopPropagation(); openEditModal(${index})" style="background:rgba(243,232,255,0.8); color:#9333EA; border:1px solid rgba(255,255,255,0.5); padding:8px 12px; border-radius:8px; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; transition:0.2s; backdrop-filter: blur(4px);"><span class="action-icon" style="font-size:14px;">${actionIcon2}</span><span class="action-text">${actionText2}</span></button>
+            </div>
+          </div>
+        </div>`;
 
     let actionTargetIndex = -1;
 
