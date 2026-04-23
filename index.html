@@ -1350,7 +1350,7 @@
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.7.2 (Stable)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.7.3 (Stable)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
@@ -2904,43 +2904,75 @@
       const file = event.target.files[0];
       if (!file) return;
 
+      // 画像ファイルかどうかのチェック
+      if (!file.type.match(/^image\//)) {
+        alert("画像ファイルを選択してください。");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = e => {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
-          const MAX_WIDTH = 1024;
-          const MAX_HEIGHT = 1024;
+          
+          const MAX_SIZE = 1024;
           let width = img.width;
           let height = img.height;
 
+          // 長辺を最大 1024px にリサイズ
           if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
             }
           } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
             }
           }
 
           canvas.width = width;
           canvas.height = height;
+
+          if (!ctx) {
+            alert("ブラウザが画像処理に対応していません。");
+            return;
+          }
+
           ctx.drawImage(img, 0, 0, width, height);
 
-          // 軽量化した画像をBase64で取得
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-          currentBase64Image = dataUrl;
-          
-          document.getElementById('photoPreview').src = dataUrl;
-          document.getElementById('photoPreview').style.display = 'block';
-          document.getElementById('uploadText').style.display = 'none';
+          try {
+            // 品質0.75でJPEG圧縮して取得
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            currentBase64Image = dataUrl;
+            
+            const photoPreview = document.getElementById('photoPreview');
+            const uploadText = document.getElementById('uploadText');
+            if (photoPreview && uploadText) {
+              photoPreview.src = dataUrl;
+              photoPreview.style.display = 'block';
+              uploadText.style.display = 'none';
+            }
+          } catch (err) {
+            console.error("Canvas Export Error:", err);
+            alert("画像の圧縮に失敗しました。");
+          }
         };
+
+        img.onerror = () => {
+          alert("画像の読み込みに失敗しました。別の画像をお試しください。");
+        };
+
         img.src = e.target.result;
       };
+
+      reader.onerror = () => {
+        alert("ファイルの読み込みに失敗しました。");
+      };
+
       reader.readAsDataURL(file);
     }
 
