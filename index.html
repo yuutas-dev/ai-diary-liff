@@ -80,7 +80,6 @@
     .story-name { font-size: 11px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
     .story-badge { position: absolute; top: -5px; right: -5px; background: #DB2777; color: #FFF; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; border: 1.5px solid #FFF; z-index: 5; }
 
-    /* ★NEW: ささやかなアラート用の丸いバッジCSS */
     .story-alert-badge { position: absolute; bottom: -2px; right: -4px; background: #EF4444; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #FFF; display: flex; align-items: center; justify-content: center; font-size: 9px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
 
     .selected-tags-box { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 24px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
@@ -171,6 +170,14 @@
   <input type="radio" name="style" id="style-cute" class="ui-state" checked onchange="saveStyleSettings()">
   <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
   <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
+
+  <!-- 写真拡大用モーダル -->
+  <div id="photoModal" class="modal-overlay" style="z-index: 10005;" onclick="closePhotoModal(event)">
+    <div style="position: relative; max-width: 90%; max-height: 90%; margin: auto;" onclick="event.stopPropagation()">
+      <img id="expandedPhoto" src="" style="width: 100%; height: auto; max-height: 80vh; object-fit: contain; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+      <div onclick="closePhotoModal()" style="position: absolute; top: -12px; right: -12px; background: #FFF; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 16px; color: #1F2937; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">×</div>
+    </div>
+  </div>
 
   <!-- 初期設定モーダル -->
   <div id="setupModal" class="modal-overlay">
@@ -327,7 +334,11 @@
           <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
         </div>
         
-        <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="margin-bottom:12px;">
+        <!-- ★NEW: 検索欄とクリアボタン -->
+        <div style="position: relative; margin-bottom:12px;">
+          <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="padding-right: 36px;">
+          <div id="clearSearchBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: #E5E7EB; color: #9CA3AF; width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer;" onclick="clearSearch()">×</div>
+        </div>
         
         <div class="filter-container">
           <div class="filter-btn" id="filter-btn-alert" onclick="setListFilter('alert')">
@@ -387,7 +398,7 @@
         <div class="settings-list">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">3.8.2</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">4.0.0</span></div>
         </div>
       </div>
     </main>
@@ -457,7 +468,7 @@
     const stylePlaceholders = { cabaret: "（例）昨日はお店来てくれて本当にありがとう🥺✨\n久しぶりに〇〇くんの顔見れて、めちゃくちゃ楽しかったよ💗", fuzoku: "（例）今日は指名してくれてありがとう🧸💓\n〇〇さんと一緒にいる時間、すごく落ち着くし癒されちゃった🛁✨", host: "（例）今日はお店来てくれてありがとな🍾✨\n最近会えてなかったから、〇〇の顔見れて普通にテンション上がったわ😎" };
     const industryAttributeTags = { cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'], fuzoku: ['M気質', 'S気質', '常連', '新規', 'キモい', '優しい', '痛客', '匂いキツめ', 'マナー良', '本番要求', 'おじさん', '若者', 'イケメン', 'デブ', 'ハゲ'], host: ['太客', '細客', 'エース', '痛客', '常連', '新規', 'メンヘラ', '金持ち', 'ケチ', '酒癖悪い', 'マナー良', '独身', '既婚', '若者', 'おばさん'] };
     let tempSelectedAttributes = [];
-    const industryConfigs = { cabaret: { prompt: "", tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '📱 LINE嬉しい', '💤 おやすみ'] }, fuzoku: { prompt: "", tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長', '🌹 夢心地'] }, host: { prompt: "", tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '🤐 誰にも内緒', '🖤 独占'] } };
+    const industryConfigs = { cabaret: { prompt: "", tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラீரல்', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '📱 LINE嬉しい', '💤 おやすみ'] }, fuzoku: { prompt: "", tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長', '🌹 夢心地'] }, host: { prompt: "", tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '🤐 誰にも内緒', '🖤 独占'] } };
     const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯', '🤳 自撮り', '🛏️ 寝起き', '🏠 お家', '🛍️ お買い物'];
 
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
@@ -677,6 +688,19 @@
         if (alertCount > 0) { badge.style.display = 'flex'; badge.innerText = alertCount; } else { badge.style.display = 'none'; }
     }
 
+    function filterCustomerList() { 
+      const searchInput = document.getElementById('customerSearch');
+      const clearBtn = document.getElementById('clearSearchBtn');
+      clearBtn.style.display = searchInput.value ? 'flex' : 'none';
+      renderCustomerList(searchInput.value); 
+    }
+
+    function clearSearch() {
+      const searchInput = document.getElementById('customerSearch');
+      searchInput.value = '';
+      filterCustomerList();
+    }
+
     function setListFilter(filterType) {
       if (currentListFilter === filterType && filterType !== 'all') { currentListFilter = 'all'; } else { currentListFilter = filterType; }
       const filters = ['all', 'alert', 'vip', 'new', 'second', 'regular'];
@@ -698,6 +722,16 @@
 
     function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
     function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
+
+    // ★NEW: 写真拡大モーダルの操作
+    function openPhotoModal(url) {
+      document.getElementById('expandedPhoto').src = url;
+      document.getElementById('photoModal').style.display = 'flex';
+    }
+    function closePhotoModal(e) {
+      document.getElementById('photoModal').style.display = 'none';
+      document.getElementById('expandedPhoto').src = '';
+    }
 
     function openResultModal(text) {
       document.getElementById('finalResultText').value = text;
@@ -734,7 +768,6 @@
         if (stats.isVip) topBadge = `<div class="story-badge" style="background:#F59E0B; border-color:#FFF; color:#FFF;">👑VIP</div>`; 
         else if (c.tagsArray.length > 0) topBadge = `<div class="story-badge">${c.tagsArray[0]}</div>`;
         
-        // ★NEW: ささやかなアラートバッジを追加
         const isAlert = isAlertCustomer(c);
         const alertBadgeHtml = isAlert ? `<div class="story-alert-badge">🚨</div>` : '';
 
@@ -742,8 +775,6 @@
         area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}${alertBadgeHtml}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
       });
     }
-
-    function filterCustomerList() { renderCustomerList(document.getElementById('customerSearch').value); }
 
     function renderCustomerList(filterText = "") {
       const area = document.getElementById('customerListArea'); area.innerHTML = "";
@@ -808,7 +839,19 @@
       if (memos.length === 0) { pastMemoHtml = '(過去の記録はありません)'; } else {
           memos.forEach(m => {
               let tagsHtml = m.tags && m.tags.length > 0 ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">` + m.tags.map(t => `<span style="background:#F3F4F6; color:#4B5563; font-size:10px; padding:3px 8px; border-radius:12px; font-weight:800;">${t}</span>`).join('') + `</div>` : '';
-              pastMemoHtml += `<div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border-color);"><div style="font-size:11px; color:var(--active-color); font-weight:800; margin-bottom:4px;">${m.date}</div><div style="font-size:13px;">${m.text}</div>${tagsHtml}</div>`;
+              
+              // ★NEW: 過去ログ用の写真サムネイル
+              let photoHtml = m.photoUrl ? `<img src="${m.photoUrl}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0; box-shadow: var(--shadow-sm);" onclick="openPhotoModal('${m.photoUrl}')">` : '';
+
+              pastMemoHtml += `
+                <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border-color); display: flex; gap: 10px; align-items: flex-start;">
+                  <div style="flex: 1;">
+                    <div style="font-size:11px; color:var(--active-color); font-weight:800; margin-bottom:4px;">${m.date}</div>
+                    <div style="font-size:13px;">${m.text}</div>
+                    ${tagsHtml}
+                  </div>
+                  ${photoHtml}
+                </div>`;
           });
       }
       document.getElementById('pastMemoDisplay').innerHTML = pastMemoHtml;
@@ -840,11 +883,20 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    function addMemoBlock(date = getTodayString(), text = "", tags = []) {
+    // ★NEW: addMemoBlockに photoUrl 引数を追加し、サムネイルを表示
+    function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "") {
       const area = document.getElementById('editMemoBlocksArea'), blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9), div = document.createElement('div'); div.className = 'memo-block'; div.id = blockId; div.dataset.tags = JSON.stringify(tags);
+      if (photoUrl) div.dataset.photo = photoUrl; // 保存用にURLを保持
+
       const readOnlyAttr = isDemoMode ? 'readonly' : '', disabledAttr = isDemoMode ? 'disabled' : '';
+
+      const photoHtml = photoUrl ? `<img src="${photoUrl}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0;" onclick="openPhotoModal('${photoUrl}')">` : '';
+
       div.innerHTML = `
-        <input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr}>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+          <input type="date" class="memo-date" value="${date}" ${readOnlyAttr} ${disabledAttr}>
+          ${photoHtml}
+        </div>
         <textarea class="memo-text" rows="2" placeholder="エピソードを入力..." ${readOnlyAttr} oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">${text}</textarea>
         <div class="memo-tags-area" style="margin-top:8px; position:relative;">
           <div class="memo-selected-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;"></div>
@@ -863,7 +915,17 @@
     function toggleMemoTagDropdown(blockId) { const block = document.getElementById(blockId), dropdown = block.querySelector('.memo-tag-dropdown'); if (dropdown.style.display === 'none') { renderMemoTagDropdownContent(blockId); dropdown.style.display = 'block'; } else { dropdown.style.display = 'none'; } }
     function renderMemoTagDropdownContent(blockId) { const block = document.getElementById(blockId), tags = JSON.parse(block.dataset.tags || "[]"), content = block.querySelector('.memo-tag-dropdown-content'); content.innerHTML = activeTags.map(t => { const isSelected = tags.includes(t), bg = isSelected ? 'var(--input-bg)' : '#FFF', color = isSelected ? 'var(--text-sub)' : 'var(--text-main)', border = isSelected ? 'transparent' : 'var(--border-color)', opacity = isSelected ? '0.5' : '1'; return `<div onclick="toggleMemoTag('${blockId}', '${t}')" style="background:${bg}; color:${color}; border:1.5px solid ${border}; padding:6px 12px; border-radius:16px; font-size:12px; font-weight:700; cursor:pointer; opacity:${opacity}; transition:0.2s;">${t}</div>`; }).join(''); }
     function toggleMemoTag(blockId, tag) { const block = document.getElementById(blockId); let tags = JSON.parse(block.dataset.tags || "[]"); if (tags.includes(tag)) { tags = tags.filter(t => t !== tag); } else { tags.push(tag); } block.dataset.tags = JSON.stringify(tags); renderMemoTags(blockId); renderMemoTagDropdownContent(blockId); }
-    function buildMemoFromBlocks() { const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block')); return JSON.stringify(blocks.map(block => { const d = block.querySelector('.memo-date').value.replace(/-/g, '/'), t = block.querySelector('.memo-text').value.trim(), tags = JSON.parse(block.dataset.tags || "[]"); if(!t && !d && tags.length === 0) return null; return { date: d, text: t, tags: tags }; }).filter(m => m !== null)); }
+    
+    // ★NEW: メモ保存時に dataset.photo からURLを回収する
+    function buildMemoFromBlocks() { 
+      const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block')); 
+      return JSON.stringify(blocks.map(block => { 
+        const d = block.querySelector('.memo-date').value.replace(/-/g, '/'), t = block.querySelector('.memo-text').value.trim(), tags = JSON.parse(block.dataset.tags || "[]"), photoUrl = block.dataset.photo || undefined; 
+        if(!t && !d && tags.length === 0 && !photoUrl) return null; 
+        return { date: d, text: t, tags: tags, photoUrl: photoUrl }; 
+      }).filter(m => m !== null)); 
+    }
+
     function updateDimmedBlocks() { const blocks = document.querySelectorAll('#editMemoBlocksArea .memo-block'); blocks.forEach((b, i) => { b.className = (i === blocks.length - 1) ? 'memo-block' : 'memo-block dimmed'; }); }
     function toggleTagAccordion() { const content = document.getElementById('tagAccordionContent'), icon = document.getElementById('tagAccordionIcon'); content.classList.toggle('open'); icon.innerText = content.classList.contains('open') ? '▲' : '▼'; }
 
@@ -882,7 +944,12 @@
       document.getElementById('tagAccordionContent').classList.remove('open'); document.getElementById('tagAccordionIcon').innerText = '▼';
       tempSelectedAttributes = [...c.tagsArray]; renderEditAttributeTags();
       const area = document.getElementById('editMemoBlocksArea'); area.innerHTML = '';
-      const memos = parseMemoToJSON(c.memo); if(memos.length === 0) addMemoBlock(); else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || []));
+      const memos = parseMemoToJSON(c.memo); 
+      
+      // ★NEW: 編集画面を開く時も photoUrl を渡して描画する
+      if(memos.length === 0) addMemoBlock(); 
+      else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || [], m.photoUrl || ""));
+      
       document.getElementById('editCustomerModal').style.display = 'flex'; setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
     }
 
@@ -974,7 +1041,11 @@
       }).join('\n---\n');
 
       let newCombinedMemo = "";
-      if (todayEpisode || selectedEpisodeTags.length > 0) { const newEpisodeObj = { date: getTodayFormatted(), text: todayEpisode, tags: [...selectedEpisodeTags] }; memos.push(newEpisodeObj); }
+      if (todayEpisode || selectedEpisodeTags.length > 0 || (isPhoto && currentBase64Image)) { 
+        // 🚨 ここではphotoUrlはまだ空。バックエンドでURLを取得してから追加してもらう。
+        const newEpisodeObj = { date: getTodayFormatted(), text: todayEpisode, tags: [...selectedEpisodeTags] }; 
+        memos.push(newEpisodeObj); 
+      }
       newCombinedMemo = JSON.stringify(memos);
 
       const payload = { action: "generate", userId: userId, name: name, episode: todayEpisode, pastMemo: filteredMemosStr, combinedMemoToSave: newCombinedMemo, style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''), tension: document.getElementById('tensionSlider').value, emoji: document.getElementById('emojiSlider').value, customText: document.getElementById('customStyleText').value, businessType: type, industryPrompt: industryConfigs[type].prompt, customerTags: cleanedCustomerTags.join(', '), customerRank: customerRank, episodeTags: selectedEpisodeTags.join(', '), image: currentBase64Image, mode: isPhoto ? "photo" : "text" };
@@ -992,7 +1063,7 @@
               fetchCustomers(); 
               const resultText = data.generatedText || "（GAS側で generatedText を返す設定にしてください）\n\n送信内容:\n" + payload.episode;
               openResultModal(resultText);
-           } else { alert("エラーが発生しました"); }
+           } else { alert("エラーが発生しました: " + (data.error || "不明なエラー")); }
         })
         .catch(e => { 
            console.error("Vercelエラー", e); 
