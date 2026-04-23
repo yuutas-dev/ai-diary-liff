@@ -498,7 +498,7 @@
     <footer class="fixed-footer">
       <nav class="bottom-nav">
         <label for="nav-create" class="nav-item tab-create"><span style="font-size:18px;">📝</span>作成</label>
-        <label for="nav-data" class="nav-item tab-data"><span style="font-size:18px;">📖</span>顧客</label>
+                <label for="nav-data" class="nav-item tab-data"><span style="font-size:18px;">📖</span>顧客</label>
         <label for="nav-settings" class="nav-item tab-settings"><span style="font-size:18px;">⚙️</span>設定</label>
       </nav>
     </footer>
@@ -567,20 +567,34 @@
     }
 
     async function init() {
-      renderTexts(); 
+      renderTexts();
+
       const params = new URLSearchParams(window.location.search);
-      if (params.get('page')) document.getElementById('nav-' + params.get('page')).checked = true;
-      if (params.get('mode')) document.getElementById('mode-' + params.get('mode')).checked = true;
+      const pageParam = params.get('page');
+      const modeParam = params.get('mode');
+
+      if (pageParam) {
+        const pageRadio = document.getElementById('nav-' + pageParam);
+        if (pageRadio) pageRadio.checked = true;
+      }
+
+      if (modeParam) {
+        const modeRadio = document.getElementById('mode-' + modeParam);
+        if (modeRadio) modeRadio.checked = true;
+      }
 
       const scrollArea = document.querySelector('.scroll-area');
       const searchContainer = document.getElementById('searchContainer');
       let lastScrollTop = 0;
       let currentSearchOffset = 0;
 
-      scrollArea.addEventListener('scroll', () => {
-        if (document.getElementById('nav-data').checked) {
-          let st = scrollArea.scrollTop;
-          let diff = st - lastScrollTop;
+      if (scrollArea) {
+        scrollArea.addEventListener('scroll', () => {
+          const navData = document.getElementById('nav-data');
+          if (!navData || !navData.checked) return;
+
+          const st = scrollArea.scrollTop;
+          const diff = st - lastScrollTop;
           
           if (st > 30) {
             currentSearchOffset -= diff;
@@ -590,37 +604,54 @@
             currentSearchOffset = 0;
           }
           
-          if(searchContainer) {
+          if (searchContainer) {
             searchContainer.style.transform = `translateY(${currentSearchOffset}px)`;
             searchContainer.style.marginBottom = `${currentSearchOffset}px`;
           }
+
           lastScrollTop = st <= 0 ? 0 : st;
-        }
-      }, { passive: true });
+        }, { passive: true });
+      }
 
       document.querySelectorAll('input[name="nav"]').forEach(radio => {
         radio.addEventListener('change', () => {
-          document.querySelector('.scroll-area').scrollTop = 0;
+          const area = document.querySelector('.scroll-area');
+          if (area) area.scrollTop = 0;
         });
       });
 
-      // ★FIX: ここにあったliff.initとfetchの競合を解消し、安全な順番（直列）に戻しました
-      try { 
-        await liff.init({ liffId: LIFF_ID }); 
-        if (liff.isLoggedIn()) userId = (await liff.getProfile()).userId; 
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          if (profile?.userId) userId = profile.userId;
+        }
       } catch (e) {
         console.error("LIFF Init Error:", e);
       }
 
-      if (localStorage.getItem('myCustomAttrs')) myCustomAttrs = JSON.parse(localStorage.getItem('myCustomAttrs'));
+      try {
+        const savedAttrs = localStorage.getItem('myCustomAttrs');
+        if (savedAttrs) myCustomAttrs = JSON.parse(savedAttrs);
+      } catch (e) {
+        console.error('myCustomAttrs parse error:', e);
+        myCustomAttrs = [];
+      }
+
       const savedType = localStorage.getItem('businessType');
-      if (!savedType) { document.getElementById('setupModal').style.display = 'flex'; } else { document.getElementById('businessType').value = savedType; }
+      if (!savedType) {
+        document.getElementById('setupModal').style.display = 'flex';
+      } else {
+        document.getElementById('businessType').value = savedType;
+      }
+
       if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
       
-      loadStyleSettings(); loadAlertSettings(); updateChips(); 
+      loadStyleSettings();
+      loadAlertSettings();
+      updateChips();
       
-      // 直列で1回だけ呼ばれるのでエラーが起きない
-      fetchCustomers(); 
+      await fetchCustomers();
     }
     window.onload = init;
 
@@ -758,13 +789,47 @@
     function updateChipsAndSave() { localStorage.setItem('businessType', document.getElementById('businessType').value); loadStyleSettings(true); updateChips(); renderQuickAccess(); renderCustomerList(); updateAlertBadge(); }
 
     async function fetchCustomers() {
+      const fallbackRender = () => {
+        customerData = [];
+        try { renderCustomerList(); } catch (err) { console.error('renderCustomerList fallback error:', err); }
+        try { renderQuickAccess(); } catch (err) { console.error('renderQuickAccess fallback error:', err); }
+        try { updateAlertBadge(); } catch (err) { console.error('updateAlertBadge fallback error:', err); }
+      };
+
       try {
-        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "getCustomers", userId: userId }) });
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "getCustomers", userId })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await res.text();
+          throw new Error(`Unexpected response: ${text.slice(0, 120)}`);
+        }
+
         const data = await res.json();
-        customerData = data.success ? data.customers.map(c => ({ ...c, name: String(c.name || "名前なし"), memo: String(c.memo || ""), tagsArray: c.tags ? String(c.tags).split(',').map(t => t.trim()).filter(t => t) : [] })) : [];
-        renderCustomerList(); renderQuickAccess(); updateAlertBadge();
+
+        customerData = data?.success && Array.isArray(data.customers)
+          ? data.customers.map(c => ({
+              ...c,
+              name: String(c?.name || "名前なし"),
+              memo: typeof c?.memo === 'string' ? c.memo : JSON.stringify(c?.memo || []),
+              tagsArray: c?.tags ? String(c.tags).split(',').map(t => t.trim()).filter(Boolean) : []
+            }))
+          : [];
+
+        renderCustomerList();
+        renderQuickAccess();
+        updateAlertBadge();
       } catch (e) { 
-        console.error("fetchCustomers Error:", e); 
+        console.error("fetchCustomers Error:", e);
+        fallbackRender();
       }
     }
 
@@ -924,13 +989,23 @@
     }
 
     function renderCustomerList(filterText = "") {
-      const area = document.getElementById('customerListArea'); area.innerHTML = "";
-      const currentType = localStorage.getItem('businessType') || 'cabaret', targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
-      const lowerFilter = filterText.toLowerCase();
+      const area = document.getElementById('customerListArea');
+      if (!area) return;
+
+      area.innerHTML = "";
+
+      const currentType = localStorage.getItem('businessType') || 'cabaret';
+      const targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+      const lowerFilter = String(filterText || '').toLowerCase();
 
       let displayList = customerData.filter(c => {
+        if (!c || !Array.isArray(c.tagsArray)) return false;
         if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
-        const matchName = String(c.name).toLowerCase().includes(lowerFilter), memos = parseMemoToJSON(c.memo), matchMemo = memos.some(m => String(m.text).toLowerCase().includes(lowerFilter) || (m.tags && m.tags.some(t => t.toLowerCase().includes(lowerFilter)))), matchTags = c.tagsArray.some(t => t.toLowerCase().includes(lowerFilter));
+
+        const matchName = String(c.name || '').toLowerCase().includes(lowerFilter);
+        const memos = parseMemoToJSON(c.memo);
+        const matchMemo = memos.some(m => String(m.text || '').toLowerCase().includes(lowerFilter) || (m.tags && m.tags.some(t => String(t).toLowerCase().includes(lowerFilter))));
+        const matchTags = c.tagsArray.some(t => String(t).toLowerCase().includes(lowerFilter));
         const isHidden = c.tagsArray.includes('非表示');
 
         if (filterText) {
@@ -949,9 +1024,30 @@
 
       displayList.sort((a, b) => {
         const statsA = getCustomerStats(a), statsB = getCustomerStats(b);
-        if (currentListFilter === 'alert') { if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; const daysA = getDaysSinceLastVisit(a.memo) || 0, daysB = getDaysSinceLastVisit(b.memo) || 0; if (daysA !== daysB) return daysB - daysA; }
-        if (statsA.isVip && !statsB.isVip) return -1; if (!statsA.isVip && statsB.isVip) return 1; return statsB.count - statsA.count;
+        if (currentListFilter === 'alert') {
+          if (statsA.isVip && !statsB.isVip) return -1;
+          if (!statsA.isVip && statsB.isVip) return 1;
+          const daysA = getDaysSinceLastVisit(a.memo) || 0, daysB = getDaysSinceLastVisit(b.memo) || 0;
+          if (daysA !== daysB) return daysB - daysA;
+        }
+        if (statsA.isVip && !statsB.isVip) return -1;
+        if (!statsA.isVip && statsB.isVip) return 1;
+        return statsB.count - statsA.count;
       });
+
+      if (displayList.length === 0) {
+        area.innerHTML = `
+          <div class="card" style="text-align:center; padding:28px 18px; color:var(--text-sub);">
+            <div style="font-size:28px; margin-bottom:8px;">🗂️</div>
+            <div style="font-weight:800; margin-bottom:6px;">顧客データがありません</div>
+            <div style="font-size:13px; line-height:1.6;">
+              通信失敗時もこの表示に切り替わります。<br>
+              しばらくして再読み込みするか、顧客を追加してください。
+            </div>
+          </div>
+        `;
+        return;
+      }
 
       displayList.forEach(c => {
         const index = customerData.indexOf(c), stats = getCustomerStats(c), isAlert = isAlertCustomer(c), days = getDaysSinceLastVisit(c.memo);
@@ -998,7 +1094,7 @@
       actionTargetIndex = index;
       const c = customerData[index];
       const isPinned = c.tagsArray.includes('一軍固定');
-      document.getElementById('actionModalName').innerText = c.name;
+            document.getElementById('actionModalName').innerText = c.name;
       document.getElementById('btnToggleVip').innerHTML = isPinned ? '❄️ 一軍固定を解除する' : '💎 一軍に固定する';
       
       document.getElementById('cardActionModalBackdrop').classList.add('show');
@@ -1033,17 +1129,21 @@
     async function updateCustomerTagsOnly(name, tagsArray, memo) {
       const memoJson = typeof memo === 'string' ? memo : JSON.stringify(memo);
       const c = customerData.find(cust => cust.name === name);
-      // ダミー顧客の場合は通信せず、変更を一時反映するだけ
       if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
         c.tagsArray = tagsArray; 
-        fetchCustomers(); 
+        await fetchCustomers();
         return; 
       }
 
       const payload = { action: "updateCustomer", userId: userId, oldName: name, newName: name, newTags: tagsArray.join(', '), newMemo: memoJson };
       try {
-        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
-        if((await res.json()).success) { fetchCustomers(); } else { alert("エラーが発生しました。"); }
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const json = await res.json();
+        if (json.success) {
+          await fetchCustomers();
+        } else {
+          alert("エラーが発生しました。");
+        }
       } catch(e) { alert("エラーが発生しました。"); }
     }
 
@@ -1100,11 +1200,12 @@
 
         try {
             const payload = { action: "deleteCustomer", userId: userId, targetName: name };
-            const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
-            if((await res.json()).success) { 
+            const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+            const json = await res.json();
+            if(json.success) { 
                 customerData = customerData.filter(c => c.name !== name);
                 openHiddenListModal();
-                fetchCustomers(); 
+                await fetchCustomers(); 
             } else alert("削除に失敗しました。");
         } catch(e) { alert("エラーが発生しました。"); }
     }
@@ -1156,7 +1257,6 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    // ★FIX: ダミー顧客でも完全にUIを開放する Sandbox化
     function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "", isExpanded = false) {
       const area = document.getElementById('editMemoBlocksArea'); 
       const blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9); 
@@ -1166,7 +1266,6 @@
       div.dataset.tags = JSON.stringify(tags);
       if (photoUrl) div.dataset.photo = photoUrl;
 
-      // readonly / disabled によるUIのロックを完全撤去
       const readOnlyAttr = '';
       const disabledAttr = '';
 
@@ -1253,7 +1352,6 @@
       tempSelectedAttributes = []; renderEditAttributeTags(); document.getElementById('editMemoBlocksArea').innerHTML = ''; addNewMemoBlock(); document.getElementById('editCustomerModal').style.display = 'flex';
     }
 
-    // ★FIX: ダミー顧客でもすべてのUIを開放（保存だけさせないSandbox状態）
     function openEditModal(index) {
       const c = customerData[index]; 
       isDemoMode = c.tagsArray.includes("ダミー") && !isDevMode; 
@@ -1264,7 +1362,6 @@
       document.getElementById('editCustomerName').value = c.name; 
       editingOriginalName = c.name; 
       
-      // 全てのロックを解除
       document.getElementById('editCustomerName').readOnly = false; 
       document.getElementById('customAttrInput').disabled = false; 
       document.getElementById('addAttrBtn').style.display = 'block'; 
@@ -1304,7 +1401,6 @@
     function addCustomAttributeTag() { const v = document.getElementById('customAttrInput').value.trim(); if(v) { if(!myCustomAttrs.includes(v)) { myCustomAttrs.unshift(v); localStorage.setItem('myCustomAttrs', JSON.stringify(myCustomAttrs)); } if(!tempSelectedAttributes.includes(v)) { tempSelectedAttributes.push(v); } document.getElementById('customAttrInput').value = ''; renderEditAttributeTags(); } }
     function closeEditModal() { document.getElementById('editCustomerModal').style.display = 'none'; }
 
-    // ★FIX: ダミー顧客の場合は「保存したフリ」をして閉じる
     async function saveCustomerEdit() {
       if (isDemoMode) {
         closeEditModal();
@@ -1323,8 +1419,9 @@
       const btn = document.getElementById('saveCustomerBtn'); btn.innerText = "保存中..."; btn.disabled = true;
       try {
         const payload = { action: isCreate ? "createCustomer" : "updateCustomer", userId: userId, oldName: editingOriginalName, newName: newName, newTags: newTagsStr, newMemo: newMemo };
-        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
-        if((await res.json()).success) { fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const json = await res.json();
+        if(json.success) { await fetchCustomers(); closeEditModal(); } else alert("保存に失敗しました。");
       } catch(e) { alert("エラーが発生しました。"); }
       btn.innerText = "全体を保存する"; btn.disabled = false;
     }
@@ -1338,7 +1435,6 @@
       document.getElementById('deleteConfirmModal').style.display = 'none';
     }
 
-    // ★FIX: ダミー顧客は削除できないように保護
     async function executeDeleteCustomer() {
       if (isDemoMode) {
         alert("お手本（ダミー）データのため、削除はできません。\n(開発者モード時のみ可能)");
@@ -1350,14 +1446,15 @@
       btn.disabled = true;
       try {
         const payload = { action: "deleteCustomer", userId: userId, targetName: editingOriginalName };
-        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
-        if((await res.json()).success) { 
+        const res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const json = await res.json();
+        if(json.success) { 
           closeDeleteConfirmModal();
           closeEditModal();
           if (document.getElementById('nameInput').value === editingOriginalName) {
              resetInputForm();
           }
-          fetchCustomers(); 
+          await fetchCustomers(); 
         } else alert("削除に失敗しました。");
       } catch(e) { alert("エラーが発生しました。"); }
       btn.innerText = "削除する"; 
@@ -1418,15 +1515,18 @@
       
       resetInputForm(); 
 
-      fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) })
-        .then(res => res.json())
-        .then(data => { 
+      fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+        .then(async res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(async data => { 
            showCuteToast(true); 
            submitBtn.disabled = false;
            submitBtn.innerText = "✨ AIで作成する";
 
            if(data.success) { 
-              fetchCustomers(); 
+              await fetchCustomers(); 
               const resultText = data.generatedText || "（テキストがありません）";
               
               document.getElementById('inlineResultText').value = resultText;
@@ -1434,7 +1534,9 @@
               
               setTimeout(() => {
                 const scrollArea = document.querySelector('.scroll-area');
-                scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
+                if (scrollArea) {
+                  scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
+                }
               }, 100);
 
            } else { alert("エラーが発生しました: " + (data.error || "不明なエラー")); }
