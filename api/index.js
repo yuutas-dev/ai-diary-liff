@@ -67,12 +67,10 @@ export default async function handler(req, res) {
       let uploadFileId = null;
       let photoUrl = null;
 
-      // 写真がある場合はDifyへの送信とSupabaseへの保存を両方行う
       if (data.mode === "photo" && data.image) {
         const base64Data = data.image.replace(/^data:image\/\w+;base64,/, "");
         const buffer = Buffer.from(base64Data, 'base64');
 
-        // ★NEW: 1. Supabase Storage へ写真を保存してURLを取得する
         const fileName = `${userId}/${Date.now()}.jpg`;
         const { error: storageError } = await supabase.storage
           .from('photos')
@@ -85,7 +83,6 @@ export default async function handler(req, res) {
           console.error("Storage upload error:", storageError);
         }
 
-        // 2. Dify 用アップロード
         const blob = new Blob([buffer], { type: 'image/jpeg' });
         const formData = new FormData();
         formData.append('file', blob, 'image.jpg');
@@ -100,11 +97,8 @@ export default async function handler(req, res) {
         if (uploadJson.id) uploadFileId = uploadJson.id;
       }
 
-      // 接客メモの更新（本番ユーザーのみ）
       if (data.combinedMemoToSave) {
         const memoJson = JSON.parse(data.combinedMemoToSave);
-        
-        // ★NEW: 写真をアップロードできていれば、最後のエピソード（今回の記録）にURLを付与する
         if (photoUrl && memoJson.length > 0) {
           memoJson[memoJson.length - 1].photoUrl = photoUrl;
         }
@@ -150,6 +144,17 @@ export default async function handler(req, res) {
       });
 
       return res.status(200).json({ success: true, generatedText: aiText });
+    }
+
+    // ★NEW: 5. 顧客の削除機能
+    if (action === 'deleteCustomer') {
+      const { error } = await supabase.from('customers')
+        .delete()
+        .eq('user_id', userId)
+        .eq('name', data.targetName);
+        
+      if (error) throw new Error("Supabase削除エラー: " + error.message);
+      return res.status(200).json({ success: true });
     }
 
   } catch (err) {
