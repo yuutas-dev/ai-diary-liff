@@ -1078,7 +1078,6 @@
   <input type="radio" name="style" id="style-custom" class="ui-state" onchange="saveStyleSettings()">
   <input type="radio" name="style" id="style-neat" class="ui-state" onchange="saveStyleSettings()">
 
-  <!-- 修正3: 写真拡大モーダルは一番手前に (10008) -->
   <div id="photoModal" class="modal-overlay" style="z-index: 10008;" onclick="closePhotoModal(event)">
     <div style="position: relative; max-width: 90%; max-height: 90%; margin: auto; display: flex; flex-direction: column; justify-content: center; align-items: center;" onclick="event.stopPropagation()">
       <img id="expandedPhoto" src="" style="width: 100%; height: auto; max-height: 80vh; object-fit: contain; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
@@ -1152,7 +1151,6 @@
     </div>
   </div>
 
-  <!-- 修正3: 削除確認モーダルのz-indexを10007へ調整 -->
   <div id="deleteConfirmModal" class="modal-overlay" style="z-index:10007;">
     <div class="modal-content" style="max-width:360px; text-align:center;">
       <h3 style="margin:0 0 12px; font-weight:900; color:#111827;">顧客を完全に削除しますか？</h3>
@@ -1165,7 +1163,6 @@
     </div>
   </div>
 
-  <!-- 修正3: 顧客編集（閲覧）モーダルに z-index:10006 を設定し、非表示リスト(10005)の前面に表示 -->
   <div id="editCustomerModal" class="modal-overlay" style="z-index: 10006;">
     <div class="modal-content">
       <h2 style="margin: 0 0 20px; font-weight: 900; text-align: center;" id="modalTitle">顧客情報の編集</h2>
@@ -1235,7 +1232,6 @@
         <div class="card mode-photo-ui">
           <span class="label">📷 写真を選ぶ</span>
           <input type="file" id="photoUpload" accept="image/*" style="display:none;" onchange="previewPhoto(event)">
-          <!-- 修正2: JSによるクリックイベントを廃止し、標準の label for を用いることで全WebViewで確実に起動させます -->
           <label for="photoUpload" id="uploadArea" class="upload-area">
             <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
             <img id="photoPreview" alt="">
@@ -1354,7 +1350,7 @@
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--border-color);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--border-color);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.7.1 (Stable)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">9.7.2 (Stable)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: #E5E7EB; cursor: pointer; user-select: none;">dev</div>
@@ -1394,7 +1390,6 @@
     };
 
     const LIFF_ID = "2009843865-hghVLuaS";
-    const GAS_URL = "/api";
 
     let userId = "test-user";
     let customerData = [];
@@ -1816,10 +1811,10 @@
 
     async function fetchCustomers() {
       try {
-        const res = await fetch(GAS_URL, {
+        const res = await fetch("/api/customers/list", {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "getCustomers", userId })
+          body: JSON.stringify({ userId })
         });
         const data = await res.json();
         customerData = data.success ? data.customers.map(c => ({
@@ -2233,7 +2228,6 @@
       }
 
       const payload = {
-        action: "updateCustomer",
         userId,
         oldName: name,
         newName: name,
@@ -2242,7 +2236,7 @@
       };
 
       try {
-        const res = await fetch(GAS_URL, {
+        const res = await fetch("/api/customers/update", {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
@@ -2627,7 +2621,6 @@
       }
     }
 
-    // 修正1: 編集モーダル用のタグ取得関数を新設し、モードの影響を排除
     function getEditorMemoTags() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const masterTags = [...industryConfigs[type].tags];
@@ -2648,7 +2641,7 @@
       const tags = JSON.parse(block.dataset.tags || "[]");
       const content = block.querySelector('.memo-tag-dropdown-content');
       
-      const editorTags = getEditorMemoTags(); // activeTagsの代わりに専用タグを使用
+      const editorTags = getEditorMemoTags(); 
       
       content.innerHTML = editorTags.map(t => {
         const isSelected = tags.includes(t);
@@ -2818,16 +2811,17 @@
       btn.innerText = "保存中...";
       btn.disabled = true;
 
+      const payload = {
+        userId,
+        oldName: editingOriginalName,
+        newName,
+        newTags: newTagsStr,
+        newMemo
+      };
+
       try {
-        const payload = {
-          action: isCreate ? "createCustomer" : "updateCustomer",
-          userId,
-          oldName: editingOriginalName,
-          newName,
-          newTags: newTagsStr,
-          newMemo
-        };
-        const res = await fetch(GAS_URL, {
+        const endpoint = isCreate ? "/api/customers/create" : "/api/customers/update";
+        const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
@@ -2868,8 +2862,8 @@
       btn.disabled = true;
 
       try {
-        const payload = { action: "deleteCustomer", userId, targetName: editingOriginalName };
-        const res = await fetch(GAS_URL, {
+        const payload = { userId, targetName: editingOriginalName };
+        const res = await fetch("/api/customers/delete", {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
@@ -2899,6 +2893,11 @@
 
       btn.innerText = "削除する";
       btn.disabled = false;
+    }
+
+    function triggerPhotoUpload() {
+      const input = document.getElementById('photoUpload');
+      if (input) input.click();
     }
 
     function previewPhoto(event) {
@@ -3010,7 +3009,6 @@
       }
 
       const payload = {
-        action: "generate",
         userId,
         name,
         episode: todayEpisode,
@@ -3031,7 +3029,7 @@
 
       resetInputForm();
 
-      fetch(GAS_URL, {
+      fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify(payload)
