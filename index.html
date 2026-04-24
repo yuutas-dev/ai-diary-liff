@@ -3471,6 +3471,20 @@
       el.scrollTop = el.scrollHeight;
     }
 
+    function buildAiCustomerTags(rawTags) {
+      const systemExactTags = new Set(['ダミー', '非表示', '一軍固定', 'system', 'dummy']);
+      const systemKeywordPatterns = ['ダミー', 'dummy', '非表示', 'hidden', '一軍固定', 'pin', '固定', 'system'];
+      const rankNoisePatterns = ['新規', '初回', '初めて', '一見', '常連', 'リピーター', '1回目', '一回目', '2回目', '二回目', '3回目', '三回目'];
+      const normalize = (tag) => String(tag || '').trim();
+
+      return Array.from(new Set((Array.isArray(rawTags) ? rawTags : [])
+        .map(normalize)
+        .filter(Boolean)
+        .filter(tag => !systemExactTags.has(tag))
+        .filter(tag => !systemKeywordPatterns.some(keyword => tag.toLowerCase().includes(keyword.toLowerCase())))
+        .filter(tag => !rankNoisePatterns.some(keyword => tag.includes(keyword)))));
+    }
+
     async function generateDiary() {
       const name = document.getElementById('nameInput').value;
       const todayEpisode = document.getElementById('todayEpisodeInput').value;
@@ -3502,8 +3516,7 @@
           else customerRank = '常連';
         }
 
-        const forbiddenTags = ['新規', '初回', '初回来店', '初めて', '一見', '常連', 'リピーター', '2回目', '二回目', '3回目', '三回目', '1回目', '一回目'];
-        const cleanedCustomerTags = currentCustomerTags.filter(tag => !forbiddenTags.some(forbidden => tag.includes(forbidden)));
+        const cleanedCustomerTags = buildAiCustomerTags(currentCustomerTags);
 
         let memos = [];
         try {

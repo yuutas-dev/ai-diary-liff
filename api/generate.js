@@ -12,6 +12,19 @@ function normalizeTags(tags) {
   return [];
 }
 
+function sanitizeCustomerTagsForAi(tags) {
+  const systemExactTags = new Set(['ダミー', '非表示', '一軍固定', 'system', 'dummy']);
+  const systemKeywordPatterns = ['ダミー', 'dummy', '非表示', 'hidden', '一軍固定', 'pin', '固定', 'system'];
+  const rankNoisePatterns = ['新規', '初回', '初めて', '一見', '常連', 'リピーター', '1回目', '一回目', '2回目', '二回目', '3回目', '三回目'];
+
+  return Array.from(new Set(normalizeTags(tags)
+    .map(t => String(t || '').trim())
+    .filter(Boolean)
+    .filter(tag => !systemExactTags.has(tag))
+    .filter(tag => !systemKeywordPatterns.some(keyword => tag.toLowerCase().includes(keyword.toLowerCase())))
+    .filter(tag => !rankNoisePatterns.some(keyword => tag.includes(keyword)))));
+}
+
 function getTodayFormatted() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -102,7 +115,7 @@ export default async function handler(req, res) {
       : (typeof data.episodeText === 'string' ? data.episodeText : (data.episode || ''));
     const factTags = normalizeTags(data.fact_tags || data.factTags);
     const moodTags = normalizeTags(data.mood_tags || data.moodTags);
-    const customerTags = normalizeTags(data.customer_tags || data.customerTags);
+    const customerTags = sanitizeCustomerTagsForAi(data.customer_tags || data.customerTags);
     const customerRank = data.customer_rank || data.customerRank || '新規';
     const pastMemo = data.past_memo || data.pastMemo || '';
     const styleProfileStyle = data.style_profile_style || data.style || data?.style_profile?.style || 'cute';
