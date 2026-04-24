@@ -871,6 +871,15 @@
       line-height: 1.45;
     }
 
+    .edit-stage-flow {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-sub);
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
     .edit-stage-textarea {
       height: 176px;
       margin-bottom: 12px;
@@ -1533,14 +1542,15 @@
         </div>
 
         <div id="inlineResultArea" class="card edit-stage-card" style="display: none; margin-top: 0;">
-          <h3 class="edit-stage-title">🪄 仕上げステージ</h3>
-          <p class="edit-stage-sub">ここで少し整えるほど、あなたらしい文章に近づきます。</p>
-          <p class="edit-stage-note">使うほどAIがあなたの書き方をつかみやすくなります。気になるところだけ軽く手直ししてください。</p>
+          <h3 class="edit-stage-title">✨ あなたらしさを仕上げるステージ</h3>
+          <p class="edit-stage-sub">ここでひとこと整えるだけで、文章がぐっと“あなたっぽく”なります。</p>
+          <p class="edit-stage-note">使うほどAIがあなたの書き方に寄っていきます。気になる部分だけ、軽く手直ししてみてください。</p>
+          <p class="edit-stage-flow">整える → 仕上げる → そのまま送る</p>
           <textarea id="inlineResultText" class="input-field edit-stage-textarea" placeholder="ここに生成された文章が表示されます。自由に仕上げてください。"></textarea>
           <input type="hidden" id="currentEntryId" value="">
           <div style="display:flex; gap:10px;">
-            <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 下書きをコピー</button>
-            <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);">💬 仕上げ文をLINE送信</button>
+            <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 仕上げ文をコピー</button>
+            <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);">💬 このままLINEで送る</button>
           </div>
         </div>
 
