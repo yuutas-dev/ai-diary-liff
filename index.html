@@ -840,6 +840,48 @@
       border-color: transparent;
     }
 
+    .edit-stage-card {
+      border: 1px solid var(--primary-light);
+      background: #FFF;
+      padding: 14px;
+    }
+
+    .edit-stage-title {
+      margin: 0 0 4px;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .edit-stage-sub {
+      margin: 0 0 10px;
+      font-size: 12px;
+      color: var(--text-sub);
+      text-align: center;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .edit-stage-note {
+      margin: 0 0 12px;
+      font-size: 11px;
+      color: var(--text-sub);
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    .edit-stage-textarea {
+      height: 176px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      resize: vertical;
+      min-height: 140px;
+    }
+
     .bottom-nav {
       background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(20px);
@@ -1490,13 +1532,15 @@
           </button>
         </div>
 
-        <div id="inlineResultArea" class="card" style="display: none; border: 1px solid var(--primary-light); background: #FFF; margin-top: 0;">
-          <h3 style="margin: 0 0 12px; font-weight: 700; text-align: center; color: var(--primary); font-size:14px;">✨ 執筆完了！</h3>
-          <textarea id="inlineResultText" class="input-field" style="height: 160px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; background:var(--input-bg); border:none;" placeholder="ここに生成された文章が表示されます。自由に修正できます。"></textarea>
+        <div id="inlineResultArea" class="card edit-stage-card" style="display: none; margin-top: 0;">
+          <h3 class="edit-stage-title">🪄 仕上げステージ</h3>
+          <p class="edit-stage-sub">ここで少し整えるほど、あなたらしい文章に近づきます。</p>
+          <p class="edit-stage-note">使うほどAIがあなたの書き方をつかみやすくなります。気になるところだけ軽く手直ししてください。</p>
+          <textarea id="inlineResultText" class="input-field edit-stage-textarea" placeholder="ここに生成された文章が表示されます。自由に仕上げてください。"></textarea>
           <input type="hidden" id="currentEntryId" value="">
           <div style="display:flex; gap:10px;">
-            <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 コピー</button>
-            <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);">💬 LINE送信</button>
+            <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 下書きをコピー</button>
+            <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);">💬 仕上げ文をLINE送信</button>
           </div>
         </div>
 
