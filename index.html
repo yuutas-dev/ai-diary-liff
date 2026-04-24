@@ -132,6 +132,10 @@
       filter: grayscale(40%);
     }
 
+    .card-customer-select {
+      min-height: 238px;
+    }
+
     #visit-yes:checked ~ .app-container .visit-label-yes,
     #visit-no:checked ~ .app-container .visit-label-no {
       background: #FFF;
@@ -520,25 +524,33 @@
     .accordion-content.open { display: block; }
 
     .create-detail-trigger {
-      display: flex;
-      justify-content: space-between;
+      display: inline-flex;
       align-items: center;
-      background: #FFF;
-      border: 1px dashed var(--border-color);
-      border-radius: 16px;
-      padding: 12px 14px;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 8px 12px;
       cursor: pointer;
+      transition: 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
     }
 
     .create-detail-trigger strong {
-      font-size: 13px;
-      color: var(--text-main);
+      font-size: 12px;
+      color: var(--text-sub);
     }
 
     .create-detail-trigger span {
-      font-size: 11px;
-      color: var(--text-sub);
+      font-size: 10px;
+      color: var(--text-muted);
       font-weight: 700;
+    }
+
+    .create-detail-trigger:hover {
+      background: #FFF;
+      border-color: #D8D1CC;
     }
 
     .details-sheet-overlay {
@@ -557,7 +569,7 @@
       width: min(calc(100vw - 20px), 560px);
       transform: translate(-50%, 110%);
       bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-height) + 64px);
-      max-height: min(72dvh, 620px);
+      max-height: min(66dvh, 560px);
       background: #FFF;
       border-radius: 24px 24px 20px 20px;
       border: 1px solid var(--border-color);
@@ -592,11 +604,11 @@
     }
 
     .details-sheet-body {
-      padding: 14px 16px 18px;
+      padding: 12px 16px 10px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
     }
 
     .details-section-card {
@@ -739,13 +751,18 @@
       font-size: 13px;
       color: var(--text-main);
       margin-bottom: 12px;
-      max-height: 140px;
-      overflow-y: auto;
+      height: 108px;
+      overflow: hidden;
       line-height: 1.6;
       border: 1px solid var(--border-color);
     }
 
-    #pastMemoDisplay { margin-top: 4px; }
+    #pastMemoDisplay {
+      margin-top: 4px;
+      min-height: 66px;
+      max-height: 66px;
+      overflow: hidden;
+    }
 
     .past-memo-label {
       font-size: 11px;
@@ -1394,14 +1411,11 @@
           </div>
         </div>
 
-        <div class="card" style="margin-bottom: 16px;">
-          <div class="create-detail-trigger" onclick="openCreateDetailsSheet()">
-            <div>
-              <strong>📝 詳細設定を追加（任意）</strong>
-              <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">いつもの雰囲気・今日の出来事・本文をまとめて入力</div>
-            </div>
+        <div style="margin: -4px 0 12px; display:flex; justify-content:flex-end;">
+          <button type="button" class="create-detail-trigger" onclick="openCreateDetailsSheet()">
+            <strong>📝 詳細設定</strong>
             <span>開く ▲</span>
-          </div>
+          </button>
         </div>
 
         <div id="inlineResultArea" class="card" style="display: none; border: 1px solid var(--primary-light); background: #FFF; margin-top: 0;">
@@ -1642,6 +1656,36 @@
 
     function getTodayFormatted() {
       return getTodayString().replace(/-/g, '/');
+    }
+
+    const EMPTY_PAST_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+    const PHOTO_MODE_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写メ日記モードでは顧客情報は使用しません)</div>";
+
+    function buildPastMemoPreviewHtml(memos) {
+      if (!Array.isArray(memos) || memos.length === 0) {
+        return '<div style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(過去の記録はありません)</div>';
+      }
+      const recent = [...memos]
+        .filter(m => m && (m.text || m.date))
+        .slice(-2)
+        .reverse();
+
+      return recent.map((m) => {
+        const tags = Array.isArray(m.tags) ? m.tags.slice(0, 2) : [];
+        const tagsHtml = tags.length > 0
+          ? `<div style="margin-top:4px; display:flex; gap:4px; overflow:hidden;">${tags.map(t => `<span style="background:var(--primary-light); color:var(--primary); font-size:10px; padding:2px 7px; border-radius:10px; font-weight:700; white-space:nowrap;">${t}</span>`).join('')}</div>`
+          : '';
+        const typeBadge = m.type === 'sales'
+          ? `<span style="font-size:10px; background:var(--sales-bg); color:var(--sales-text); padding:1px 6px; border-radius:4px; font-weight:700; margin-right:4px;">📱営業</span>`
+          : '';
+        return `
+          <div style="margin-bottom:8px; padding-bottom:7px; border-bottom:1px dashed var(--border-color);">
+            <div style="font-size:10px; color:var(--text-sub); font-weight:700; margin-bottom:2px;">${typeBadge}${m.date || ''}</div>
+            <div style="font-size:12px; color:var(--text-main); line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${m.text || ''}</div>
+            ${tagsHtml}
+          </div>
+        `;
+      }).join('');
     }
 
     function getFactTagContextKey() {
@@ -1992,11 +2036,11 @@
 
       if (isPhoto) {
         document.getElementById('nameInput').value = "";
-        document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写メ日記モードでは顧客情報は使用しません)</div>";
+        document.getElementById('pastMemoDisplay').innerHTML = PHOTO_MODE_MEMO_HTML;
         currentCustomerTags = [];
         renderAttributeTags();
       } else {
-        document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+        document.getElementById('pastMemoDisplay').innerHTML = EMPTY_PAST_MEMO_HTML;
       }
     }
 
@@ -2624,7 +2668,7 @@
 
       if (nameInput.value === c.name) {
         nameInput.value = "";
-        document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+        document.getElementById('pastMemoDisplay').innerHTML = EMPTY_PAST_MEMO_HTML;
         resetCreateInputState({ clearMood: true, clearEpisode: true });
         currentCustomerTags = [];
         renderAttributeTags();
@@ -2641,33 +2685,7 @@
       nameInput.value = c.name;
 
       const memos = parseMemoToJSON(c.memo);
-      let pastMemoHtml = '';
-      if (memos.length === 0) {
-        pastMemoHtml = '<div style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(過去の記録はありません)</div>';
-      } else {
-        memos.forEach(m => {
-          const tagsHtml = m.tags && m.tags.length > 0
-            ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">${m.tags.map(t => `<span style="background:var(--primary-light); color:var(--primary); font-size:10px; padding:3px 8px; border-radius:12px; font-weight:700;">${t}</span>`).join('')}</div>`
-            : '';
-          const photoHtml = m.photoUrl
-            ? `<img src="${m.photoUrl}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 1px solid var(--border-color); flex-shrink: 0; box-shadow: var(--shadow-sm);" onclick="event.stopPropagation(); openPhotoModal('${m.photoUrl}', event)">`
-            : `<div style="width: 44px; height: 44px; border-radius: 8px; background: var(--input-bg); border: 1px dashed var(--text-muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px;">📷</div>`;
-
-          const typeBadge = m.type === 'sales' ? `<span style="font-size:10px; background:var(--sales-bg); color:var(--sales-text); padding:2px 6px; border-radius:4px; font-weight:700; margin-right:4px;">📱営業</span>` : '';
-
-          pastMemoHtml += `
-            <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border-color); display: flex; gap: 10px; align-items: flex-start;">
-              <div style="flex: 1;">
-                <div style="font-size:11px; color:var(--text-sub); font-weight:700; margin-bottom:4px;">${typeBadge}${m.date}</div>
-                <div style="font-size:13px; color:var(--text-main);">${m.text}</div>
-                ${tagsHtml}
-              </div>
-              ${photoHtml}
-            </div>`;
-        });
-      }
-
-      document.getElementById('pastMemoDisplay').innerHTML = pastMemoHtml;
+      document.getElementById('pastMemoDisplay').innerHTML = buildPastMemoPreviewHtml(memos);
       currentCustomerTags = c.tagsArray.filter(t => t !== '非表示' && t !== '一軍固定');
       renderAttributeTags();
 
@@ -2677,7 +2695,7 @@
 
     function resetInputForm() {
       document.getElementById('nameInput').value = "";
-      document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+      document.getElementById('pastMemoDisplay').innerHTML = EMPTY_PAST_MEMO_HTML;
       currentCustomerTags = [];
       renderAttributeTags();
       resetCreateInputState({ clearMood: true, clearEpisode: true });
@@ -2709,7 +2727,7 @@
 
       const matchedCustomer = customerData.find(c => c.name === text);
       if (!matchedCustomer) {
-        document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+        document.getElementById('pastMemoDisplay').innerHTML = EMPTY_PAST_MEMO_HTML;
         currentCustomerTags = [];
         renderAttributeTags();
       } else {
