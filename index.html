@@ -571,6 +571,15 @@
       font-weight: 700;
     }
 
+    .create-detail-trigger small {
+      display: block;
+      margin-top: 2px;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
     .create-detail-trigger:hover {
       background: #FFF;
       border-color: #D8D1CC;
@@ -827,6 +836,24 @@
       z-index: 850;
       padding: 0;
       pointer-events: none;
+    }
+
+    .create-assist-copy {
+      margin: -6px 0 10px;
+      font-size: 11px;
+      color: var(--text-sub);
+      text-align: center;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .submit-flow-copy {
+      margin: 0 0 8px;
+      font-size: 11px;
+      color: var(--text-sub);
+      text-align: center;
+      line-height: 1.4;
+      font-weight: 700;
     }
 
     .submit-btn {
@@ -1508,7 +1535,7 @@
           <span class="label">👤 誰に送る？ <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">(任意)</span></span>
           <div class="customer-select-sub">
             <span>よく使う相手をタップして選択</span>
-            <span>未選択でも作成OK</span>
+            <span>顧客を選ぶと過去の流れを反映できます。選ばなくても作成できます。</span>
           </div>
           <div class="fade-scroll-wrapper">
             <div class="stories-scroll" id="quickAccessArea">
@@ -1525,8 +1552,8 @@
               <div id="resultArea" class="result-box"></div>
             </div>
           </details>
-          <div class="past-memo-box" style="margin-top: 12px; margin-bottom: 0;">
-            <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(顧客を選択するか、過去の記録がありません)</div>
+          <div class="past-memo-box" style="margin-top: 10px; margin-bottom: 0;">
+            <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(このままでも作れます。顧客を選ぶと過去の流れも活かせます)</div>
           </div>
         </div>
 
@@ -1547,11 +1574,13 @@
             <label for="visit-no" class="toggle-label visit-label-no" style="padding: 6px 0; font-size:12px;">📱 来店なし(営業)</label>
           </div>
         </div>
+        <div id="createAssistText" class="create-assist-copy">そのままでも作れます。詳しく入れるほど、あなたらしくなります。</div>
 
-        <div style="margin: 10px 0 16px; display:flex; justify-content:flex-end;">
+        <div style="margin: 6px 0 12px; display:flex; justify-content:flex-end;">
           <button type="button" class="create-detail-trigger" onclick="openCreateDetailsSheet()">
-            <strong>📝 詳細設定</strong>
+            <strong>📝 もっと細かく調整する（任意）</strong>
             <span>開く ▲</span>
+            <small>ムードや今日の出来事を追加できます</small>
           </button>
         </div>
 
@@ -1570,6 +1599,7 @@
 
         <!-- 💎 CTA 下部固定浮遊 -->
         <div class="sticky-submit">
+          <div id="submitFlowText" class="submit-flow-copy">まずはそのまま作成 → 必要なら詳細設定で調整</div>
           <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
         </div>
 
@@ -1798,8 +1828,8 @@
       return getTodayString().replace(/-/g, '/');
     }
 
-    const EMPTY_PAST_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
-    const PHOTO_MODE_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写メ日記モードでは顧客情報は使用しません)</div>";
+    const EMPTY_PAST_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(このままでも作れます。顧客を選ぶと過去の流れも活かせます)</div>";
+    const PHOTO_MODE_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写真があればそのまま作れます。必要なら一言足してください)</div>";
 
     function buildPastMemoPreviewHtml(memos) {
       if (!Array.isArray(memos) || memos.length === 0) {
@@ -1862,6 +1892,25 @@
       if (customFactInput) customFactInput.value = "";
       renderFactChips();
       if (clearMood) renderMoodChips();
+    }
+
+    function updateCreateAssistText() {
+      const assistEl = document.getElementById('createAssistText');
+      const submitFlowEl = document.getElementById('submitFlowText');
+      if (!assistEl || !submitFlowEl) return;
+
+      const isPhoto = document.getElementById('mode-photo')?.checked;
+      const isVisitYes = document.getElementById('visit-yes')?.checked;
+
+      if (isPhoto) {
+        assistEl.innerText = "写真があればそのまま作れます。必要なら一言足してください。";
+      } else if (isVisitYes) {
+        assistEl.innerText = "そのままでも作れます。詳しく入れるほど、あなたらしくなります。";
+      } else {
+        assistEl.innerText = "そのままでも作れます。営業用に自然な文を作れます。";
+      }
+
+      submitFlowEl.innerText = "まずはそのまま作成 → 必要なら詳細設定で調整";
     }
 
     function renderTexts() {
@@ -1945,6 +1994,12 @@
         const modeEl = document.getElementById('mode-' + params.get('mode'));
         if (modeEl) modeEl.checked = true;
       }
+
+      const visitYesEl = document.getElementById('visit-yes');
+      const visitNoEl = document.getElementById('visit-no');
+      if (visitYesEl) visitYesEl.addEventListener('change', updateCreateAssistText);
+      if (visitNoEl) visitNoEl.addEventListener('change', updateCreateAssistText);
+      updateCreateAssistText();
 
       document.getElementById('nav-data').addEventListener('change', (e) => {
         if (e.target.checked && !isFilterScrolled) {
@@ -2191,6 +2246,7 @@
       } else {
         document.getElementById('pastMemoDisplay').innerHTML = EMPTY_PAST_MEMO_HTML;
       }
+      updateCreateAssistText();
     }
 
     function renderMoodChips() {
@@ -2873,6 +2929,7 @@
         renderQuickAccess();
         const visitYes = document.getElementById('visit-yes');
         if (visitYes) visitYes.checked = true;
+        updateCreateAssistText();
         return;
       }
 
@@ -2891,6 +2948,7 @@
 
       const visitYes = document.getElementById('visit-yes');
       if (visitYes) visitYes.checked = true;
+      updateCreateAssistText();
     }
 
     function resetInputForm() {
@@ -2908,6 +2966,7 @@
       
       const visitYes = document.getElementById('visit-yes');
       if (visitYes) visitYes.checked = true;
+      updateCreateAssistText();
       
       const entryIdInput = document.getElementById('currentEntryId');
       if (entryIdInput) entryIdInput.value = '';
@@ -2930,6 +2989,7 @@
         document.getElementById('pastMemoDisplay').innerHTML = EMPTY_PAST_MEMO_HTML;
         currentCustomerTags = [];
         renderAttributeTags();
+        updateCreateAssistText();
       } else {
         const cIndex = customerData.indexOf(matchedCustomer);
         selectCustomerByIndex(cIndex);
