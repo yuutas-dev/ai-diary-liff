@@ -20,38 +20,29 @@ function getTodayFormatted() {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return sendJson(res, 405, { success: false, error: 'Method Not Allowed' });
 
+  console.log("[DEBUG] API /generate called");
+
   try {
     let data = req.body;
-    if (typeof req.body === 'string') {
-      try {
-        data = JSON.parse(req.body);
-      } catch (parseErr) {
-        console.error('[generate] invalid JSON body:', parseErr);
-        return sendJson(res, 400, { success: false, error: 'Invalid JSON body' });
-      }
-    }
-    if (!data || typeof data !== 'object') data = {};
-
+    if (typeof req.body === 'string') data = JSON.parse(req.body);
     const userId = data?.userId || 'test-user';
-    const messageMode = data?.message_mode || data?.mode || 'text';
-    const businessType = data?.business_type || data?.businessType || '';
-    const rawVisitStatus = data?.visit_status || data?.visitStatus || 'sales';
-    const visitStatus = messageMode === 'photo'
-      ? 'photo'
-      : (rawVisitStatus === 'visit' ? 'visit' : 'sales');
-    console.log('[generate] start', { userId, messageMode, businessType, visitStatus });
+
+    console.log("[DEBUG] Payload received:", { userId, name: data.name, mode: data.mode });
 
     const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
     const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-    if (!supabaseUrl || !supabaseKey) throw new Error('Vercelの環境変数が読み込めていません');
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("[DEBUG] Missing Supabase Env Vars");
+      throw new Error('Vercelの環境変数が読み込めていません');
+    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let uploadFileId = null;
     let photoUrl = null;
 
-    // 画像処理ロジック (既存維持)
-    if (messageMode === 'photo' && typeof data.image === 'string' && data.image) {
+    if (data.mode === 'photo' && data.image) {
+      console.log("[DEBUG] Processing photo mode...");
       const base64Data = data.image.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
 
@@ -63,8 +54,9 @@ export default async function handler(req, res) {
       if (!storageError) {
         const { data: publicUrlData } = supabase.storage.from('photos').getPublicUrl(fileName);
         photoUrl = publicUrlData.publicUrl;
+        console.log("[DEBUG] Photo uploaded to Supabase:", photoUrl);
       } else {
-        console.error('Storage upload error:', storageError);
+        console.error('[DEBUG] Storage upload error:', storageError);
       }
 
       const blob = new Blob([buffer], { type: 'image/jpeg' });
@@ -72,90 +64,81 @@ export default async function handler(req, res) {
       formData.append('file', blob, 'image.jpg');
       formData.append('user', userId);
 
-      try {
-        const uploadRes = await fetch('https://api.dify.ai/v1/files/upload', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${process.env.DIFY_API_KEY}` },
-          body: formData
-        });
-        const uploadJson = await uploadRes.json();
-        if (uploadJson.id) uploadFileId = uploadJson.id;
-        else console.error('[generate] dify file upload failed:', uploadJson);
-      } catch (uploadErr) {
-        console.error('[generate] dify file upload exception:', uploadErr);
+      console.log("[DEBUG] Uploading file to Dify...");
+      const uploadRes = await fetch('https://api.dify.ai/v1/files/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${process.env.DIFY_API_KEY}` },
+        body: formData
+      });
+
+      const uploadJson = await uploadRes.json();
+      if (uploadJson.id) {
+        uploadFileId = uploadJson.id;
+        console.log("[DEBUG] Dify uploadFileId:", uploadFileId);
+      } else {
+        console.error("[DEBUG] Dify file upload failed:", uploadJson);
       }
     }
 
     let customerId = null;
-    if (data?.name) {
-      const { data: custData } = await supabase
+    
+    console.log("[DEBUG] Processing Customer DB...");
+    if (data.combinedMemoToSave && data.name) {
+      const memoJson = JSON.parse(data.combinedMemoToSave);
+      if (photoUrl && memoJson.length > 0) {
+        memoJson[memoJson.length - 1].photoUrl = photoUrl;
+      }
+
+      console.log("[DEBUG] Updating existing customer memo...");
+      const { data: updatedCustomer, error } = await supabase
+        .from('customers')
+        .update({ memo: memoJson, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('name', data.name)
+        .select('id')
+        .maybeSingle(); // 変更箇所
+
+      if (error) {
+        console.error('[DEBUG] Supabaseメモ更新エラー:', error);
+      } else if (updatedCustomer) {
+        customerId = updatedCustomer.id;
+        console.log("[DEBUG] Updated customerId:", customerId);
+      }
+    } else if (data.name) {
+      console.log("[DEBUG] Fetching customer ID for draft...");
+      const { data: custData, error } = await supabase
         .from('customers')
         .select('id')
         .eq('user_id', userId)
         .eq('name', data.name)
-        .maybeSingle();
-      if (custData) customerId = custData.id;
+        .maybeSingle(); // 変更箇所
+
+      if (error) {
+        console.error('[DEBUG] Supabase customer selectエラー:', error);
+      } else if (custData) {
+        customerId = custData.id;
+        console.log("[DEBUG] Fetched customerId:", customerId);
+      }
     }
 
-    const episodeText = typeof data.episode_text === 'string'
-      ? data.episode_text
-      : (typeof data.episodeText === 'string' ? data.episodeText : (data.episode || ''));
-    const factTags = normalizeTags(data.fact_tags || data.factTags);
-    const moodTags = normalizeTags(data.mood_tags || data.moodTags);
-    const customerTags = normalizeTags(data.customer_tags || data.customerTags);
-    const customerRank = data.customer_rank || data.customerRank || '新規';
-    const pastMemo = data.past_memo || data.pastMemo || '';
-    const styleProfile = data.style_profile || {
-      style: data.style || 'cute',
-      tension: data.tension || '3',
-      emoji: data.emoji || '4',
-      custom_text: data.custom_text || data.customText || ''
-    };
-    const styleProfileFlat = {
-      style_profile_style: styleProfile.style || 'cute',
-      style_profile_tension: styleProfile.tension || '3',
-      style_profile_emoji: styleProfile.emoji || '4',
-      style_profile_custom_text: styleProfile.custom_text || ''
-    };
-
-    // Difyリクエスト
-    const baseInputs = {
-      name: data.name || '',
-      business_type: businessType,
-      message_mode: messageMode,
-      visit_status: visitStatus,
-      is_photo_diary: messageMode === 'photo' ? 'yes' : 'no',
-      routing_business_type: businessType,
-      routing_visit_status: visitStatus,
-      routing_is_photo_diary: messageMode === 'photo' ? 'yes' : 'no',
-      route_key: messageMode === 'photo' ? 'photo_diary' : `${businessType}_${visitStatus}`,
-      style_profile: styleProfile,
-      ...styleProfileFlat
-    };
-
-    const textModeInputs = {
-      episode_text: episodeText,
-      fact_tags: factTags.join(', '),
-      mood_tags: moodTags.join(', '),
-      customer_rank: customerRank,
-      customer_tags: customerTags.join(', '),
-      past_memo: pastMemo,
-      has_episode_text: episodeText.trim() ? 'yes' : 'no',
-      has_fact_tags: factTags.length > 0 ? 'yes' : 'no',
-      grounding_priority: 'episode_text > fact_tags > mood_tags > past_memo',
-      past_memo_usage_rule: 'Use past_memo as tone/context only. Do not treat it as evidence of today.'
-    };
-
-    const photoModeInputs = {
-      photo_caption_hint: episodeText || '',
-      photo_tags: factTags.join(', '),
-      mood_tags: moodTags.join(', ')
-    };
-
+    console.log("[DEBUG] Preparing Dify Payload...");
     const difyPayload = {
-      inputs: messageMode === 'photo'
-        ? { ...baseInputs, ...photoModeInputs }
-        : { ...baseInputs, ...textModeInputs },
+      inputs: {
+        name: data.name || '',
+        episode: data.episode || '',
+        pastMemo: data.pastMemo || '',
+        customerTags: data.customerTags || '',
+        customerRank: data.customerRank || '新規',
+        episodeTags: data.episodeTags || '',
+        style: data.style || 'cute',
+        tension: data.tension || '3',
+        emoji: data.emoji || '4',
+        custom_text: data.customText || '',
+        businessType: data.businessType || '',
+        industryPrompt: data.industryPrompt || '',
+        mode: data.mode || 'text' ,
+        entry_type: (data.combinedMemoToSave && data.name) ? 'visit' : 'sales'
+      },
       response_mode: 'blocking',
       user: userId
     };
@@ -165,41 +148,50 @@ export default async function handler(req, res) {
       difyPayload.inputs.image_file = { type: 'image', transfer_method: 'local_file', upload_file_id: uploadFileId };
     }
 
-    let difyRes;
-    try {
-      difyRes = await fetch(process.env.DIFY_API_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.DIFY_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(difyPayload)
-      });
-    } catch (difyNetworkErr) {
-      console.error('[generate] dify network error:', difyNetworkErr);
-      return sendJson(res, 502, { success: false, error: 'Dify request failed before response' });
+    const difyUrl = process.env.DIFY_API_URL;
+    const difyKey = process.env.DIFY_API_KEY;
+
+    console.log("[DEBUG] Dify API URL check:", difyUrl ? "EXISTS" : "MISSING");
+    console.log("[DEBUG] Dify API KEY check:", difyKey ? "EXISTS" : "MISSING");
+    console.log("[DEBUG] Dify Payload String:", JSON.stringify(difyPayload));
+
+    if (!difyUrl || !difyKey) {
+      throw new Error("DifyのAPI URLまたはKEYが環境変数に設定されていません");
     }
 
-    let difyData = {};
+    console.log("[DEBUG] Fetching Dify API...");
+    const difyRes = await fetch(difyUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${difyKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(difyPayload)
+    });
+
+    console.log("[DEBUG] Dify Response Status:", difyRes.status, difyRes.statusText);
+    const difyRawText = await difyRes.text();
+    console.log("[DEBUG] Dify Raw Response:", difyRawText);
+
+    let difyData;
     try {
-      difyData = await difyRes.json();
-    } catch (difyJsonErr) {
-      console.error('[generate] dify invalid json:', difyJsonErr);
-      return sendJson(res, 502, { success: false, error: 'Invalid JSON from Dify' });
+      difyData = JSON.parse(difyRawText);
+    } catch(e) {
+      throw new Error("DifyからJSON形式の応答が得られませんでした: " + difyRawText);
     }
+
     if (!difyRes.ok) {
-      console.error('[generate] dify non-200:', { status: difyRes.status, difyData });
-      return sendJson(res, 502, { success: false, error: difyData?.message || `Dify returned ${difyRes.status}` });
+      throw new Error(`Dify APIエラー: ${difyRes.status} ${JSON.stringify(difyData)}`);
     }
 
     const aiText = difyData.data?.outputs?.text || difyData.data?.outputs?.answer || difyData.answer || '生成されましたがテキストが空です。';
 
-    // 【ダブルライト新側】新構造 customer_entries への draft 保存
     let entryId = null;
-    if (messageMode !== 'photo' && customerId) {
-      const isVisit = visitStatus === 'visit';
+    if (data.mode !== 'photo' && customerId) {
+      console.log("[DEBUG] Saving draft to customer_entries...");
+      const isVisit = !!data.combinedMemoToSave;
       const entryType = isVisit ? 'visit' : 'sales';
-      const inputTags = [...factTags, ...moodTags];
+      const inputTags = normalizeTags(data.episodeTags);
 
       const { data: newEntry, error: entryError } = await supabase
         .from('customer_entries')
@@ -208,7 +200,7 @@ export default async function handler(req, res) {
           customer_id: customerId,
           entry_type: entryType,
           entry_date: getTodayFormatted(),
-          input_memo: episodeText,
+          input_memo: data.episode || '',
           input_tags: inputTags,
           photo_url: photoUrl,
           ai_generated_text: aiText,
@@ -216,21 +208,21 @@ export default async function handler(req, res) {
           delivery_status: 'draft'
         })
         .select('id')
-        .single();
+        .maybeSingle();
         
       if (entryError) {
-        console.error('Customer entries insert error:', entryError);
-        // エントリ作成失敗でも生成テキストは返すのでスローはしない
+        console.error('[DEBUG] Customer entries insert error:', entryError);
       } else if (newEntry) {
         entryId = newEntry.id;
+        console.log("[DEBUG] Draft saved successfully. EntryID:", entryId);
       }
     }
 
-    // 生成テキストと共に entry_id をフロントへ返す
-    console.log('[generate] success', { userId, messageMode, hasEntryId: !!entryId });
+    console.log("[DEBUG] Execution finished properly. Returning response.");
     return sendJson(res, 200, { success: true, generatedText: aiText, entry_id: entryId });
+
   } catch (err) {
-    console.error('[generate] backend error:', err);
-    return sendJson(res, 500, { success: false, error: err.message });
+    console.error('[DEBUG] バックエンド処理エラー (Catch):', err);
+    return sendJson(res, 500, { success: false, error: err.message, stack: err.stack });
   }
 }
