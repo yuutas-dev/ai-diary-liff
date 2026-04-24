@@ -1447,7 +1447,7 @@
         <div class="details-sheet-header">
           <div>
             <div style="font-size:14px; font-weight:700;">📝 詳細設定</div>
-            <div style="font-size:11px; color:var(--text-sub);">急ぎならスキップOK。必要な時だけ使えます。</div>
+            <div style="font-size:11px; color:var(--text-sub);">AIがあなたの思いをもっとくみ取ります</div>
           </div>
           <button type="button" onclick="closeCreateDetailsSheet()" style="border:none; background:var(--input-bg); color:var(--text-main); border-radius:12px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer;">閉じる</button>
         </div>
@@ -1455,8 +1455,8 @@
           <div class="details-section-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
               <div>
-                <div class="label" style="margin:0;">🎭 いつもの雰囲気（ムード）</div>
-                <div style="font-size:11px; color:var(--text-sub);">固定語彙から選択。自由入力なし。プリセット保存できます。</div>
+                <div class="label" style="margin:0;">🎭 メッセージの雰囲気（ムード）</div>
+                <div style="font-size:11px; color:var(--text-sub);"></div>
               </div>
               <div style="font-size:11px; color:var(--text-sub); font-weight:700;">選択: <span id="moodCountLabel">0</span></div>
             </div>
@@ -1469,7 +1469,7 @@
 
           <div class="details-section-card">
             <div class="label" style="margin:0;">🧩 今日の出来事（トピック）</div>
-            <div style="font-size:11px; color:var(--text-sub);">その日限定で追加できます。プリセットには保存されません。</div>
+            <div style="font-size:11px; color:var(--text-sub);">保存されません。</div>
             <div id="factTagsArea" class="fact-chip-grid"></div>
             <div style="margin-top: 8px; display: flex; gap: 8px;">
               <input type="text" id="customFactTagInput" placeholder="＋今日だけの出来事を追加" class="input-field" style="padding:10px; font-size:12px; background:#FFF; border:1px solid var(--border-color); flex:1;">
@@ -1481,7 +1481,7 @@
             <div class="label" style="margin:0;">✍️ 伝えたいこと（本文）</div>
             <div style="font-size:11px; color:var(--text-sub); margin-bottom:8px;">短くてもOK。AIが自然な文章に整えます。</div>
             <div class="textarea-wrapper">
-              <textarea id="todayEpisodeInput" class="input-field" placeholder="（例）今日はシャンパン入れてくれてありがとう！" oninput="autoScrollTextarea()" style="background:#FFF; border:1px solid var(--border-color);"></textarea>
+              <textarea id="todayEpisodeInput" class="input-field" placeholder="（例）シャンパン　ありがとう　" oninput="autoScrollTextarea()" style="background:#FFF; border:1px solid var(--border-color);"></textarea>
               <div class="clear-btn" onclick="clearEpisodeInput()">🧹 クリア</div>
             </div>
           </div>
