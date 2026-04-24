@@ -1861,11 +1861,14 @@
       if (!assistEl) return;
 
       const isPhoto = document.getElementById('mode-photo')?.checked;
+      const isVisitYes = document.getElementById('visit-yes')?.checked;
 
       if (isPhoto) {
         assistEl.innerText = "写真があればそのまま作れます。";
+      } else if (isVisitYes) {
+        assistEl.innerText = "ありがとうをつたえる";
       } else {
-        assistEl.innerText = "そのままでも作れます。";
+        assistEl.innerText = "きてほしいをつたえる";
       }
     }
 
