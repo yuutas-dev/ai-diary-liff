@@ -553,6 +553,11 @@
       border-color: #D8D1CC;
     }
 
+    .detail-trigger-inline {
+      display: flex;
+      justify-content: flex-end;
+      margin: 10px 0 78px;
+    }
     .details-sheet-overlay {
       position: fixed;
       inset: 0;
@@ -759,9 +764,11 @@
 
     #pastMemoDisplay {
       margin-top: 4px;
-      min-height: 66px;
-      max-height: 66px;
-      overflow: hidden;
+      height: 66px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
     }
 
     .past-memo-label {
@@ -1428,6 +1435,12 @@
           </div>
         </div>
 
+        <div class="detail-trigger-inline">
+          <button type="button" class="create-detail-trigger" onclick="openCreateDetailsSheet()">
+            <strong>📝 詳細設定</strong>
+            <span>開く ▲</span>
+          </button>
+        </div>
         <!-- 💎 CTA 下部固定浮遊 -->
         <div class="sticky-submit">
           <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
@@ -1667,8 +1680,14 @@
       }
       const recent = [...memos]
         .filter(m => m && (m.text || m.date))
-        .slice(-2)
-        .reverse();
+        .sort((a, b) => {
+          const ta = Date.parse((a.date || '').replace(/\//g, '-'));
+          const tb = Date.parse((b.date || '').replace(/\//g, '-'));
+          if (Number.isNaN(ta) && Number.isNaN(tb)) return 0;
+          if (Number.isNaN(ta)) return -1;
+          if (Number.isNaN(tb)) return 1;
+          return ta - tb;
+        });
 
       return recent.map((m) => {
         const tags = Array.isArray(m.tags) ? m.tags.slice(0, 2) : [];
