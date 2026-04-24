@@ -2350,7 +2350,41 @@
       return diffTime < 0 ? 0 : Math.floor(diffTime / (1000 * 60 * 60 * 24));
     }
 
+    function getDaysSinceDate(dateStr) {
+      if (!dateStr) return null;
+      const d = new Date(String(dateStr).replace(/-/g, '/'));
+      if (isNaN(d)) return null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      d.setHours(0, 0, 0, 0);
+      const diffTime = today - d;
+      return diffTime < 0 ? 0 : Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function getDaysSinceRecentSalesContact(c) {
+      const salesContacts = (Array.isArray(c.entries) ? c.entries : []).filter(e => {
+        const type = e?.type || e?.entry_type;
+        const status = e?.status || e?.delivery_status;
+        return type === 'sales' && (status === 'line_sent' || status === 'copied');
+      });
+      if (salesContacts.length === 0) return null;
+
+      let latestDate = null;
+      salesContacts.forEach(e => {
+        const date = e?.date || e?.entry_date || '';
+        const current = new Date(String(date).replace(/-/g, '/'));
+        if (isNaN(current)) return;
+        if (!latestDate || current.getTime() > latestDate.getTime()) latestDate = current;
+      });
+      if (!latestDate) return null;
+      return getDaysSinceDate(latestDate.toISOString().slice(0, 10));
+    }
+
     function isAlertCustomer(c) {
+      const SALES_CONTACT_SNOOZE_DAYS = 5;
+      const recentSalesContactDays = getDaysSinceRecentSalesContact(c);
+      if (recentSalesContactDays !== null && recentSalesContactDays <= SALES_CONTACT_SNOOZE_DAYS) return false;
+
       const stats = getCustomerStats(c);
       const days = getDaysSinceLastVisit(c.memo);
       if (days === null) return false;
