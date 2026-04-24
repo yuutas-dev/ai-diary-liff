@@ -112,7 +112,8 @@ export default async function handler(req, res) {
         custom_text: data.customText || '',
         businessType: data.businessType || '',
         industryPrompt: data.industryPrompt || '',
-        mode: data.mode || 'text'
+        mode: data.mode || 'text' ,
+        entry_type: (data.combinedMemoToSave && data.name) ? 'visit' : 'sales'
       },
       response_mode: 'blocking',
       user: userId
