@@ -104,17 +104,17 @@ export default async function handler(req, res) {
       }
     }
 
-    const manualVisitIdsToDelete = (existingEntries || [])
-      .filter(e => e.entry_type === 'visit' && e.delivery_status === 'manual' && !keepIds.has(e.id))
+    const manualEntryIdsToDelete = (existingEntries || [])
+      .filter(e => (e.entry_type === 'visit' || e.entry_type === 'sales') && e.delivery_status === 'manual' && !keepIds.has(e.id))
       .map(e => e.id);
 
-    if (manualVisitIdsToDelete.length > 0) {
+    if (manualEntryIdsToDelete.length > 0) {
       const { error: deleteError } = await supabase
         .from('customer_entries')
         .delete()
         .eq('user_id', userId)
         .eq('customer_id', customerId)
-        .in('id', manualVisitIdsToDelete);
+        .in('id', manualEntryIdsToDelete);
       if (deleteError) throw new Error('不要エントリ削除エラー: ' + deleteError.message);
     }
 

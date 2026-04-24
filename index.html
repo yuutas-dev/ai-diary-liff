@@ -3142,14 +3142,13 @@
     }
 
     async function saveManualVisitEntries(customerId, memoBlocks) {
-      const visitEntries = memoBlocks.filter(m => (m.type || 'visit') === 'visit');
       const res = await fetch("/api/entries/upsert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
           customerId,
-          entries: visitEntries
+          entries: memoBlocks
         })
       });
       return res.json();
