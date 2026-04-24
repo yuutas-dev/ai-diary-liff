@@ -384,6 +384,15 @@
       position: relative;
     }
 
+    .story-item.selected .story-ring {
+      box-shadow: 0 0 0 2px rgba(223, 138, 155, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .story-item.selected .story-name {
+      color: var(--primary);
+    }
+
     .story-ring {
       width: 62px;
       height: 62px;
@@ -1080,6 +1089,40 @@
       z-index: 50;
     }
 
+    .customer-select-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .customer-search-toggle {
+      margin-top: 6px;
+    }
+
+    .customer-search-toggle summary {
+      list-style: none;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-sub);
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .customer-search-toggle summary::-webkit-details-marker { display: none; }
+
+    .customer-search-body {
+      margin-top: 8px;
+    }
+
     .suggest-item {
       padding: 12px 16px;
       border-bottom: 1px solid var(--border-color);
@@ -1399,6 +1442,10 @@
         <!-- 👤 誰に送る？ -->
         <div class="card card-customer-select">
           <span class="label">👤 誰に送る？ <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">(任意)</span></span>
+          <div class="customer-select-sub">
+            <span>よく使う相手をタップして選択</span>
+            <span>未選択でも作成OK</span>
+          </div>
           <div class="fade-scroll-wrapper">
             <div class="stories-scroll" id="quickAccessArea">
               <div class="story-item">
@@ -1407,10 +1454,13 @@
               </div>
             </div>
           </div>
-          <div style="position: relative;">
-            <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
-            <div id="resultArea" class="result-box"></div>
-          </div>
+          <details class="customer-search-toggle">
+            <summary>⌕ 名前で探す（補助）</summary>
+            <div class="customer-search-body" style="position: relative;">
+              <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()" style="padding:12px; font-size:13px;">
+              <div id="resultArea" class="result-box"></div>
+            </div>
+          </details>
           <div class="past-memo-box" style="margin-top: 12px; margin-bottom: 0;">
             <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(顧客を選択するか、過去の記録がありません)</div>
           </div>
@@ -2130,17 +2180,29 @@
       renderFactChips();
     }
 
+    function getMoodPresetStorageKey() {
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      return `savedMoodTagsPreset_${type}`;
+    }
+
     function saveMoodPreset() {
       if (selectedMoodTags.length === 0) {
         alert("感情タグが選択されていません");
         return;
       }
-      localStorage.setItem('savedMoodTagsPreset', JSON.stringify(selectedMoodTags));
+      const storageKey = getMoodPresetStorageKey();
+      localStorage.setItem(storageKey, JSON.stringify(selectedMoodTags));
       showActionToast('プリセットを保存しました');
     }
 
     function loadMoodPreset() {
-      const saved = JSON.parse(localStorage.getItem('savedMoodTagsPreset') || '[]');
+      const storageKey = getMoodPresetStorageKey();
+      let saved = [];
+      try {
+        saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      } catch (e) {
+        saved = [];
+      }
       if (saved.length === 0) {
         alert("保存されたプリセットがありません");
         return;
@@ -2357,6 +2419,7 @@
     function renderQuickAccess() {
       const area = document.getElementById('quickAccessArea');
       area.innerHTML = "";
+      const selectedName = document.getElementById('nameInput')?.value || "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
       const targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
 
@@ -2377,6 +2440,7 @@
       filtered.slice(0, 15).forEach(item => {
         const c = item.c;
         const index = item.index;
+        const isSelected = selectedName === c.name;
         const stats = getCustomerStats(c);
         let topBadge = '';
         if (stats.isVip) topBadge = `<div class="story-badge" style="background:var(--vip-border); border-color:#FFF; color:#A48624;">👑VIP</div>`;
@@ -2386,7 +2450,8 @@
         const alertBadgeHtml = isAlert ? `<div class="story-alert-badge">🚨</div>` : '';
 
         const ringClass = stats.isVip ? "story-ring story-ring-vip" : "story-ring";
-        area.innerHTML += `<div class="story-item" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}${alertBadgeHtml}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
+        const selectedClass = isSelected ? " selected" : "";
+        area.innerHTML += `<div class="story-item${selectedClass}" onclick="selectCustomerByIndex(${index})"><div class="${ringClass}">${topBadge}${alertBadgeHtml}<div class="story-inner">${String(c.name).charAt(0)}</div></div><span class="story-name">${c.name}</span></div>`;
       });
     }
 
@@ -2701,6 +2766,7 @@
         resetCreateInputState({ clearMood: true, clearEpisode: true });
         currentCustomerTags = [];
         renderAttributeTags();
+        renderQuickAccess();
         const visitYes = document.getElementById('visit-yes');
         if (visitYes) visitYes.checked = true;
         return;
@@ -2717,6 +2783,7 @@
       document.getElementById('pastMemoDisplay').innerHTML = buildPastMemoPreviewHtml(memos);
       currentCustomerTags = c.tagsArray.filter(t => t !== '非表示' && t !== '一軍固定');
       renderAttributeTags();
+      renderQuickAccess();
 
       const visitYes = document.getElementById('visit-yes');
       if (visitYes) visitYes.checked = true;
