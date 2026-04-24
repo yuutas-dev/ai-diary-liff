@@ -11,6 +11,7 @@
       --card-bg: #FFFFFF;
       --input-bg: #F4F3F0;
       
+      
       /* 💎 Text Colors */
       --text-main: #433E3C;
       --text-sub: #8D8885;
@@ -3395,10 +3396,11 @@
           const tagsStr = filteredTags.length > 0 ? `(タグ: ${filteredTags.join(', ')})` : '';
           return `${m.date}: ${m.text} ${tagsStr}`.trim();
         }).join('\n---\n');
-        const industryPrompt = (industryConfigs?.[type]?.prompt) || '';
-
         const messageMode = isPhoto ? "photo" : "text";
-        const visitStatus = messageMode === "text" ? (isVisitYes ? "visit" : "sales") : "photo";
+        const visitStatus = messageMode === "text" ? (isVisitYes ? "visit" : "sales") : "sales";
+        const isPhotoDiary = messageMode === "photo" ? "yes" : "no";
+        const routingVisitStatus = messageMode === "photo" ? "photo" : visitStatus;
+        const routeKey = messageMode === "photo" ? "photo_diary" : `${type}_${visitStatus}`;
         const styleProfile = {
           style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
           tension: document.getElementById('tensionSlider').value,
@@ -3412,29 +3414,28 @@
           business_type: type,
           visit_status: visitStatus,
           message_mode: messageMode,
+          is_photo_diary: isPhotoDiary,
+          route_key: routeKey,
+          routing_business_type: type,
+          routing_visit_status: routingVisitStatus,
+          routing_is_photo_diary: isPhotoDiary,
           episode_text: todayEpisode,
           fact_tags: selectedFactTags,
           mood_tags: selectedMoodTags,
           past_memo: filteredMemosStr,
-          style_profile: styleProfile,
+          style_profile_style: styleProfile.style,
+          style_profile_tension: styleProfile.tension,
+          style_profile_emoji: styleProfile.emoji,
+          style_profile_custom_text: styleProfile.custom_text,
           customer_tags: cleanedCustomerTags,
           customer_rank: customerRank,
-          industryPrompt,
-          image: currentBase64Image,
-          // backward compatible fields
-          businessType: type,
-          visitStatus: visitStatus,
-          mode: messageMode,
-          episodeText: todayEpisode,
-          factTags: selectedFactTags,
-          moodTags: selectedMoodTags,
-          pastMemo: filteredMemosStr,
-          style: styleProfile.style,
-          tension: styleProfile.tension,
-          emoji: styleProfile.emoji,
-          customText: styleProfile.custom_text,
-          customerTags: cleanedCustomerTags,
-          customerRank
+          has_episode_text: todayEpisode.trim() ? "yes" : "no",
+          has_fact_tags: selectedFactTags.length > 0 ? "yes" : "no",
+          grounding_priority: "episode_text > fact_tags > mood_tags > past_memo",
+          past_memo_usage_rule: "Use past_memo as tone/context only. Do not treat it as evidence of today.",
+          photo_caption_hint: messageMode === "photo" ? todayEpisode : "",
+          photo_tags: messageMode === "photo" ? selectedFactTags.join(", ") : "",
+          image: currentBase64Image
         };
 
         const res = await fetch("/api/generate", {

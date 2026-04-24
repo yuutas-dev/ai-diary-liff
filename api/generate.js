@@ -34,11 +34,11 @@ export default async function handler(req, res) {
 
     const userId = data?.userId || 'test-user';
     const messageMode = data?.message_mode || data?.mode || 'text';
+    const isPhotoDiary = messageMode === 'photo';
     const businessType = data?.business_type || data?.businessType || '';
     const rawVisitStatus = data?.visit_status || data?.visitStatus || 'sales';
-    const visitStatus = messageMode === 'photo'
-      ? 'photo'
-      : (rawVisitStatus === 'visit' ? 'visit' : 'sales');
+    const visitStatus = rawVisitStatus === 'visit' ? 'visit' : 'sales';
+    const routingVisitStatus = isPhotoDiary ? 'photo' : visitStatus;
     console.log('[generate] start', { userId, messageMode, businessType, visitStatus });
 
     const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     let photoUrl = null;
 
     // 画像処理ロジック (既存維持)
-    if (messageMode === 'photo' && typeof data.image === 'string' && data.image) {
+    if (isPhotoDiary && typeof data.image === 'string' && data.image) {
       const base64Data = data.image.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
 
@@ -105,44 +105,26 @@ export default async function handler(req, res) {
     const customerTags = normalizeTags(data.customer_tags || data.customerTags);
     const customerRank = data.customer_rank || data.customerRank || '新規';
     const pastMemo = data.past_memo || data.pastMemo || '';
-    const styleProfile = data.style_profile || {
-      style: data.style || 'cute',
-      tension: data.tension || '3',
-      emoji: data.emoji || '4',
-      custom_text: data.custom_text || data.customText || ''
-    };
-    const styleProfileFlat = {
-      style_profile_style: styleProfile.style || 'cute',
-      style_profile_tension: styleProfile.tension || '3',
-      style_profile_emoji: styleProfile.emoji || '4',
-      style_profile_custom_text: styleProfile.custom_text || ''
-    };
-    const legacyStyle = {
-      style: styleProfile.style || 'cute',
-      tension: styleProfile.tension || '3',
-      emoji: styleProfile.emoji || '4',
-      customText: styleProfile.custom_text || ''
-    };
+    const styleProfileStyle = data.style_profile_style || data.style || data?.style_profile?.style || 'cute';
+    const styleProfileTension = data.style_profile_tension || data.tension || data?.style_profile?.tension || '3';
+    const styleProfileEmoji = data.style_profile_emoji || data.emoji || data?.style_profile?.emoji || '4';
+    const styleProfileCustomText = data.style_profile_custom_text || data.customText || data?.style_profile?.custom_text || '';
 
     // Difyリクエスト
     const baseInputs = {
       name: data.name || '',
       business_type: businessType,
       message_mode: messageMode,
-      mode: messageMode,
       visit_status: visitStatus,
-      episode: episodeText,
-      pastMemo: pastMemo,
-      customerTags: customerTags.join(', '),
-      customerRank: customerRank,
-      is_photo_diary: messageMode === 'photo' ? 'yes' : 'no',
+      is_photo_diary: isPhotoDiary ? 'yes' : 'no',
       routing_business_type: businessType,
-      routing_visit_status: visitStatus,
-      routing_is_photo_diary: messageMode === 'photo' ? 'yes' : 'no',
-      route_key: messageMode === 'photo' ? 'photo_diary' : `${businessType}_${visitStatus}`,
-      style_profile: styleProfile,
-      ...legacyStyle,
-      ...styleProfileFlat
+      routing_visit_status: routingVisitStatus,
+      routing_is_photo_diary: isPhotoDiary ? 'yes' : 'no',
+      route_key: isPhotoDiary ? 'photo_diary' : `${businessType}_${visitStatus}`,
+      style_profile_style: styleProfileStyle,
+      style_profile_tension: styleProfileTension,
+      style_profile_emoji: styleProfileEmoji,
+      style_profile_custom_text: styleProfileCustomText
     };
 
     const textModeInputs = {
@@ -165,7 +147,7 @@ export default async function handler(req, res) {
     };
 
     const difyPayload = {
-      inputs: messageMode === 'photo'
+      inputs: isPhotoDiary
         ? { ...baseInputs, ...photoModeInputs }
         : { ...baseInputs, ...textModeInputs },
       response_mode: 'blocking',
@@ -208,7 +190,7 @@ export default async function handler(req, res) {
 
     // 【ダブルライト新側】新構造 customer_entries への draft 保存
     let entryId = null;
-    if (messageMode !== 'photo' && customerId) {
+    if (!isPhotoDiary && customerId) {
       const isVisit = visitStatus === 'visit';
       const entryType = isVisit ? 'visit' : 'sales';
       const inputTags = [...factTags, ...moodTags];
@@ -236,7 +218,7 @@ export default async function handler(req, res) {
       } else if (newEntry) {
         entryId = newEntry.id;
       }
-    } else if (messageMode !== 'photo' && !customerId) {
+    } else if (!isPhotoDiary && !customerId) {
       console.log('[generate] skip entry save: customerId not found');
     }
 
