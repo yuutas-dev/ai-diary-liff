@@ -147,6 +147,19 @@
     .mode-text-only { display: block; }
     #mode-photo:checked ~ .app-container .mode-text-only { display: none !important; }
 
+    .photo-mode-hint {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #FFF7EC;
+      border: 1px dashed #F5C88E;
+      color: #8A5B21;
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+      font-weight: 600;
+    }
+
     .style-content-wrapper {
       min-height: 340px;
       position: relative;
@@ -1524,6 +1537,7 @@
             <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
             <img id="photoPreview" alt="">
           </label>
+          <div class="photo-mode-hint">📸 写メ日記では顧客情報・過去メモ・来店区分は使わず、写真と本文メモを中心に作成します。</div>
         </div>
 
         <!-- 🚶‍♀️ 来店あり/なし トグル -->
@@ -2170,6 +2184,8 @@
       if (isPhoto) {
         document.getElementById('nameInput').value = "";
         document.getElementById('pastMemoDisplay').innerHTML = PHOTO_MODE_MEMO_HTML;
+        document.getElementById('resultArea').innerHTML = '';
+        document.getElementById('visit-yes').checked = true;
         currentCustomerTags = [];
         renderAttributeTags();
       } else {
@@ -3576,11 +3592,17 @@
           custom_text: document.getElementById('customStyleText').value
         };
 
+        const effectiveName = messageMode === "photo" ? "" : name;
+        const effectivePastMemo = messageMode === "photo" ? "" : filteredMemosStr;
+        const effectiveCustomerTags = messageMode === "photo" ? [] : cleanedCustomerTags;
+        const effectiveCustomerRank = messageMode === "photo" ? "" : customerRank;
+        const effectiveVisitStatus = messageMode === "photo" ? "sales" : visitStatus;
+
         const payload = {
           userId,
-          name,
+          name: effectiveName,
           business_type: type,
-          visit_status: visitStatus,
+          visit_status: effectiveVisitStatus,
           message_mode: messageMode,
           is_photo_diary: isPhotoDiary,
           route_key: routeKey,
@@ -3590,13 +3612,13 @@
           episode_text: todayEpisode,
           fact_tags: selectedFactTags,
           mood_tags: selectedMoodTags,
-          past_memo: filteredMemosStr,
+          past_memo: effectivePastMemo,
           style_profile_style: styleProfile.style,
           style_profile_tension: styleProfile.tension,
           style_profile_emoji: styleProfile.emoji,
           style_profile_custom_text: styleProfile.custom_text,
-          customer_tags: cleanedCustomerTags,
-          customer_rank: customerRank,
+          customer_tags: effectiveCustomerTags,
+          customer_rank: effectiveCustomerRank,
           has_episode_text: todayEpisode.trim() ? "yes" : "no",
           has_fact_tags: selectedFactTags.length > 0 ? "yes" : "no",
           grounding_priority: "episode_text > fact_tags > mood_tags > past_memo",
