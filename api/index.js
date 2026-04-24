@@ -99,15 +99,9 @@ export default async function handler(req, res) {
       const tagsArray = data.newTags
         ? String(data.newTags).split(',').map(t => t.trim()).filter(Boolean)
         : [];
-      const memoJson =
-        typeof data.newMemo === 'string'
-          ? JSON.parse(data.newMemo)
-          : (data.newMemo || []);
-
       const { error } = await supabase.from('customers').insert({
         user_id: userId,
         name: data.newName,
-        memo: memoJson,
         tags: tagsArray
       });
 
@@ -120,16 +114,10 @@ export default async function handler(req, res) {
       const tagsArray = data.newTags
         ? String(data.newTags).split(',').map(t => t.trim()).filter(Boolean)
         : [];
-      const memoJson =
-        typeof data.newMemo === 'string'
-          ? JSON.parse(data.newMemo)
-          : (data.newMemo || []);
-
       const { error } = await supabase
         .from('customers')
         .update({
           name: data.newName,
-          memo: memoJson,
           tags: tagsArray,
           updated_at: new Date().toISOString()
         })
@@ -193,32 +181,13 @@ export default async function handler(req, res) {
         if (uploadJson.id) uploadFileId = uploadJson.id;
       }
 
-      if (data.combinedMemoToSave && data.name) {
-        const memoJson = JSON.parse(data.combinedMemoToSave);
-
-        if (photoUrl && memoJson.length > 0) {
-          memoJson[memoJson.length - 1].photoUrl = photoUrl;
-        }
-
-        const { error } = await supabase
-          .from('customers')
-          .update({
-            memo: memoJson,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId)
-          .eq('name', data.name);
-
-        if (error) throw new Error('Supabaseメモ更新エラー: ' + error.message);
-      }
-
       const episodeText = typeof data.episodeText === 'string'
         ? data.episodeText
         : (data.episode || '');
       const factTags = normalizeTags(data.factTags || data.episodeTags);
       const moodTags = normalizeTags(data.moodTags);
       const customerTags = normalizeTags(data.customerTags);
-      const visitStatus = data.visitStatus || ((data.combinedMemoToSave && data.name) ? 'visit' : 'sales');
+      const visitStatus = data.visitStatus || 'sales';
 
       const difyPayload = {
         inputs: {

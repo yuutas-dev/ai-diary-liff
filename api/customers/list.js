@@ -51,6 +51,7 @@ export default async function handler(req, res) {
     const finalCustomers = Array.from(combinedCustMap.values());
 
     const customerIds = finalCustomers.map(c => c.id);
+    if (customerIds.length === 0) return sendJson(res, 200, { success: true, customers: [] });
 
     // 2. customer_entries 取得
     const { data: entriesData, error: entriesError } = await supabase
@@ -68,31 +69,25 @@ export default async function handler(req, res) {
       entriesMap[e.customer_id].push(e);
     });
 
-    // 3. マッピング (フロントとの互換性を維持したmemo再構築)
+    // 3. マッピング (customer_entries から互換memoを再構築)
     const customers = finalCustomers.map(c => {
-      const entries = entriesMap[c.id];
-      let reconstructedMemo;
-
-      if (entries && entries.length > 0) {
-        // 新テーブルのデータから旧互換のJSONを再構築
-        const memoArr = entries.map(e => ({
-          date: e.entry_date,
-          text: e.input_memo || '',
-          tags: e.input_tags || [],
-          photoUrl: e.photo_url || undefined,
-          type: e.entry_type, // 'visit' or 'sales'
-          status: e.delivery_status
-        }));
-        reconstructedMemo = JSON.stringify(memoArr);
-      } else {
-        // フォールバック (未移行や手動旧データなど)
-        reconstructedMemo = typeof c.memo === 'string' ? c.memo : JSON.stringify(c.memo || []);
-      }
+      const entries = entriesMap[c.id] || [];
+      const memoArr = entries.map(e => ({
+        id: e.id,
+        date: e.entry_date,
+        text: e.input_memo || '',
+        tags: e.input_tags || [],
+        photoUrl: e.photo_url || undefined,
+        type: e.entry_type,
+        status: e.delivery_status
+      }));
 
       return {
+        id: c.id,
         name: c.name,
-        memo: reconstructedMemo,
-        tags: normalizeTags(c.tags).join(', ')
+        memo: JSON.stringify(memoArr),
+        tags: normalizeTags(c.tags).join(', '),
+        entries: memoArr
       };
     });
 

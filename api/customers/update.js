@@ -19,21 +19,28 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const tagsArray = data.newTags ? String(data.newTags).split(',').map(t => t.trim()).filter(Boolean) : [];
-    const memoJson = typeof data.newMemo === 'string' ? JSON.parse(data.newMemo) : (data.newMemo || []);
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('customers')
       .update({
         name: data.newName,
-        memo: memoJson,
         tags: tagsArray,
         updated_at: new Date().toISOString()
       })
       .eq('user_id', userId)
-      .eq('name', data.oldName);
+      .eq('name', data.oldName)
+      .select('id, name, tags')
+      .single();
 
     if (error) throw new Error('Supabase更新エラー: ' + error.message);
-    return sendJson(res, 200, { success: true });
+    return sendJson(res, 200, {
+      success: true,
+      customer: {
+        id: updated.id,
+        name: updated.name,
+        tags: (updated.tags || []).join(', ')
+      }
+    });
   } catch (err) {
     console.error('バックエンド処理エラー:', err);
     return sendJson(res, 500, { success: false, error: err.message });

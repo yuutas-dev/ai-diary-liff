@@ -1929,6 +1929,8 @@
         const data = await res.json();
         customerData = data.success ? data.customers.map(c => ({
           ...c,
+          id: c.id || null,
+          entries: Array.isArray(c.entries) ? c.entries : [],
           tagsArray: c.tags ? c.tags.split(',').map(t => t.trim()).filter(Boolean) : []
         })) : [];
         renderCustomerList();
@@ -2317,7 +2319,7 @@
       c.tagsArray = newTags;
       renderCustomerList(document.getElementById('customerSearch').value);
       
-      await updateCustomerTagsOnly(c.name, newTags, c.memo);
+      await updateCustomerTagsOnly(c.name, newTags);
     }
 
     async function setHidden() {
@@ -2331,11 +2333,10 @@
       c.tagsArray = newTags;
       renderCustomerList(document.getElementById('customerSearch').value);
 
-      await updateCustomerTagsOnly(c.name, newTags, c.memo);
+      await updateCustomerTagsOnly(c.name, newTags);
     }
 
-    async function updateCustomerTagsOnly(name, tagsArray, memo) {
-      const memoJson = typeof memo === 'string' ? memo : JSON.stringify(memo);
+    async function updateCustomerTagsOnly(name, tagsArray) {
       const c = customerData.find(cust => cust.name === name);
 
       if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
@@ -2345,12 +2346,10 @@
       }
 
       const payload = {
-        action: "updateCustomer",
         userId,
         oldName: name,
         newName: name,
-        newTags: tagsArray.join(', '),
-        newMemo: memoJson
+        newTags: tagsArray.join(', ')
       };
 
       try {
@@ -2442,7 +2441,7 @@
       }
       renderCustomerList(document.getElementById('customerSearch').value);
       
-      await updateCustomerTagsOnly(c.name, newTags, c.memo);
+      await updateCustomerTagsOnly(c.name, newTags);
     }
 
     function selectCustomerByIndex(index) {
@@ -2567,12 +2566,13 @@
       area.style.display = matchCount > 0 ? "block" : "none";
     }
 
-    function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "", isExpanded = false, isReadOnly = false, type = 'visit', status = 'legacy') {
+    function addMemoBlock(date = getTodayString(), text = "", tags = [], photoUrl = "", isExpanded = false, isReadOnly = false, type = 'visit', status = 'legacy', entryId = null) {
       const area = document.getElementById('editMemoBlocksArea');
       const blockId = 'memo-block-' + Date.now() + Math.random().toString(36).substr(2, 9);
       const div = document.createElement('div');
       div.className = 'memo-block' + (isExpanded ? ' expanded' : '');
       div.id = blockId;
+      if (entryId) div.dataset.entryId = entryId;
       div.dataset.tags = JSON.stringify(tags);
       div.dataset.readonly = isReadOnly;
       div.dataset.type = type;
@@ -2787,20 +2787,20 @@
 
     function buildMemoFromBlocks() {
       const blocks = Array.from(document.querySelectorAll('#editMemoBlocksArea .memo-block'));
-      return JSON.stringify(blocks.map(block => {
+      return blocks.map(block => {
         const isReadOnly = block.dataset.readonly === 'true';
         if(isReadOnly) return null; 
         
-        const d = block.querySelector('.memo-date').value.replace(/-/g, '/');
+        const d = block.querySelector('.memo-date').value.replace(/-/g, '-');
         const t = block.querySelector('.memo-text').value.trim();
         const tags = JSON.parse(block.dataset.tags || "[]");
         const photoUrl = block.dataset.photo || undefined;
         const type = block.dataset.type || 'visit';
-        const status = block.dataset.status || 'legacy';
+        const id = block.dataset.entryId || null;
 
         if (!t && !d && tags.length === 0 && !photoUrl) return null;
-        return { date: d, text: t, tags, photoUrl, type, status };
-      }).filter(m => m !== null));
+        return { id, date: d, text: t, tags, photoUrl, type };
+      }).filter(m => m !== null);
     }
 
     function toggleTagAccordion() {
@@ -2866,7 +2866,10 @@
       else if (memos.length === 0 && isReadOnly) {
         area.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-weight:700; padding:20px;">過去の記録がありません</p>';
       }
-      else memos.forEach(m => addMemoBlock(m.date, m.text, m.tags || [], m.photoUrl || "", false, isReadOnly, m.type || 'visit', m.status || 'legacy'));
+      else memos.forEach(m => {
+        const blockReadOnly = isReadOnly || (m.type === 'sales');
+        addMemoBlock(m.date, m.text, m.tags || [], m.photoUrl || "", false, blockReadOnly, m.type || 'visit', m.status || 'legacy', m.id || null);
+      });
 
       document.getElementById('editCustomerModal').style.display = 'flex';
       setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
@@ -2918,6 +2921,20 @@
       document.getElementById('editCustomerModal').style.display = 'none';
     }
 
+    async function saveManualVisitEntries(customerId, memoBlocks) {
+      const visitEntries = memoBlocks.filter(m => (m.type || 'visit') === 'visit');
+      const res = await fetch("/api/entries/upsert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          customerId,
+          entries: visitEntries
+        })
+      });
+      return res.json();
+    }
+
     async function saveCustomerEdit() {
       if (isDemoMode) {
         closeEditModal();
@@ -2926,7 +2943,7 @@
 
       const isCreate = document.getElementById('isCreateMode').value === "true";
       const newName = document.getElementById('editCustomerName').value.trim();
-      const newMemo = buildMemoFromBlocks();
+      const memoBlocks = buildMemoFromBlocks();
       const newTagsStr = tempSelectedAttributes.join(', ');
       if (!newName) return alert("名前は必須です");
 
@@ -2938,19 +2955,28 @@
         userId,
         oldName: editingOriginalName,
         newName,
-        newTags: newTagsStr,
-        newMemo
+        newTags: newTagsStr
       };
 
       try {
         const endpoint = isCreate ? "/api/customers/create" : "/api/customers/update";
-        const res = await fetch(endpoint, {
+        const customerRes = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-        const json = await res.json();
-        if (json.success) {
+        const customerJson = await customerRes.json();
+        if (customerJson.success) {
+          const customerId = customerJson.customer?.id || customerData.find(c => c.name === newName)?.id;
+          if (!customerId) {
+            alert("顧客IDの取得に失敗しました。");
+            return;
+          }
+          const entriesJson = await saveManualVisitEntries(customerId, memoBlocks);
+          if (!entriesJson.success) {
+            alert("接客履歴の保存に失敗しました。");
+            return;
+          }
           await fetchCustomers();
           closeEditModal();
         } else {
@@ -3143,19 +3169,6 @@
         return `${m.date}: ${m.text} ${tagsStr}`.trim();
       }).join('\n---\n');
 
-      let shouldSaveMemo = false;
-      if (!isPhoto && isVisitYes) {
-        if (todayEpisode || selectedFactTags.length > 0 || selectedMoodTags.length > 0) {
-          const newEpisodeObj = { 
-            date: getTodayFormatted(), 
-            text: todayEpisode, 
-            tags: [...selectedFactTags, ...selectedMoodTags] 
-          };
-          memos.push(newEpisodeObj);
-          shouldSaveMemo = true;
-        }
-      }
-
       const payload = {
         userId,
         name,
@@ -3164,7 +3177,6 @@
         moodTags: selectedMoodTags,
         visitStatus: isVisitYes ? "visit" : "sales",
         pastMemo: filteredMemosStr,
-        combinedMemoToSave: shouldSaveMemo ? JSON.stringify(memos) : null,
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
         tension: document.getElementById('tensionSlider').value,
         emoji: document.getElementById('emojiSlider').value,
@@ -3189,7 +3201,7 @@
           submitBtn.innerText = "✨ AIで作成する";
 
           if (data.success) {
-            if (shouldSaveMemo) {
+            if (!isPhoto && name) {
               await fetchCustomers();
             }
             const resultText = data.generatedText || "（テキストがありません）";

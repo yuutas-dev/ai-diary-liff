@@ -67,27 +67,7 @@ export default async function handler(req, res) {
     }
 
     let customerId = null;
-    
-    // 【ダブルライト旧側】旧memoの更新ロジック
-    // data.combinedMemoToSave が存在すれば「来店あり(visit)」と判定
-    if (data.combinedMemoToSave && data.name) {
-      const memoJson = JSON.parse(data.combinedMemoToSave);
-      if (photoUrl && memoJson.length > 0) {
-        memoJson[memoJson.length - 1].photoUrl = photoUrl;
-      }
-
-      const { data: updatedCustomer, error } = await supabase
-        .from('customers')
-        .update({ memo: memoJson, updated_at: new Date().toISOString() })
-        .eq('user_id', userId)
-        .eq('name', data.name)
-        .select('id')
-        .single();
-
-      if (error) throw new Error('Supabaseメモ更新エラー: ' + error.message);
-      if (updatedCustomer) customerId = updatedCustomer.id;
-    } else if (data.name) {
-      // 来店なし(sales)等でも、後で新テーブルに入れるために customer_id を取得
+    if (data.name) {
       const { data: custData } = await supabase
         .from('customers')
         .select('id')
@@ -103,7 +83,7 @@ export default async function handler(req, res) {
     const factTags = normalizeTags(data.factTags || data.episodeTags);
     const moodTags = normalizeTags(data.moodTags);
     const customerTags = normalizeTags(data.customerTags);
-    const visitStatus = data.visitStatus || ((data.combinedMemoToSave && data.name) ? 'visit' : 'sales');
+    const visitStatus = data.visitStatus || 'sales';
 
     // Difyリクエスト
     const difyPayload = {
@@ -156,7 +136,6 @@ export default async function handler(req, res) {
     // 【ダブルライト新側】新構造 customer_entries への draft 保存
     let entryId = null;
     if (data.mode !== 'photo' && customerId) {
-      // combinedMemoToSave の有無で entry_type を自動判定
       const isVisit = visitStatus === 'visit';
       const entryType = isVisit ? 'visit' : 'sales';
       const inputTags = [...factTags, ...moodTags];

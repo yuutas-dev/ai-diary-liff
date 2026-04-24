@@ -19,17 +19,22 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const tagsArray = data.newTags ? String(data.newTags).split(',').map(t => t.trim()).filter(Boolean) : [];
-    const memoJson = typeof data.newMemo === 'string' ? JSON.parse(data.newMemo) : (data.newMemo || []);
 
-    const { error } = await supabase.from('customers').insert({
+    const { data: created, error } = await supabase.from('customers').insert({
       user_id: userId,
       name: data.newName,
-      memo: memoJson,
       tags: tagsArray
-    });
+    }).select('id, name, tags').single();
 
     if (error) throw new Error('Supabase保存エラー: ' + error.message);
-    return sendJson(res, 200, { success: true });
+    return sendJson(res, 200, {
+      success: true,
+      customer: {
+        id: created.id,
+        name: created.name,
+        tags: (created.tags || []).join(', ')
+      }
+    });
   } catch (err) {
     console.error('バックエンド処理エラー:', err);
     return sendJson(res, 500, { success: false, error: err.message });
