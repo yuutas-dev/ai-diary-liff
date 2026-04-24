@@ -93,7 +93,7 @@ export default async function handler(req, res) {
         .select('id')
         .eq('user_id', userId)
         .eq('name', data.name)
-        .single();
+        .maybeSingle();
       if (custData) customerId = custData.id;
     }
 

@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       .select('id')
       .eq('id', customerId)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (customerError || !customer) {
       return sendJson(res, 404, { success: false, error: '対象顧客が見つかりません' });
@@ -89,8 +89,9 @@ export default async function handler(req, res) {
           .eq('user_id', userId)
           .eq('customer_id', customerId)
           .select('id')
-          .single();
+          .maybeSingle();
         if (updateError) throw new Error('エントリ更新エラー: ' + updateError.message);
+        if (!updated?.id) throw new Error('エントリ更新対象が見つかりません');
         keepIds.add(updated.id);
       } else {
         const { data: inserted, error: insertError } = await supabase

@@ -30,9 +30,10 @@ export default async function handler(req, res) {
       .eq('user_id', userId)
       .eq('name', data.oldName)
       .select('id, name, tags')
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error('Supabase更新エラー: ' + error.message);
+    if (!updated) return sendJson(res, 404, { success: false, error: '更新対象の顧客が見つかりません' });
     return sendJson(res, 200, {
       success: true,
       customer: {
