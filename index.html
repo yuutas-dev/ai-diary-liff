@@ -771,6 +771,15 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    #pastMemoDisplay::before {
+      content: "📖 過去のメモ";
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
     .past-memo-label {
       font-size: 11px;
       font-weight: 700;
@@ -1396,7 +1405,6 @@
             <div id="resultArea" class="result-box"></div>
           </div>
           <div class="past-memo-box" style="margin-top: 12px; margin-bottom: 0;">
-            <span class="past-memo-label">📖 過去のメモ</span>
             <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(顧客を選択するか、過去の記録がありません)</div>
           </div>
         </div>
