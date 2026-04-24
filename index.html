@@ -11,7 +11,7 @@
       --card-bg: #FFFFFF;
       --input-bg: #F4F3F0;
       
-      /* 💎 Text Colors (可読性と洗練) */
+      /* 💎 Text Colors */
       --text-main: #433E3C;
       --text-sub: #8D8885;
       --text-muted: #C0BBB8;
@@ -22,7 +22,7 @@
       --primary-gradient: linear-gradient(135deg, #E69AB0, #DF8A9B);
       --border-color: #EAE6E3;
 
-      /* 💎 Semantic Colors (意味色は悪目立ちさせない) */
+      /* 💎 Semantic Colors */
       --alert-bg: #FFF2F2;
       --alert-text: #D9534F;
       --vip-bg: #FCFBF7;
@@ -30,7 +30,7 @@
       --sales-bg: #F0F6FC;
       --sales-text: #6A96D2;
 
-      /* 💎 Shadows (発光ではなく浮遊感) */
+      /* 💎 Shadows */
       --shadow-sm: 0 2px 8px rgba(67, 62, 60, 0.04);
       --shadow-md: 0 6px 20px rgba(67, 62, 60, 0.06);
       --shadow-float: 0 8px 24px rgba(223, 138, 155, 0.25);
@@ -100,7 +100,7 @@
       flex: 1;
       text-align: center;
       padding: 10px;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-sub);
       border-radius: 34px;
@@ -112,7 +112,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 90px);
+      padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 100px); /* 浮遊ボタン用に余白増 */
     }
 
     .mode-photo-ui { display: none; }
@@ -225,6 +225,8 @@
     }
 
     ::placeholder { color: var(--text-muted); }
+
+    .story-ring-vip { background: linear-gradient(135deg, #F59E0B, #FDE047) !important; }
 
     .filter-container {
       display: flex;
@@ -379,7 +381,7 @@
       width: 62px;
       height: 62px;
       border-radius: 50%;
-      background: var(--primary-light);
+      background: var(--primary-gradient);
       padding: 2.5px;
       position: relative;
     }
@@ -443,45 +445,6 @@
       z-index: 5;
     }
 
-    .selected-tags-box {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 8px;
-      min-height: 24px;
-      border-bottom: 1px dashed var(--border-color);
-      padding-bottom: 8px;
-    }
-
-    .selected-chip {
-      background: var(--primary);
-      color: #FFF;
-      padding: 6px 12px;
-      border-radius: 14px;
-      font-size: 12px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      animation: pop 0.2s ease-out;
-    }
-
-    @keyframes pop {
-      0% { transform: scale(0.8); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .episode-tags-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      max-height: 180px;
-      overflow-y: auto;
-      padding: 4px 0;
-      align-content: flex-start;
-      margin-top: 12px;
-    }
-
     .chip {
       background: #FFF;
       border: 1px solid var(--border-color);
@@ -496,17 +459,24 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .chip.dimmed {
-      opacity: 0.4;
-      background: var(--input-bg);
-      border-color: transparent;
-      pointer-events: none;
+    /* 感情タグ選択状態 */
+    .selected-mood-chip {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* 事実タグ選択状態 */
+    .selected-fact-chip {
+      background: var(--sales-bg);
+      color: var(--sales-text);
+      border-color: var(--sales-text);
     }
 
     .attr-chip {
       background: var(--primary-light);
       border: 1px solid transparent;
-      color: var(--primary);
+      color: var(--accent-text);
       padding: 6px 12px;
       border-radius: 8px;
       font-size: 11px;
@@ -653,18 +623,22 @@
       display: block;
     }
 
-    .submit-area {
-      padding: 16px 0;
-      pointer-events: auto;
+    /* 💎 CTA 下部浮遊 */
+    .sticky-submit {
+      position: sticky;
+      bottom: -10px; 
+      padding: 16px 0 24px 0;
+      background: linear-gradient(to top, var(--bg-color) 70%, transparent);
+      z-index: 20;
     }
 
     .submit-btn {
       width: 100%;
       background: var(--primary-gradient);
       color: #FFF;
-      border: none;
-      padding: 16px;
-      font-size: 15px;
+      border: 1px solid rgba(255,255,255,0.8);
+      padding: 18px;
+      font-size: 16px;
       font-weight: 700;
       border-radius: 35px;
       box-shadow: var(--shadow-float);
@@ -677,6 +651,7 @@
       color: var(--text-muted);
       box-shadow: none;
       cursor: not-allowed;
+      border-color: transparent;
     }
 
     .bottom-nav {
@@ -720,6 +695,7 @@
       font-size: 28px;
       font-weight: 400;
       box-shadow: var(--shadow-float);
+      border: 1px solid rgba(255,255,255,0.8);
       cursor: pointer;
       z-index: 1000;
       transition: 0.2s;
@@ -748,12 +724,7 @@
       box-shadow: 0 20px 40px rgba(67, 62, 60, 0.1);
     }
 
-    .modal-content.style-modal-content {
-      min-height: 520px;
-      display: flex;
-      flex-direction: column;
-    }
-
+    .modal-content.style-modal-content,
     .modal-content.help-modal-content {
       min-height: 520px;
       display: flex;
@@ -768,18 +739,18 @@
     }
 
     .help-section {
-      background: #FFF;
+      background: var(--bg-color);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 12px;
+      padding: 10px;
       margin-bottom: 8px;
     }
 
     .help-section h4 {
-      margin: 0 0 6px;
+      margin: 0 0 4px;
       font-size: 13px;
       font-weight: 700;
-      color: var(--primary);
+      color: var(--accent-text);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -789,7 +760,8 @@
       margin: 0;
       color: var(--text-main);
       font-size: 11px;
-      line-height: 1.6;
+      line-height: 1.5;
+      font-weight: 700;
     }
 
     .half-modal-backdrop {
@@ -1003,6 +975,7 @@
       background-color: var(--border-color);
       transition: .3s;
       border-radius: 24px;
+      border: 1px solid rgba(0,0,0,0.05);
     }
 
     .slider:before {
@@ -1010,15 +983,15 @@
       content: "";
       height: 16px;
       width: 16px;
-      left: 3px;
-      bottom: 3px;
+      left: 2px;
+      bottom: 2px;
       background-color: white;
       transition: .3s;
       border-radius: 50%;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider { background-color: var(--primary); border-color: var(--primary); }
     input:checked + .slider:before { transform: translateX(18px); }
 
     #searchContainer {
@@ -1108,8 +1081,8 @@
   <div id="cardActionModalBackdrop" class="half-modal-backdrop" onclick="closeCardActionModal()"></div>
   <div id="cardActionHalfModal" class="half-modal" style="z-index:10002;">
     <div class="half-modal-handle"></div>
-    <h3 id="actionModalName" style="margin: 0 0 16px; font-weight: 700; text-align: center;"></h3>
-    <button id="btnToggleVip" onclick="toggleVipPin()" style="width:100%; background:#FFF; color:var(--text-main); border:1px solid var(--border-color); padding:14px; border-radius:12px; font-weight:700; font-size:14px; margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: var(--shadow-sm);"></button>
+    <h3 id="actionModalName" style="margin: 0 0 16px; font-weight: 700; text-align: center; color: var(--text-main);"></h3>
+    <button id="btnToggleVip" onclick="toggleVipPin()" style="width:100%; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border-color); padding:14px; border-radius:12px; font-weight:700; font-size:14px; margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:8px; box-shadow: var(--shadow-sm);"></button>
     <button onclick="setHidden()" style="width:100%; background:var(--alert-bg); color:var(--alert-text); border:1px solid transparent; padding:14px; border-radius:12px; font-weight:700; font-size:14px; margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:8px;">💤 非表示にする</button>
   </div>
 
@@ -1232,8 +1205,9 @@
 
     <main class="scroll-area">
       <div class="page page-create">
+        <!-- 👤 誰に送る？ -->
         <div class="card card-customer-select">
-          <span class="label">👤 誰に送る？</span>
+          <span class="label">👤 誰に送る？ <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">(任意)</span></span>
           <div class="fade-scroll-wrapper">
             <div class="stories-scroll" id="quickAccessArea">
               <div class="story-item">
@@ -1246,6 +1220,10 @@
             <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
             <div id="resultArea" class="result-box"></div>
           </div>
+          <div class="past-memo-box" style="margin-top: 12px; margin-bottom: 0;">
+            <span class="past-memo-label">📖 過去のメモ</span>
+            <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(顧客を選択するか、過去の記録がありません)</div>
+          </div>
         </div>
 
         <div class="card mode-photo-ui">
@@ -1257,52 +1235,64 @@
           </label>
         </div>
 
-        <div class="card">
-          <span class="label">📝 エピソード作成</span>
+        <!-- 🚶‍♀️ 来店あり/なし トグル -->
+        <div class="mode-text-only" style="margin-bottom: 16px; display:flex; justify-content:center;">
+          <div class="toggle-container" style="width: 100%; max-width: 240px; padding: 3px; background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+            <label for="visit-yes" class="toggle-label visit-label-yes" style="padding: 6px 0; font-size:12px;">🚶‍♀️ 来店あり</label>
+            <label for="visit-no" class="toggle-label visit-label-no" style="padding: 6px 0; font-size:12px;">📱 来店なし(営業)</label>
+          </div>
+        </div>
 
-          <div class="mode-text-only" style="margin-bottom: 16px; display:flex; justify-content:center;">
-            <div class="toggle-container" style="width: 100%; max-width: 240px; padding: 3px;">
-              <label for="visit-yes" class="toggle-label visit-label-yes" style="padding: 6px 0; font-size:12px;">🚶‍♀️ 来店あり</label>
-              <label for="visit-no" class="toggle-label visit-label-no" style="padding: 6px 0; font-size:12px;">📱 来店なし</label>
+        <!-- 📝 詳細を追加（アコーディオン） -->
+        <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 16px;">
+          <div class="accordion-header" onclick="toggleCreateDetails()" id="createDetailsHeader" style="margin: 0; background: var(--card-bg); border-radius: 0;">
+            <span style="font-weight: 700; color: var(--text-main);">📝 詳細を追加 <span style="font-size:11px; font-weight:normal; color:var(--text-sub);">(任意)</span></span>
+            <span id="createDetailsIcon">▼</span>
+          </div>
+          
+          <div id="createDetailsContent" style="display: none; padding: 16px; border-top: 1px solid var(--border-color); background: #FFF;">
+            <!-- 感情タグ -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="label" style="margin:0;">🎭 感情・ムード</span>
+              <div style="display:flex; gap:6px;">
+                <button type="button" onclick="loadMoodPreset()" style="background:var(--input-bg); border:none; color:var(--text-sub); font-size:10px; padding:4px 8px; border-radius:8px; font-weight:700; cursor:pointer;">プリセット読込</button>
+                <button type="button" onclick="saveMoodPreset()" style="background:var(--primary-light); border:none; color:var(--primary); font-size:10px; padding:4px 8px; border-radius:8px; font-weight:700; cursor:pointer;">保存</button>
+              </div>
+            </div>
+            <div class="tags-scroll-container" id="moodTagsArea" style="flex-wrap: wrap; overflow:visible; margin-bottom: 16px;"></div>
+
+            <!-- 事実タグ -->
+            <span class="label">📝 今日の出来事（トピック）</span>
+            <div class="tags-scroll-container" id="factTagsArea" style="flex-wrap: wrap; overflow:visible;"></div>
+            <div style="margin-top: 8px; display: flex; gap: 8px; margin-bottom: 16px;">
+              <input type="text" id="customFactTagInput" placeholder="＋オリジナル出来事追加" class="input-field" style="padding:10px; font-size:12px; background:var(--input-bg); border:1px solid transparent; flex:1;">
+              <button onclick="addCustomFactTag()" style="background:var(--text-sub); color:#fff; border:none; padding:0 14px; border-radius:10px; font-weight:700; font-size:12px; cursor:pointer;">追加</button>
+            </div>
+
+            <!-- 本文 -->
+            <span class="label">✍️ 伝えたいこと（本文）</span>
+            <div class="textarea-wrapper">
+              <textarea id="todayEpisodeInput" class="input-field" placeholder="（例）今日はシャンパン入れてくれてありがとう！" oninput="autoScrollTextarea()" style="background:var(--input-bg); border:1px solid transparent;"></textarea>
+              <div class="clear-btn" onclick="clearEpisodeInput()">🧹 クリア</div>
             </div>
           </div>
-
-          <div id="attributeTagsWrapper" class="fade-scroll-wrapper" style="display:none; margin-bottom: 12px;">
-            <div class="tags-scroll-container" id="attributeTagsArea"></div>
-          </div>
-          <div class="past-memo-box">
-            <span class="past-memo-label">📖 過去のメモ</span>
-            <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0;">(顧客を選択するか、過去の記録がありません)</div>
-          </div>
-          <div id="selectedEpisodeTags" class="selected-tags-box"></div>
-
-          <div class="textarea-wrapper">
-            <textarea id="todayEpisodeInput" class="input-field" placeholder="今日の出来事や特記事項を入力..." oninput="autoScrollTextarea()" style="background:#FFF; border:1px solid var(--border-color);"></textarea>
-            <div class="clear-btn" onclick="clearEpisodeInput()">🧹 クリア</div>
-          </div>
-
-          <div class="episode-tags-container" id="dynamicChips"></div>
-          <div style="margin-top: 16px; display: flex; gap: 8px;">
-            <input type="text" id="customTagInput" placeholder="＋オリジナルタグ追加" class="input-field" style="padding:10px; font-size:12px; background:#FFF; border:1px solid var(--border-color); flex:1;">
-            <button onclick="addCustomTag()" style="background:var(--primary); color:#fff; border:none; padding:0 14px; border-radius:10px; font-weight:700; font-size:12px;">追加</button>
-          </div>
         </div>
 
-        <div class="submit-area">
-          <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
-        </div>
-
-        <!-- 💎 UI変更: 変な発光をなくし、クリーンな結果表示枠へ -->
         <div id="inlineResultArea" class="card" style="display: none; border: 1px solid var(--primary-light); background: #FFF; margin-top: 0;">
           <h3 style="margin: 0 0 12px; font-weight: 700; text-align: center; color: var(--primary); font-size:14px;">✨ 執筆完了！</h3>
           <textarea id="inlineResultText" class="input-field" style="height: 160px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; background:var(--input-bg); border:none;" placeholder="ここに生成された文章が表示されます。自由に修正できます。"></textarea>
-          <!-- API用エントリーID保持 -->
           <input type="hidden" id="currentEntryId" value="">
           <div style="display:flex; gap:10px;">
             <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 コピー</button>
             <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);">💬 LINE送信</button>
           </div>
         </div>
+
+        <!-- 💎 CTA 下部固定浮遊 -->
+        <div class="sticky-submit">
+          <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
+        </div>
+
       </div>
 
       <div class="page page-data">
@@ -1316,7 +1306,7 @@
 
           <div id="searchContainer">
             <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="padding-right: 36px; background: #FFF; border: 1px solid var(--border-color);">
-            <div id="clearSearchBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: var(--input-bg); color: var(--text-muted); width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer;" onclick="clearSearch()">×</div>
+            <div id="clearSearchBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.05); color: var(--text-sub); width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer;" onclick="clearSearch()">×</div>
           </div>
 
           <div class="filter-container" style="padding-bottom: 10px; margin-bottom: 0;">
@@ -1379,7 +1369,7 @@
         <div class="settings-list" style="margin-bottom: 40px;">
           <div class="settings-item" onclick="alert('利用規約のページが開きます')"><span>📄 利用規約</span><span style="color:var(--text-muted);">▶</span></div>
           <div class="settings-item" onclick="alert('プライバシーポリシーのページが開きます')"><span>🛡 プライバシーポリシー</span><span style="color:var(--text-muted);">▶</span></div>
-          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">10.0.0 (Stable)</span></div>
+          <div class="settings-item"><span>ℹ️ バージョン</span><span class="settings-val">11.0.0 (Stable)</span></div>
         </div>
 
         <div onclick="promptDevMode()" style="position: absolute; bottom: 10px; right: 10px; font-size: 11px; color: var(--text-muted); cursor: pointer; user-select: none;">dev</div>
@@ -1402,7 +1392,7 @@
         title: "📖 アプリの使い方と仕様",
         sections: [
           { icon: "🧠", title: "AIが読み取る情報", content: "設定した「属性タグ」「過去の接客メモ」「今日のエピソードタグ」をAIがすべて読み取り、あなただけの自然な文章を生成します。" },
-          { icon: "👑", title: "自動ランク付けとVIP", content: "過去のエピソード数を自動カウントし、「🔰新規」「✌️2回目」「👑常連」バッジを付与。太客タグ等でシステムが自動でVIP判定し最上位に表示します。" },
+          { icon: "👑", title: "自動ランク付けとVIP", content: "過去の来店数を自動カウントし、「🔰新規」「✌️2回目」「👑常連」バッジを付与。太客タグ等でシステムが自動でVIP判定し最上位に表示します。" },
           { icon: "🚨", title: "放置アラート", content: "設定日数以上来店がないと「🚨◯日放置」と表示され、「会いたい」感情タグが自動で追加されます。" },
           { icon: "💎", title: "一軍・非表示の長押し", content: "顧客カードを長押しすると、最上位に固定する「💎一軍固定」や、リストから隠す「💤非表示」が選べます。" },
           { icon: "🗑️", title: "非表示リストと削除", content: "設定タブの「非表示にした顧客」から、非表示カードを長押しすると、記録を確認した上で「復活」か「完全削除」が行えます。" }
@@ -1423,10 +1413,14 @@
 
     let userId = "test-user";
     let customerData = [];
-    let activeTags = [];
+    
+    // タグ管理の分離
+    let masterMoodTags = ['💖 感謝', '🥺 会いたい', '🥺 寂しい', '💕 大好き', '🤫 秘密の話', '🤫 秘密', '🤐 誰にも内緒', '💤 おやすみ', '🧸 癒やし', '🌹 夢心地', '💕 愛してる', '📱 LINE嬉しい', '📱 LINE待ってる', '🖤 独占', '✨ 楽しい'];
+    let activeFactTags = [];
+    let selectedMoodTags = [];
+    let selectedFactTags = [];
+
     let currentCustomerTags = [];
-    let selectedEpisodeTags = [];
-    let autoAddedTags = [];
     let currentBase64Image = null;
     let isDemoMode = false;
     let isDevMode = false;
@@ -1455,12 +1449,10 @@
       host: ['太客', '細客', 'エース', '痛客', '常連', '新規', 'メンヘラ', '金持ち', 'ケチ', '酒癖悪い', 'マナー良', '独身', '既婚', '若者', 'おばさん']
     };
 
-    let tempSelectedAttributes = [];
-
-    const industryConfigs = {
-      cabaret: { prompt: "", tags: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '🥺 会いたい', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🤫 秘密の話', '💖 感謝', '🍰 アフター', '🎁 プレゼント', '📱 LINE嬉しい', '💤 おやすみ'] },
-      fuzoku: { prompt: "", tags: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '🧸 癒やし', '💋 キス', '🛁 シャワー', '🥺 寂しい', '💕 大好き', '🤫 秘密', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長', '🌹 夢心地'] },
-      host: { prompt: "", tags: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '🥺 会いたい', '💸 痛客', '💕 愛してる', '📱 LINE待ってる', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１', '🤐 誰にも内緒', '🖤 独占'] }
+    const industryFactConfigs = {
+      cabaret: ['✨ 本指名', '🥂 同伴', '🍾 シャンパン', '👗 新衣装', '💇‍♀️ ヘアメ', '🍷 ワイン', '🎤 カラオケ', '🍰 アフター', '🎁 プレゼント'],
+      fuzoku: ['✨ 本指名', '🏩 ロング', '🔞 濃厚', '🧴 メンエス', '💋 キス', '🛁 シャワー', '🧼 泡泡', '💆‍♂️ マッサージ', '🦶 足ツボ', '🛌 延長'],
+      host: ['🍾 オリシャン', '🎤 ラスソン', '🥂 アフター', '💸 エース', '👑 枕', '💸 痛客', '🍾 タワー', '🍷 高額ボトル', '🌟 Ｎｏ.１']
     };
 
     const photoChips = ['📸 日常', '💄 出勤前', '👙 えちえち', '🥱 待機中', '👗 新衣装', '💇‍♀️ ヘアメ', '💅 ネイル', '🐶 ペット', '🍰 スイーツ', '🥂 乾杯', '🤳 自撮り', '🛏️ 寝起き', '🏠 お家', '🛍️ お買い物'];
@@ -1589,7 +1581,7 @@
               }
             } else if (st < lastScrollTop - 10) {
               if (isSearchHidden) {
-                searchContainer.style.maxHeight = '60px';
+                searchContainer.style.maxHeight = '56px';
                 searchContainer.style.opacity = '1';
                 searchContainer.style.marginBottom = '12px';
                 isSearchHidden = false;
@@ -1668,19 +1660,9 @@
       const pass = prompt("開発者パスワードを入力してください:");
       if (pass === "0804") {
         isDevMode = true;
-        alert("開発者モードを有効にしました。ダミー顧客（テストユーザー）の裏側への保存・削除が可能になります。");
+        alert("開発者モードを有効にしました。");
       } else if (pass !== null) {
         alert("パスワードが違います。");
-      }
-    }
-
-    function clearAutoTags() {
-      if (autoAddedTags.length > 0) {
-        selectedEpisodeTags = selectedEpisodeTags.filter(tag => !autoAddedTags.includes(tag));
-        autoAddedTags.forEach(tag => {
-          if (!activeTags.includes(tag)) activeTags.unshift(tag);
-        });
-        autoAddedTags = [];
       }
     }
 
@@ -1764,28 +1746,41 @@
       customTextArea.placeholder = stylePlaceholders[type];
     }
 
+    function toggleCreateDetails() {
+      const content = document.getElementById('createDetailsContent');
+      const icon = document.getElementById('createDetailsIcon');
+      if (content.style.display === 'block') {
+        content.style.display = 'none';
+        icon.innerText = '▼';
+      } else {
+        content.style.display = 'block';
+        icon.innerText = '▲';
+      }
+    }
+
     function updateChips() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
-      const storageKey = isPhoto ? 'customTags_photo' : `customTags_${type}`;
       updateStyleUI(type);
 
-      const masterTags = isPhoto ? [...photoChips] : [...industryConfigs[type].tags];
+      const masterFactTags = isPhoto ? [...photoChips] : [...industryFactConfigs[type]];
+      const storageKey = isPhoto ? 'customFactTags_photo' : `customFactTags_${type}`;
+      
       const savedTags = localStorage.getItem(storageKey);
-
       if (savedTags) {
         const parsed = JSON.parse(savedTags);
-        if (parsed.length < masterTags.length) {
-          activeTags = masterTags;
-          localStorage.setItem(storageKey, JSON.stringify(masterTags));
+        if (parsed.length < masterFactTags.length) {
+          activeFactTags = masterFactTags;
+          localStorage.setItem(storageKey, JSON.stringify(masterFactTags));
         } else {
-          activeTags = parsed;
+          activeFactTags = parsed;
         }
       } else {
-        activeTags = masterTags;
+        activeFactTags = masterFactTags;
       }
 
-      renderChips();
+      renderMoodChips();
+      renderFactChips();
 
       if (isPhoto) {
         document.getElementById('nameInput').value = "";
@@ -1797,65 +1792,87 @@
       }
     }
 
-    function renderChips() {
-      const container = document.getElementById('dynamicChips');
+    function renderMoodChips() {
+      const container = document.getElementById('moodTagsArea');
       container.innerHTML = '';
-      activeTags.forEach(text => {
-        const isSelected = selectedEpisodeTags.includes(text);
+      masterMoodTags.forEach(text => {
+        const isSelected = selectedMoodTags.includes(text);
         const chip = document.createElement('div');
-        chip.className = 'chip' + (isSelected ? ' dimmed' : '');
+        chip.className = 'chip' + (isSelected ? ' selected-mood-chip' : '');
         chip.innerHTML = text;
         chip.onclick = () => {
-          if (!isSelected) {
-            selectedEpisodeTags.push(text);
-            renderSelectedEpisodeTags();
-            renderChips();
+          if (isSelected) {
+            selectedMoodTags = selectedMoodTags.filter(t => t !== text);
+          } else {
+            selectedMoodTags.push(text);
           }
+          renderMoodChips();
         };
         container.appendChild(chip);
       });
     }
 
-    function renderSelectedEpisodeTags() {
-      const area = document.getElementById('selectedEpisodeTags');
-      area.innerHTML = '';
-      selectedEpisodeTags.forEach((tag, index) => {
+    function renderFactChips() {
+      const container = document.getElementById('factTagsArea');
+      container.innerHTML = '';
+      activeFactTags.forEach(text => {
+        const isSelected = selectedFactTags.includes(text);
         const chip = document.createElement('div');
-        chip.className = 'selected-chip';
-        chip.innerHTML = `${tag} <span onclick="removeEpisodeTag(${index})" style="margin-left:4px; cursor:pointer;">×</span>`;
-        area.appendChild(chip);
+        chip.className = 'chip' + (isSelected ? ' selected-fact-chip' : '');
+        chip.innerHTML = text;
+        chip.onclick = () => {
+          if (isSelected) {
+            selectedFactTags = selectedFactTags.filter(t => t !== text);
+          } else {
+            selectedFactTags.push(text);
+          }
+          renderFactChips();
+        };
+        container.appendChild(chip);
       });
     }
 
-    function removeEpisodeTag(index) {
-      const tag = selectedEpisodeTags[index];
-      autoAddedTags = autoAddedTags.filter(t => t !== tag);
-      selectedEpisodeTags.splice(index, 1);
-      renderSelectedEpisodeTags();
-      renderChips();
-    }
-
-    function addCustomTag() {
-      const input = document.getElementById('customTagInput');
+    function addCustomFactTag() {
+      const input = document.getElementById('customFactTagInput');
       if (input.value.trim() !== "") {
-        activeTags.unshift(input.value.trim());
+        activeFactTags.unshift(input.value.trim());
         input.value = "";
-        renderChips();
+        renderFactChips();
         const type = localStorage.getItem('businessType') || 'cabaret';
         const isPhoto = document.getElementById('mode-photo').checked;
-        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
+        localStorage.setItem(isPhoto ? 'customFactTags_photo' : `customFactTags_${type}`, JSON.stringify(activeFactTags));
       }
+    }
+
+    function saveMoodPreset() {
+      if (selectedMoodTags.length === 0) {
+        alert("感情タグが選択されていません");
+        return;
+      }
+      localStorage.setItem('savedMoodTagsPreset', JSON.stringify(selectedMoodTags));
+      showActionToast('プリセットを保存しました');
+    }
+
+    function loadMoodPreset() {
+      const saved = JSON.parse(localStorage.getItem('savedMoodTagsPreset') || '[]');
+      if (saved.length === 0) {
+        alert("保存されたプリセットがありません");
+        return;
+      }
+      selectedMoodTags = saved;
+      renderMoodChips();
+      showActionToast('プリセットを読み込みました');
     }
 
     function clearEpisodeInput() {
-      if (document.getElementById('todayEpisodeInput').value || selectedEpisodeTags.length > 0) {
-        if (!confirm("入力中のエピソードとタグをクリアしますか？")) return;
+      if (document.getElementById('todayEpisodeInput').value || selectedFactTags.length > 0 || selectedMoodTags.length > 0) {
+        if (!confirm("入力をクリアしますか？")) return;
       }
       document.getElementById('todayEpisodeInput').value = "";
-      selectedEpisodeTags = [];
-      autoAddedTags = [];
-      updateChips();
-      renderSelectedEpisodeTags();
+      selectedFactTags = [];
+      selectedMoodTags = [];
+      renderFactChips();
+      renderMoodChips();
     }
 
     function updateChipsAndSave() {
@@ -1871,7 +1888,7 @@
       try {
         const res = await fetch("/api/customers/list", {
           method: "POST",
-          headers: { "Content-Type": "text/plain" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId })
         });
         const data = await res.json();
@@ -2214,7 +2231,7 @@
                onmouseleave="handleTouchEnd(event, this)">
             <div class="card-inner" style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div style="flex:1; margin-right:10px; overflow:hidden; position:relative;">
-                <div style="display:flex; align-items:flex-start;">${alertBadgeHtml}${sysBadgeHtml}<b style="font-size:15px; line-height:1.4; word-break:break-word;">${c.name}</b></div>
+                <div style="display:flex; align-items:flex-start;">${alertBadgeHtml}${sysBadgeHtml}<b style="font-size:15px; line-height:1.4; word-break:break-word; color:var(--text-main);">${c.name}</b></div>
                 <small class="card-memo" style="color:var(--text-sub); display:block; margin-top:4px; line-height:1.4;">${previewMemo}</small>
                 <div class="card-tags" style="margin-top:6px;">${tagHtml}</div>
               </div>
@@ -2304,7 +2321,7 @@
       try {
         const res = await fetch("/api/customers/update", {
           method: "POST",
-          headers: { "Content-Type": "text/plain" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
         const json = await res.json();
@@ -2400,17 +2417,20 @@
       if (nameInput.value === c.name) {
         nameInput.value = "";
         document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+        selectedFactTags = [];
+        document.getElementById('todayEpisodeInput').value = "";
+        renderFactChips();
         currentCustomerTags = [];
         renderAttributeTags();
-        clearAutoTags();
-        renderSelectedEpisodeTags();
-        renderChips();
         const visitYes = document.getElementById('visit-yes');
         if (visitYes) visitYes.checked = true;
         return;
       }
 
-      clearAutoTags();
+      selectedFactTags = [];
+      document.getElementById('todayEpisodeInput').value = "";
+      renderFactChips();
+      
       document.getElementById('mode-text').checked = true;
       document.getElementById('nav-create').checked = true;
       updateChips(); 
@@ -2447,19 +2467,6 @@
       currentCustomerTags = c.tagsArray.filter(t => t !== '非表示' && t !== '一軍固定');
       renderAttributeTags();
 
-      if (isAlertCustomer(c) && !c.tagsArray.includes('非表示')) {
-        const type = localStorage.getItem('businessType') || 'cabaret';
-        const autoTag = (type === 'fuzoku') ? '🥺 寂しい' : '🥺 会いたい';
-        if (!selectedEpisodeTags.includes(autoTag)) {
-          selectedEpisodeTags.push(autoTag);
-          activeTags = activeTags.filter(t => t !== autoTag);
-          autoAddedTags.push(autoTag);
-        }
-      }
-
-      renderSelectedEpisodeTags();
-      renderChips();
-
       const visitYes = document.getElementById('visit-yes');
       if (visitYes) visitYes.checked = true;
     }
@@ -2470,10 +2477,10 @@
       document.getElementById('todayEpisodeInput').value = "";
       currentCustomerTags = [];
       renderAttributeTags();
-      selectedEpisodeTags = [];
-      autoAddedTags = [];
-      renderSelectedEpisodeTags();
-      renderChips();
+      selectedFactTags = [];
+      selectedMoodTags = [];
+      renderFactChips();
+      renderMoodChips();
       currentBase64Image = null;
       document.getElementById('photoPreview').style.display = 'none';
       document.getElementById('uploadText').style.display = 'block';
@@ -2505,7 +2512,6 @@
         document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
         currentCustomerTags = [];
         renderAttributeTags();
-        clearAutoTags();
       } else {
         const cIndex = customerData.indexOf(matchedCustomer);
         selectCustomerByIndex(cIndex);
@@ -2572,7 +2578,7 @@
       const actionButtons = isReadOnly ? '' : `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border-color);">
           <button type="button" onclick="deleteMemoBlock('${blockId}')" style="background:var(--alert-bg); color:var(--alert-text); border:none; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px;">🗑️</button>
-          <button type="button" onclick="quickSaveMemoBlock('${blockId}')" style="background:var(--primary-gradient); color:#FFF; border:none; padding:10px 20px; border-radius:20px; font-weight:700; font-size:13px; box-shadow:var(--shadow-float);">💾 このまま保存</button>
+          <button type="button" onclick="quickSaveMemoBlock('${blockId}')" style="background:var(--primary-gradient); color:#FFF; border:none; padding:10px 20px; border-radius:20px; font-weight:700; font-size:13px; box-shadow:var(--shadow-sm);">💾 このまま保存</button>
         </div>`;
 
       const textareaHtml = isReadOnly 
@@ -2681,7 +2687,7 @@
       const tags = JSON.parse(block.dataset.tags || "[]");
       const selectedArea = block.querySelector('.memo-selected-tags');
       selectedArea.innerHTML = tags.map((t, index) => {
-        const cross = isReadOnly ? '' : `<span onclick="removeMemoTag('${blockId}', ${index})" style="cursor:pointer; margin-left:4px;">×</span>`;
+        const cross = isReadOnly ? '' : `<span onclick="removeMemoTag('${blockId}', ${index})" style="cursor:pointer; margin-left:2px;">×</span>`;
         return `<span style="background:var(--primary-light); color:var(--primary); border:1px solid transparent; font-size:11px; padding:4px 10px; border-radius:14px; font-weight:700; display:flex; align-items:center; gap:4px;">${t} ${cross}</span>`;
       }).join('');
     }
@@ -2913,7 +2919,7 @@
         const endpoint = isCreate ? "/api/customers/create" : "/api/customers/update";
         const res = await fetch(endpoint, {
           method: "POST",
-          headers: { "Content-Type": "text/plain" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
         const json = await res.json();
@@ -2955,7 +2961,7 @@
         const payload = { userId, targetName: editingOriginalName };
         const res = await fetch("/api/customers/delete", {
           method: "POST",
-          headers: { "Content-Type": "text/plain" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
         const json = await res.json();
@@ -3071,15 +3077,6 @@
       el.scrollTop = el.scrollHeight;
     }
 
-    function sortAndSaveTags() {
-      if (selectedEpisodeTags.length > 0) {
-        activeTags = [...selectedEpisodeTags, ...activeTags.filter(t => !selectedEpisodeTags.includes(t))];
-        const type = localStorage.getItem('businessType') || 'cabaret';
-        const isPhoto = document.getElementById('mode-photo').checked;
-        localStorage.setItem(isPhoto ? 'customTags_photo' : `customTags_${type}`, JSON.stringify(activeTags));
-      }
-    }
-
     function generateDiary() {
       const name = document.getElementById('nameInput').value;
       const todayEpisode = document.getElementById('todayEpisodeInput').value;
@@ -3087,9 +3084,9 @@
       const isVisitYes = document.getElementById('visit-yes').checked;
       const type = localStorage.getItem('businessType') || 'cabaret';
 
-      if (!isPhoto && !name) return alert("名前を入れてね");
-
-      sortAndSaveTags();
+      if (!isPhoto && !name) {
+        if (!confirm("名前が入力されていませんが、そのまま作成しますか？")) return;
+      }
 
       showCuteToast(false);
       document.getElementById('inlineResultArea').style.display = 'none';
@@ -3121,12 +3118,18 @@
 
       let shouldSaveMemo = false;
       if (!isPhoto && isVisitYes) {
-        if (todayEpisode || selectedEpisodeTags.length > 0) {
-          const newEpisodeObj = { date: getTodayFormatted(), text: todayEpisode, tags: [...selectedEpisodeTags] };
+        if (todayEpisode || selectedFactTags.length > 0 || selectedMoodTags.length > 0) {
+          const newEpisodeObj = { 
+            date: getTodayFormatted(), 
+            text: todayEpisode, 
+            tags: [...selectedFactTags, ...selectedMoodTags] 
+          };
           memos.push(newEpisodeObj);
           shouldSaveMemo = true;
         }
       }
+
+      const combinedTagsForLLM = [...selectedFactTags, ...selectedMoodTags].join(', ');
 
       const payload = {
         userId,
@@ -3142,16 +3145,14 @@
         industryPrompt: industryConfigs[type].prompt,
         customerTags: cleanedCustomerTags.join(', '),
         customerRank,
-        episodeTags: selectedEpisodeTags.join(', '),
+        episodeTags: combinedTagsForLLM,
         image: currentBase64Image,
         mode: isPhoto ? "photo" : "text"
       };
 
-      resetInputForm();
-
       fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "text/plain" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       })
         .then(res => res.json())
