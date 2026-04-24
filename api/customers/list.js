@@ -27,9 +27,10 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // 1. customers 取得 (自身 + ダミー)
+    const customerColumns = 'id, user_id, name, tags, updated_at, created_at';
     const [userCustRes, dummyCustRes] = await Promise.all([
-      supabase.from('customers').select('*').eq('user_id', userId),
-      supabase.from('customers').select('*').contains('tags', ['ダミー'])
+      supabase.from('customers').select(customerColumns).eq('user_id', userId),
+      supabase.from('customers').select(customerColumns).contains('tags', ['ダミー'])
     ]);
 
     if (userCustRes.error) throw new Error('Supabaseユーザーデータ取得エラー: ' + userCustRes.error.message);
@@ -37,7 +38,7 @@ export default async function handler(req, res) {
     let dummyCustomers = dummyCustRes.data || [];
     if (dummyCustRes.error) {
       // jsonb非対応フォールバック
-      const fallbackRes = await supabase.from('customers').select('*').ilike('tags', '%ダミー%');
+      const fallbackRes = await supabase.from('customers').select(customerColumns).ilike('tags', '%ダミー%');
       if (!fallbackRes.error) dummyCustomers = fallbackRes.data || [];
     }
 
