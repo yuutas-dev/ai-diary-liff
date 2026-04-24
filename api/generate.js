@@ -117,19 +117,31 @@ export default async function handler(req, res) {
       style_profile_emoji: styleProfile.emoji || '4',
       style_profile_custom_text: styleProfile.custom_text || ''
     };
+    const legacyStyle = {
+      style: styleProfile.style || 'cute',
+      tension: styleProfile.tension || '3',
+      emoji: styleProfile.emoji || '4',
+      customText: styleProfile.custom_text || ''
+    };
 
     // Difyリクエスト
     const baseInputs = {
       name: data.name || '',
       business_type: businessType,
       message_mode: messageMode,
+      mode: messageMode,
       visit_status: visitStatus,
+      episode: episodeText,
+      pastMemo: pastMemo,
+      customerTags: customerTags.join(', '),
+      customerRank: customerRank,
       is_photo_diary: messageMode === 'photo' ? 'yes' : 'no',
       routing_business_type: businessType,
       routing_visit_status: visitStatus,
       routing_is_photo_diary: messageMode === 'photo' ? 'yes' : 'no',
       route_key: messageMode === 'photo' ? 'photo_diary' : `${businessType}_${visitStatus}`,
       style_profile: styleProfile,
+      ...legacyStyle,
       ...styleProfileFlat
     };
 
@@ -224,6 +236,8 @@ export default async function handler(req, res) {
       } else if (newEntry) {
         entryId = newEntry.id;
       }
+    } else if (messageMode !== 'photo' && !customerId) {
+      console.log('[generate] skip entry save: customerId not found');
     }
 
     // 生成テキストと共に entry_id をフロントへ返す
