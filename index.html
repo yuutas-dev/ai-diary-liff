@@ -139,9 +139,7 @@
 
     #visit-yes:checked ~ .app-container .visit-label-yes,
     #visit-no:checked ~ .app-container .visit-label-no {
-      background: #FFF;
-      color: var(--primary);
-      box-shadow: var(--shadow-sm);
+      color: #FFF;
     }
 
     .mode-text-only { display: block; }
@@ -825,6 +823,55 @@
       font-weight: 600;
     }
 
+    .visit-switch {
+      position: relative;
+      width: 100%;
+      max-width: 248px;
+      height: 38px;
+      border-radius: 999px;
+      background: #F2F2F7;
+      border: 1px solid rgba(67, 62, 60, 0.10);
+      padding: 3px;
+      box-shadow: inset 0 1px 2px rgba(67, 62, 60, 0.08);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .visit-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: calc(50% - 3px);
+      height: calc(100% - 6px);
+      border-radius: 999px;
+      background: var(--primary);
+      box-shadow: 0 4px 12px rgba(223, 138, 155, 0.35);
+      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+
+    #visit-no:checked ~ .app-container .visit-switch .visit-thumb {
+      transform: translateX(100%);
+    }
+
+    .visit-switch .toggle-label {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s ease;
+    }
+
     .submit-btn {
       width: 100%;
       background: var(--primary-gradient);
@@ -1160,27 +1207,25 @@
       gap: 8px;
     }
 
-    .customer-search-toggle {
+    .customer-search-inline {
       margin-top: 6px;
+      position: relative;
     }
 
-    .customer-search-toggle summary {
-      list-style: none;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-sub);
+    .customer-search-input {
+      width: 100%;
       background: var(--input-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 8px 10px;
-      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-sub);
+      outline: none;
     }
 
-    .customer-search-toggle summary::-webkit-details-marker { display: none; }
-
-    .customer-search-body {
-      margin-top: 8px;
+    .customer-search-input::placeholder {
+      color: var(--text-sub);
     }
 
     .suggest-item {
@@ -1513,13 +1558,10 @@
               </div>
             </div>
           </div>
-          <details class="customer-search-toggle">
-            <summary>⌕ 名前で探す（補助）</summary>
-            <div class="customer-search-body" style="position: relative;">
-              <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()" style="padding:12px; font-size:13px;">
-              <div id="resultArea" class="result-box"></div>
-            </div>
-          </details>
+          <div class="customer-search-inline">
+            <input type="text" id="nameInput" class="customer-search-input" placeholder="⌕ 名前で探す" oninput="suggestCustomer()">
+            <div id="resultArea" class="result-box"></div>
+          </div>
           <div class="past-memo-box" style="margin-top: 8px; margin-bottom: 0;">
             <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(過去の記録はありません)</div>
           </div>
@@ -1536,9 +1578,10 @@
 
         <!-- 🚶‍♀️ 来店あり/なし トグル -->
         <div class="mode-text-only" style="margin-bottom: 16px; display:flex; justify-content:center;">
-          <div class="toggle-container" style="width: 100%; max-width: 240px; padding: 3px; background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
-            <label for="visit-yes" class="toggle-label visit-label-yes" style="padding: 6px 0; font-size:12px;">🚶‍♀️ 来店あり</label>
-            <label for="visit-no" class="toggle-label visit-label-no" style="padding: 6px 0; font-size:12px;">📱 来店なし(営業)</label>
+          <div class="visit-switch">
+            <div class="visit-thumb"></div>
+            <label for="visit-yes" class="toggle-label visit-label-yes">🚶‍♀️ 来店あり</label>
+            <label for="visit-no" class="toggle-label visit-label-no">📱 来店なし(営業)</label>
           </div>
         </div>
         <div id="createAssistText" class="create-assist-copy">そのままでも作れます。</div>
