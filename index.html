@@ -3169,24 +3169,44 @@
         return `${m.date}: ${m.text} ${tagsStr}`.trim();
       }).join('\n---\n');
 
-      const payload = {
-        userId,
-        name,
-        episodeText: todayEpisode,
-        factTags: selectedFactTags,
-        moodTags: selectedMoodTags,
-        visitStatus: isVisitYes ? "visit" : "sales",
-        pastMemo: filteredMemosStr,
+      const messageMode = isPhoto ? "photo" : "text";
+      const visitStatus = messageMode === "text" ? (isVisitYes ? "visit" : "sales") : "photo";
+      const styleProfile = {
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
         tension: document.getElementById('tensionSlider').value,
         emoji: document.getElementById('emojiSlider').value,
-        customText: document.getElementById('customStyleText').value,
-        businessType: type,
+        custom_text: document.getElementById('customStyleText').value
+      };
+
+      const payload = {
+        userId,
+        name,
+        business_type: type,
+        visit_status: visitStatus,
+        message_mode: messageMode,
+        episode_text: todayEpisode,
+        fact_tags: selectedFactTags,
+        mood_tags: selectedMoodTags,
+        past_memo: filteredMemosStr,
+        style_profile: styleProfile,
+        customer_tags: cleanedCustomerTags,
+        customer_rank: customerRank,
         industryPrompt: industryConfigs[type].prompt,
-        customerTags: cleanedCustomerTags,
-        customerRank,
         image: currentBase64Image,
-        mode: isPhoto ? "photo" : "text"
+        // backward compatible fields
+        businessType: type,
+        visitStatus: visitStatus,
+        mode: messageMode,
+        episodeText: todayEpisode,
+        factTags: selectedFactTags,
+        moodTags: selectedMoodTags,
+        pastMemo: filteredMemosStr,
+        style: styleProfile.style,
+        tension: styleProfile.tension,
+        emoji: styleProfile.emoji,
+        customText: styleProfile.custom_text,
+        customerTags: cleanedCustomerTags,
+        customerRank
       };
 
       fetch("/api/generate", {

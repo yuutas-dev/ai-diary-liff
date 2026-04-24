@@ -24,6 +24,12 @@ export default async function handler(req, res) {
     let data = req.body;
     if (typeof req.body === 'string') data = JSON.parse(req.body);
     const userId = data?.userId || 'test-user';
+    const messageMode = data?.message_mode || data?.mode || 'text';
+    const businessType = data?.business_type || data?.businessType || '';
+    const rawVisitStatus = data?.visit_status || data?.visitStatus || 'sales';
+    const visitStatus = messageMode === 'photo'
+      ? 'photo'
+      : (rawVisitStatus === 'visit' ? 'visit' : 'sales');
 
     const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
     const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
@@ -35,7 +41,7 @@ export default async function handler(req, res) {
     let photoUrl = null;
 
     // 画像処理ロジック (既存維持)
-    if (data.mode === 'photo' && data.image) {
+    if (messageMode === 'photo' && data.image) {
       const base64Data = data.image.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
 
@@ -77,41 +83,65 @@ export default async function handler(req, res) {
       if (custData) customerId = custData.id;
     }
 
-    const episodeText = typeof data.episodeText === 'string'
-      ? data.episodeText
-      : (data.episode || '');
-    const factTags = normalizeTags(data.factTags || data.episodeTags);
-    const moodTags = normalizeTags(data.moodTags);
-    const customerTags = normalizeTags(data.customerTags);
-    const visitStatus = data.visitStatus || 'sales';
+    const episodeText = typeof data.episode_text === 'string'
+      ? data.episode_text
+      : (typeof data.episodeText === 'string' ? data.episodeText : (data.episode || ''));
+    const factTags = normalizeTags(data.fact_tags || data.factTags);
+    const moodTags = normalizeTags(data.mood_tags || data.moodTags);
+    const customerTags = normalizeTags(data.customer_tags || data.customerTags);
+    const customerRank = data.customer_rank || data.customerRank || '新規';
+    const pastMemo = data.past_memo || data.pastMemo || '';
+    const styleProfile = data.style_profile || {
+      style: data.style || 'cute',
+      tension: data.tension || '3',
+      emoji: data.emoji || '4',
+      custom_text: data.custom_text || data.customText || ''
+    };
+    const styleProfileFlat = {
+      style_profile_style: styleProfile.style || 'cute',
+      style_profile_tension: styleProfile.tension || '3',
+      style_profile_emoji: styleProfile.emoji || '4',
+      style_profile_custom_text: styleProfile.custom_text || ''
+    };
 
     // Difyリクエスト
+    const baseInputs = {
+      name: data.name || '',
+      business_type: businessType,
+      message_mode: messageMode,
+      visit_status: visitStatus,
+      is_photo_diary: messageMode === 'photo' ? 'yes' : 'no',
+      routing_business_type: businessType,
+      routing_visit_status: visitStatus,
+      routing_is_photo_diary: messageMode === 'photo' ? 'yes' : 'no',
+      route_key: messageMode === 'photo' ? 'photo_diary' : `${businessType}_${visitStatus}`,
+      style_profile: styleProfile,
+      ...styleProfileFlat
+    };
+
+    const textModeInputs = {
+      episode_text: episodeText,
+      fact_tags: factTags.join(', '),
+      mood_tags: moodTags.join(', '),
+      customer_rank: customerRank,
+      customer_tags: customerTags.join(', '),
+      past_memo: pastMemo,
+      has_episode_text: episodeText.trim() ? 'yes' : 'no',
+      has_fact_tags: factTags.length > 0 ? 'yes' : 'no',
+      grounding_priority: 'episode_text > fact_tags > mood_tags > past_memo',
+      past_memo_usage_rule: 'Use past_memo as tone/context only. Do not treat it as evidence of today.'
+    };
+
+    const photoModeInputs = {
+      photo_caption_hint: episodeText || '',
+      photo_tags: factTags.join(', '),
+      mood_tags: moodTags.join(', ')
+    };
+
     const difyPayload = {
-      inputs: {
-        name: data.name || '',
-        episode_text: episodeText,
-        episode: episodeText,
-        pastMemo: data.pastMemo || '',
-        customerTags: customerTags.join(', '),
-        customerRank: data.customerRank || '新規',
-        customer_tags: customerTags.join(', '),
-        fact_tags: factTags.join(', '),
-        mood_tags: moodTags.join(', '),
-        visit_status: visitStatus,
-        episodeTags: [...factTags, ...moodTags].join(', '),
-        has_episode_text: episodeText.trim() ? 'yes' : 'no',
-        has_fact_tags: factTags.length > 0 ? 'yes' : 'no',
-        style: data.style || 'cute',
-        tension: data.tension || '3',
-        emoji: data.emoji || '4',
-        custom_text: data.customText || '',
-        businessType: data.businessType || '',
-        industryPrompt: data.industryPrompt || '',
-        mode: data.mode || 'text' ,
-        entry_type: visitStatus,
-        grounding_priority: 'episodeText > factTags > moodTags > pastMemo',
-        past_memo_usage_rule: 'Use pastMemo as tone/context only. Do not treat it as evidence of today.'
-      },
+      inputs: messageMode === 'photo'
+        ? { ...baseInputs, ...photoModeInputs }
+        : { ...baseInputs, ...textModeInputs },
       response_mode: 'blocking',
       user: userId
     };
@@ -135,7 +165,7 @@ export default async function handler(req, res) {
 
     // 【ダブルライト新側】新構造 customer_entries への draft 保存
     let entryId = null;
-    if (data.mode !== 'photo' && customerId) {
+    if (messageMode !== 'photo' && customerId) {
       const isVisit = visitStatus === 'visit';
       const entryType = isVisit ? 'visit' : 'sales';
       const inputTags = [...factTags, ...moodTags];
