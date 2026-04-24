@@ -1464,6 +1464,11 @@
       fuzoku: "（例）今日は指名してくれてありがとう🧸💓\n〇〇さんと一緒にいる時間、すごく落ち着くし癒されちゃった🛁✨",
       host: "（例）今日はお店来てくれてありがとな🍾✨\n最近会えてなかったから、〇〇の顔見れて普通にテンション上がったわ😎"
     };
+    const industryConfigs = {
+      cabaret: { prompt: 'キャバクラ・ラウンジ向けの自然なお礼日記トーンで作成する' },
+      fuzoku: { prompt: '風俗・メンエス向けの自然なお礼日記トーンで作成する' },
+      host: { prompt: 'ホスト向けの自然なお礼日記トーンで作成する' }
+    };
 
     const industryAttributeTags = {
       cabaret: ['太客', '細客', '常連', '新規', '痛客', 'お酒好き', '下戸', '金持ち', 'ケチ', '既婚', '独身', 'おじさん', '若者', 'イケメン', '優しい'],
@@ -3150,75 +3155,74 @@
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
       submitBtn.innerText = "執筆中...";
-
-      const targetCustomer = customerData.find(c => c.name === name);
-      let customerRank = '新規';
-      if (targetCustomer) {
-        const stats = getCustomerStats(targetCustomer);
-        if (stats.isVip) customerRank = 'VIP';
-        else if (stats.count === 1) customerRank = '新規';
-        else if (stats.count === 2) customerRank = '2回目';
-        else customerRank = '常連';
-      }
-
-      const forbiddenTags = ['新規', '初回', '初回来店', '初めて', '一見', '常連', 'リピーター', '2回目', '二回目', '3回目', '三回目', '1回目', '一回目'];
-      const cleanedCustomerTags = currentCustomerTags.filter(tag => !forbiddenTags.some(forbidden => tag.includes(forbidden)));
-
-      let memos = [];
       try {
-        memos = parseMemoToJSON(targetCustomer ? targetCustomer.memo : "");
-      } catch (memoErr) {
-        console.error("generateDiary: parseMemoToJSON failed", memoErr);
-        memos = [];
-      }
-      const filteredMemosStr = memos.map(m => {
-        const filteredTags = (m.tags || []).filter(tag => !isEmotionTag(tag));
-        const tagsStr = filteredTags.length > 0 ? `(タグ: ${filteredTags.join(', ')})` : '';
-        return `${m.date}: ${m.text} ${tagsStr}`.trim();
-      }).join('\n---\n');
-      const industryPrompt = (industryConfigs && industryConfigs[type] && industryConfigs[type].prompt) ? industryConfigs[type].prompt : '';
+        const targetCustomer = customerData.find(c => c.name === name);
+        let customerRank = '新規';
+        if (targetCustomer) {
+          const stats = getCustomerStats(targetCustomer);
+          if (stats.isVip) customerRank = 'VIP';
+          else if (stats.count === 1) customerRank = '新規';
+          else if (stats.count === 2) customerRank = '2回目';
+          else customerRank = '常連';
+        }
 
-      const messageMode = isPhoto ? "photo" : "text";
-      const visitStatus = messageMode === "text" ? (isVisitYes ? "visit" : "sales") : "photo";
-      const styleProfile = {
-        style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
-        tension: document.getElementById('tensionSlider').value,
-        emoji: document.getElementById('emojiSlider').value,
-        custom_text: document.getElementById('customStyleText').value
-      };
+        const forbiddenTags = ['新規', '初回', '初回来店', '初めて', '一見', '常連', 'リピーター', '2回目', '二回目', '3回目', '三回目', '1回目', '一回目'];
+        const cleanedCustomerTags = currentCustomerTags.filter(tag => !forbiddenTags.some(forbidden => tag.includes(forbidden)));
 
-      const payload = {
-        userId,
-        name,
-        business_type: type,
-        visit_status: visitStatus,
-        message_mode: messageMode,
-        episode_text: todayEpisode,
-        fact_tags: selectedFactTags,
-        mood_tags: selectedMoodTags,
-        past_memo: filteredMemosStr,
-        style_profile: styleProfile,
-        customer_tags: cleanedCustomerTags,
-        customer_rank: customerRank,
-        industryPrompt,
-        image: currentBase64Image,
-        // backward compatible fields
-        businessType: type,
-        visitStatus: visitStatus,
-        mode: messageMode,
-        episodeText: todayEpisode,
-        factTags: selectedFactTags,
-        moodTags: selectedMoodTags,
-        pastMemo: filteredMemosStr,
-        style: styleProfile.style,
-        tension: styleProfile.tension,
-        emoji: styleProfile.emoji,
-        customText: styleProfile.custom_text,
-        customerTags: cleanedCustomerTags,
-        customerRank
-      };
+        let memos = [];
+        try {
+          memos = parseMemoToJSON(targetCustomer ? targetCustomer.memo : "");
+        } catch (memoErr) {
+          console.error("generateDiary: parseMemoToJSON failed", memoErr);
+          memos = [];
+        }
+        const filteredMemosStr = memos.map(m => {
+          const filteredTags = (m.tags || []).filter(tag => !isEmotionTag(tag));
+          const tagsStr = filteredTags.length > 0 ? `(タグ: ${filteredTags.join(', ')})` : '';
+          return `${m.date}: ${m.text} ${tagsStr}`.trim();
+        }).join('\n---\n');
+        const industryPrompt = (industryConfigs?.[type]?.prompt) || '';
 
-      try {
+        const messageMode = isPhoto ? "photo" : "text";
+        const visitStatus = messageMode === "text" ? (isVisitYes ? "visit" : "sales") : "photo";
+        const styleProfile = {
+          style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
+          tension: document.getElementById('tensionSlider').value,
+          emoji: document.getElementById('emojiSlider').value,
+          custom_text: document.getElementById('customStyleText').value
+        };
+
+        const payload = {
+          userId,
+          name,
+          business_type: type,
+          visit_status: visitStatus,
+          message_mode: messageMode,
+          episode_text: todayEpisode,
+          fact_tags: selectedFactTags,
+          mood_tags: selectedMoodTags,
+          past_memo: filteredMemosStr,
+          style_profile: styleProfile,
+          customer_tags: cleanedCustomerTags,
+          customer_rank: customerRank,
+          industryPrompt,
+          image: currentBase64Image,
+          // backward compatible fields
+          businessType: type,
+          visitStatus: visitStatus,
+          mode: messageMode,
+          episodeText: todayEpisode,
+          factTags: selectedFactTags,
+          moodTags: selectedMoodTags,
+          pastMemo: filteredMemosStr,
+          style: styleProfile.style,
+          tension: styleProfile.tension,
+          emoji: styleProfile.emoji,
+          customText: styleProfile.custom_text,
+          customerTags: cleanedCustomerTags,
+          customerRank
+        };
+
         const res = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
