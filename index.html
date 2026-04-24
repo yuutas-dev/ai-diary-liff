@@ -752,7 +752,7 @@
     .past-memo-box {
       background: #FFF;
       border-radius: 14px;
-      padding: 14px;
+      padding: 8px 10px;
       font-size: 13px;
       color: var(--text-main);
       margin-bottom: 12px;
@@ -769,8 +769,11 @@
       overflow-x: hidden;
       scrollbar-width: thin;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
       padding-top: 0 !important;
       padding-bottom: 0 !important;
+      line-height: 1.45;
     }
 
     #pastMemoDisplay::before {
@@ -780,6 +783,7 @@
       font-weight: 700;
       color: var(--text-sub);
       margin-bottom: 0;
+      line-height: 1.2;
     }
 
     .past-memo-label {
