@@ -22,7 +22,16 @@ export default async function handler(req, res) {
 
   try {
     let data = req.body;
-    if (typeof req.body === 'string') data = JSON.parse(req.body);
+    if (typeof req.body === 'string') {
+      try {
+        data = JSON.parse(req.body);
+      } catch (parseErr) {
+        console.error('[generate] invalid JSON body:', parseErr);
+        return sendJson(res, 400, { success: false, error: 'Invalid JSON body' });
+      }
+    }
+    if (!data || typeof data !== 'object') data = {};
+
     const userId = data?.userId || 'test-user';
     const messageMode = data?.message_mode || data?.mode || 'text';
     const businessType = data?.business_type || data?.businessType || '';
@@ -30,6 +39,7 @@ export default async function handler(req, res) {
     const visitStatus = messageMode === 'photo'
       ? 'photo'
       : (rawVisitStatus === 'visit' ? 'visit' : 'sales');
+    console.log('[generate] start', { userId, messageMode, businessType, visitStatus });
 
     const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
     const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
@@ -41,7 +51,7 @@ export default async function handler(req, res) {
     let photoUrl = null;
 
     // 画像処理ロジック (既存維持)
-    if (messageMode === 'photo' && data.image) {
+    if (messageMode === 'photo' && typeof data.image === 'string' && data.image) {
       const base64Data = data.image.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
 
@@ -62,18 +72,22 @@ export default async function handler(req, res) {
       formData.append('file', blob, 'image.jpg');
       formData.append('user', userId);
 
-      const uploadRes = await fetch('https://api.dify.ai/v1/files/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${process.env.DIFY_API_KEY}` },
-        body: formData
-      });
-
-      const uploadJson = await uploadRes.json();
-      if (uploadJson.id) uploadFileId = uploadJson.id;
+      try {
+        const uploadRes = await fetch('https://api.dify.ai/v1/files/upload', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${process.env.DIFY_API_KEY}` },
+          body: formData
+        });
+        const uploadJson = await uploadRes.json();
+        if (uploadJson.id) uploadFileId = uploadJson.id;
+        else console.error('[generate] dify file upload failed:', uploadJson);
+      } catch (uploadErr) {
+        console.error('[generate] dify file upload exception:', uploadErr);
+      }
     }
 
     let customerId = null;
-    if (data.name) {
+    if (data?.name) {
       const { data: custData } = await supabase
         .from('customers')
         .select('id')
@@ -151,16 +165,33 @@ export default async function handler(req, res) {
       difyPayload.inputs.image_file = { type: 'image', transfer_method: 'local_file', upload_file_id: uploadFileId };
     }
 
-    const difyRes = await fetch(process.env.DIFY_API_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.DIFY_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(difyPayload)
-    });
+    let difyRes;
+    try {
+      difyRes = await fetch(process.env.DIFY_API_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.DIFY_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(difyPayload)
+      });
+    } catch (difyNetworkErr) {
+      console.error('[generate] dify network error:', difyNetworkErr);
+      return sendJson(res, 502, { success: false, error: 'Dify request failed before response' });
+    }
 
-    const difyData = await difyRes.json();
+    let difyData = {};
+    try {
+      difyData = await difyRes.json();
+    } catch (difyJsonErr) {
+      console.error('[generate] dify invalid json:', difyJsonErr);
+      return sendJson(res, 502, { success: false, error: 'Invalid JSON from Dify' });
+    }
+    if (!difyRes.ok) {
+      console.error('[generate] dify non-200:', { status: difyRes.status, difyData });
+      return sendJson(res, 502, { success: false, error: difyData?.message || `Dify returned ${difyRes.status}` });
+    }
+
     const aiText = difyData.data?.outputs?.text || difyData.data?.outputs?.answer || difyData.answer || '生成されましたがテキストが空です。';
 
     // 【ダブルライト新側】新構造 customer_entries への draft 保存
@@ -196,9 +227,10 @@ export default async function handler(req, res) {
     }
 
     // 生成テキストと共に entry_id をフロントへ返す
+    console.log('[generate] success', { userId, messageMode, hasEntryId: !!entryId });
     return sendJson(res, 200, { success: true, generatedText: aiText, entry_id: entryId });
   } catch (err) {
-    console.error('バックエンド処理エラー:', err);
+    console.error('[generate] backend error:', err);
     return sendJson(res, 500, { success: false, error: err.message });
   }
 }
