@@ -147,19 +147,6 @@
     .mode-text-only { display: block; }
     #mode-photo:checked ~ .app-container .mode-text-only { display: none !important; }
 
-    .photo-mode-hint {
-      margin-top: 10px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #FFF7EC;
-      border: 1px dashed #F5C88E;
-      color: #8A5B21;
-      font-size: 12px;
-      line-height: 1.5;
-      text-align: center;
-      font-weight: 600;
-    }
-
     .style-content-wrapper {
       min-height: 340px;
       position: relative;
@@ -553,7 +540,7 @@
       background: transparent;
       border: 1px solid var(--border-color);
       border-radius: 999px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       cursor: pointer;
       transition: 0.2s;
       appearance: none;
@@ -561,23 +548,14 @@
     }
 
     .create-detail-trigger strong {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-sub);
     }
 
     .create-detail-trigger span {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text-muted);
       font-weight: 700;
-    }
-
-    .create-detail-trigger small {
-      display: block;
-      margin-top: 2px;
-      font-size: 10px;
-      color: var(--text-muted);
-      font-weight: 600;
-      line-height: 1.35;
     }
 
     .create-detail-trigger:hover {
@@ -839,21 +817,12 @@
     }
 
     .create-assist-copy {
-      margin: -6px 0 10px;
+      margin: -4px 0 8px;
       font-size: 11px;
       color: var(--text-sub);
       text-align: center;
-      line-height: 1.45;
+      line-height: 1.35;
       font-weight: 600;
-    }
-
-    .submit-flow-copy {
-      margin: 0 0 8px;
-      font-size: 11px;
-      color: var(--text-sub);
-      text-align: center;
-      line-height: 1.4;
-      font-weight: 700;
     }
 
     .submit-btn {
@@ -1535,7 +1504,6 @@
           <span class="label">👤 誰に送る？ <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">(任意)</span></span>
           <div class="customer-select-sub">
             <span>よく使う相手をタップして選択</span>
-            <span>顧客を選ぶと過去の流れを反映できます。選ばなくても作成できます。</span>
           </div>
           <div class="fade-scroll-wrapper">
             <div class="stories-scroll" id="quickAccessArea">
@@ -1552,8 +1520,8 @@
               <div id="resultArea" class="result-box"></div>
             </div>
           </details>
-          <div class="past-memo-box" style="margin-top: 10px; margin-bottom: 0;">
-            <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(このままでも作れます。顧客を選ぶと過去の流れも活かせます)</div>
+          <div class="past-memo-box" style="margin-top: 8px; margin-bottom: 0;">
+            <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(過去の記録はありません)</div>
           </div>
         </div>
 
@@ -1564,7 +1532,6 @@
             <div id="uploadText">📸<br><br>タップして写真をアップロード</div>
             <img id="photoPreview" alt="">
           </label>
-          <div class="photo-mode-hint">📸 写メ日記では顧客情報・過去メモ・来店区分は使わず、写真と本文メモを中心に作成します。</div>
         </div>
 
         <!-- 🚶‍♀️ 来店あり/なし トグル -->
@@ -1574,21 +1541,17 @@
             <label for="visit-no" class="toggle-label visit-label-no" style="padding: 6px 0; font-size:12px;">📱 来店なし(営業)</label>
           </div>
         </div>
-        <div id="createAssistText" class="create-assist-copy">そのままでも作れます。詳しく入れるほど、あなたらしくなります。</div>
+        <div id="createAssistText" class="create-assist-copy">そのままでも作れます。</div>
 
         <div style="margin: 6px 0 12px; display:flex; justify-content:flex-end;">
           <button type="button" class="create-detail-trigger" onclick="openCreateDetailsSheet()">
-            <strong>📝 もっと細かく調整する（任意）</strong>
+            <strong>📝 詳細設定（任意）</strong>
             <span>開く ▲</span>
-            <small>ムードや今日の出来事を追加できます</small>
           </button>
         </div>
 
         <div id="inlineResultArea" class="card edit-stage-card" style="display: none; margin-top: 0;">
-          <h3 class="edit-stage-title">✨ あなたらしさを仕上げるステージ</h3>
-          <p class="edit-stage-sub">ここでひとこと整えるだけで、文章がぐっと“あなたっぽく”なります。</p>
-          <p class="edit-stage-note">使うほどAIがあなたの書き方に寄っていきます。気になる部分だけ、軽く手直ししてみてください。</p>
-          <p class="edit-stage-flow">整える → 仕上げる → そのまま送る</p>
+          <h3 class="edit-stage-title">🪄 仕上げステージ</h3>
           <textarea id="inlineResultText" class="input-field edit-stage-textarea" placeholder="ここに生成された文章が表示されます。自由に仕上げてください。"></textarea>
           <input type="hidden" id="currentEntryId" value="">
           <div style="display:flex; gap:10px;">
@@ -1599,7 +1562,6 @@
 
         <!-- 💎 CTA 下部固定浮遊 -->
         <div class="sticky-submit">
-          <div id="submitFlowText" class="submit-flow-copy">まずはそのまま作成 → 必要なら詳細設定で調整</div>
           <button class="submit-btn" id="submitBtn" onclick="generateDiary()">✨ AIで作成する</button>
         </div>
 
@@ -1828,8 +1790,8 @@
       return getTodayString().replace(/-/g, '/');
     }
 
-    const EMPTY_PAST_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(このままでも作れます。顧客を選ぶと過去の流れも活かせます)</div>";
-    const PHOTO_MODE_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写真があればそのまま作れます。必要なら一言足してください)</div>";
+    const EMPTY_PAST_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(過去の記録はありません)</div>";
+    const PHOTO_MODE_MEMO_HTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写メ日記モード)</div>";
 
     function buildPastMemoPreviewHtml(memos) {
       if (!Array.isArray(memos) || memos.length === 0) {
@@ -1896,21 +1858,15 @@
 
     function updateCreateAssistText() {
       const assistEl = document.getElementById('createAssistText');
-      const submitFlowEl = document.getElementById('submitFlowText');
-      if (!assistEl || !submitFlowEl) return;
+      if (!assistEl) return;
 
       const isPhoto = document.getElementById('mode-photo')?.checked;
-      const isVisitYes = document.getElementById('visit-yes')?.checked;
 
       if (isPhoto) {
-        assistEl.innerText = "写真があればそのまま作れます。必要なら一言足してください。";
-      } else if (isVisitYes) {
-        assistEl.innerText = "そのままでも作れます。詳しく入れるほど、あなたらしくなります。";
+        assistEl.innerText = "写真があればそのまま作れます。";
       } else {
-        assistEl.innerText = "そのままでも作れます。営業用に自然な文を作れます。";
+        assistEl.innerText = "そのままでも作れます。";
       }
-
-      submitFlowEl.innerText = "まずはそのまま作成 → 必要なら詳細設定で調整";
     }
 
     function renderTexts() {
