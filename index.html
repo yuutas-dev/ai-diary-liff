@@ -37,6 +37,8 @@
       
       /* 💎 Typography */
       --font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Arial, sans-serif;
+      --bottom-nav-height: 66px;
+      --cta-gap-from-nav: 10px;
     }
 
     * { box-sizing: border-box; }
@@ -112,7 +114,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + 100px); /* 浮遊ボタン用に余白増 */
+      padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + var(--bottom-nav-height) + 120px);
     }
 
     .mode-photo-ui { display: none; }
@@ -625,11 +627,14 @@
 
     /* 💎 CTA 下部浮遊 */
     .sticky-submit {
-      position: sticky;
-      bottom: -10px; 
-      padding: 16px 0 24px 0;
-      background: linear-gradient(to top, var(--bg-color) 70%, transparent);
-      z-index: 20;
+      position: fixed;
+      left: 50%;
+      width: min(calc(100vw - 32px), 520px);
+      transform: translateX(-50%);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-height) + var(--cta-gap-from-nav));
+      z-index: 850;
+      padding: 0;
+      pointer-events: none;
     }
 
     .submit-btn {
@@ -637,13 +642,15 @@
       background: var(--primary-gradient);
       color: #FFF;
       border: 1px solid rgba(255,255,255,0.8);
-      padding: 18px;
+      padding: 16px 18px;
       font-size: 16px;
       font-weight: 700;
-      border-radius: 35px;
-      box-shadow: var(--shadow-float);
+      border-radius: 18px;
+      box-shadow: 0 14px 28px rgba(223, 138, 155, 0.30), 0 2px 6px rgba(67, 62, 60, 0.10);
       cursor: pointer;
       transition: 0.3s;
+      display: block;
+      pointer-events: auto;
     }
 
     .submit-btn:disabled {
@@ -661,10 +668,24 @@
       display: flex;
       justify-content: space-around;
       padding: 12px 0 calc(env(safe-area-inset-bottom, 12px) + 6px);
+      min-height: var(--bottom-nav-height);
       border-top: 1px solid var(--border-color);
       pointer-events: auto;
       z-index: 500;
       position: relative;
+    }
+
+    .fixed-footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 800;
+      pointer-events: none;
+    }
+
+    .fixed-footer .bottom-nav {
+      pointer-events: auto;
     }
 
     .nav-item {
@@ -1417,6 +1438,7 @@
     // タグ管理の分離
     let masterMoodTags = ['💖 感謝', '🥺 会いたい', '🥺 寂しい', '💕 大好き', '🤫 秘密の話', '🤫 秘密', '🤐 誰にも内緒', '💤 おやすみ', '🧸 癒やし', '🌹 夢心地', '💕 愛してる', '📱 LINE嬉しい', '📱 LINE待ってる', '🖤 独占', '✨ 楽しい'];
     let activeFactTags = [];
+    const dailyCustomFactTags = {};
     let selectedMoodTags = [];
     let selectedFactTags = [];
 
@@ -1464,6 +1486,35 @@
 
     function getTodayFormatted() {
       return getTodayString().replace(/-/g, '/');
+    }
+
+    function getFactTagContextKey() {
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const isPhoto = document.getElementById('mode-photo').checked;
+      return `${getTodayString()}_${isPhoto ? 'photo' : type}`;
+    }
+
+    function getDefaultFactTagsForCurrentContext() {
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const isPhoto = document.getElementById('mode-photo').checked;
+      return isPhoto ? [...photoChips] : [...industryFactConfigs[type]];
+    }
+
+    function refreshActiveFactTags() {
+      const contextKey = getFactTagContextKey();
+      const baseTags = getDefaultFactTagsForCurrentContext();
+      const customTags = dailyCustomFactTags[contextKey] || [];
+      activeFactTags = [...customTags, ...baseTags];
+    }
+
+    function resetCreateInputState({ clearMood = false, clearEpisode = false } = {}) {
+      selectedFactTags = [];
+      if (clearMood) selectedMoodTags = [];
+      if (clearEpisode) document.getElementById('todayEpisodeInput').value = "";
+      const customFactInput = document.getElementById('customFactTagInput');
+      if (customFactInput) customFactInput.value = "";
+      renderFactChips();
+      if (clearMood) renderMoodChips();
     }
 
     function renderTexts() {
@@ -1762,22 +1813,7 @@
       const type = localStorage.getItem('businessType') || 'cabaret';
       const isPhoto = document.getElementById('mode-photo').checked;
       updateStyleUI(type);
-
-      const masterFactTags = isPhoto ? [...photoChips] : [...industryFactConfigs[type]];
-      const storageKey = isPhoto ? 'customFactTags_photo' : `customFactTags_${type}`;
-      
-      const savedTags = localStorage.getItem(storageKey);
-      if (savedTags) {
-        const parsed = JSON.parse(savedTags);
-        if (parsed.length < masterFactTags.length) {
-          activeFactTags = masterFactTags;
-          localStorage.setItem(storageKey, JSON.stringify(masterFactTags));
-        } else {
-          activeFactTags = parsed;
-        }
-      } else {
-        activeFactTags = masterFactTags;
-      }
+      refreshActiveFactTags();
 
       renderMoodChips();
       renderFactChips();
@@ -1834,14 +1870,17 @@
 
     function addCustomFactTag() {
       const input = document.getElementById('customFactTagInput');
-      if (input.value.trim() !== "") {
-        activeFactTags.unshift(input.value.trim());
-        input.value = "";
-        renderFactChips();
-        const type = localStorage.getItem('businessType') || 'cabaret';
-        const isPhoto = document.getElementById('mode-photo').checked;
-        localStorage.setItem(isPhoto ? 'customFactTags_photo' : `customFactTags_${type}`, JSON.stringify(activeFactTags));
+      const newTag = input.value.trim();
+      if (!newTag) return;
+      const contextKey = getFactTagContextKey();
+      const baseTags = getDefaultFactTagsForCurrentContext();
+      const customTags = dailyCustomFactTags[contextKey] || [];
+      if (!baseTags.includes(newTag) && !customTags.includes(newTag)) {
+        dailyCustomFactTags[contextKey] = [newTag, ...customTags];
       }
+      input.value = "";
+      refreshActiveFactTags();
+      renderFactChips();
     }
 
     function saveMoodPreset() {
@@ -1868,11 +1907,7 @@
       if (document.getElementById('todayEpisodeInput').value || selectedFactTags.length > 0 || selectedMoodTags.length > 0) {
         if (!confirm("入力をクリアしますか？")) return;
       }
-      document.getElementById('todayEpisodeInput').value = "";
-      selectedFactTags = [];
-      selectedMoodTags = [];
-      renderFactChips();
-      renderMoodChips();
+      resetCreateInputState({ clearMood: true, clearEpisode: true });
     }
 
     function updateChipsAndSave() {
@@ -2417,9 +2452,7 @@
       if (nameInput.value === c.name) {
         nameInput.value = "";
         document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
-        selectedFactTags = [];
-        document.getElementById('todayEpisodeInput').value = "";
-        renderFactChips();
+        resetCreateInputState({ clearMood: true, clearEpisode: true });
         currentCustomerTags = [];
         renderAttributeTags();
         const visitYes = document.getElementById('visit-yes');
@@ -2427,9 +2460,7 @@
         return;
       }
 
-      selectedFactTags = [];
-      document.getElementById('todayEpisodeInput').value = "";
-      renderFactChips();
+      resetCreateInputState({ clearMood: true, clearEpisode: true });
       
       document.getElementById('mode-text').checked = true;
       document.getElementById('nav-create').checked = true;
@@ -2474,13 +2505,9 @@
     function resetInputForm() {
       document.getElementById('nameInput').value = "";
       document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
-      document.getElementById('todayEpisodeInput').value = "";
       currentCustomerTags = [];
       renderAttributeTags();
-      selectedFactTags = [];
-      selectedMoodTags = [];
-      renderFactChips();
-      renderMoodChips();
+      resetCreateInputState({ clearMood: true, clearEpisode: true });
       currentBase64Image = null;
       document.getElementById('photoPreview').style.display = 'none';
       document.getElementById('uploadText').style.display = 'block';
@@ -3129,12 +3156,13 @@
         }
       }
 
-      const combinedTagsForLLM = [...selectedFactTags, ...selectedMoodTags].join(', ');
-
       const payload = {
         userId,
         name,
-        episode: todayEpisode,
+        episodeText: todayEpisode,
+        factTags: selectedFactTags,
+        moodTags: selectedMoodTags,
+        visitStatus: isVisitYes ? "visit" : "sales",
         pastMemo: filteredMemosStr,
         combinedMemoToSave: shouldSaveMemo ? JSON.stringify(memos) : null,
         style: document.querySelector('input[name="style"]:checked').id.replace('style-', ''),
@@ -3143,9 +3171,8 @@
         customText: document.getElementById('customStyleText').value,
         businessType: type,
         industryPrompt: industryConfigs[type].prompt,
-        customerTags: cleanedCustomerTags.join(', '),
+        customerTags: cleanedCustomerTags,
         customerRank,
-        episodeTags: combinedTagsForLLM,
         image: currentBase64Image,
         mode: isPhoto ? "photo" : "text"
       };
@@ -3169,6 +3196,7 @@
             document.getElementById('inlineResultText').value = resultText;
             localStorage.setItem('diaryDraft', resultText);
             document.getElementById('inlineResultArea').style.display = 'block';
+            resetCreateInputState({ clearMood: false, clearEpisode: false });
             
             const entryIdInput = document.getElementById('currentEntryId');
             if (entryIdInput && data.entry_id) {

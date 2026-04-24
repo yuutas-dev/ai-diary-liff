@@ -212,21 +212,38 @@ export default async function handler(req, res) {
         if (error) throw new Error('Supabaseメモ更新エラー: ' + error.message);
       }
 
+      const episodeText = typeof data.episodeText === 'string'
+        ? data.episodeText
+        : (data.episode || '');
+      const factTags = normalizeTags(data.factTags || data.episodeTags);
+      const moodTags = normalizeTags(data.moodTags);
+      const customerTags = normalizeTags(data.customerTags);
+      const visitStatus = data.visitStatus || ((data.combinedMemoToSave && data.name) ? 'visit' : 'sales');
+
       const difyPayload = {
         inputs: {
           name: data.name || '',
-          episode: data.episode || '',
+          episode_text: episodeText,
+          episode: episodeText,
           pastMemo: data.pastMemo || '',
-          customerTags: data.customerTags || '',
+          customerTags: customerTags.join(', '),
           customerRank: data.customerRank || '新規',
-          episodeTags: data.episodeTags || '',
+          customer_tags: customerTags.join(', '),
+          fact_tags: factTags.join(', '),
+          mood_tags: moodTags.join(', '),
+          visit_status: visitStatus,
+          episodeTags: [...factTags, ...moodTags].join(', '),
+          has_episode_text: episodeText.trim() ? 'yes' : 'no',
+          has_fact_tags: factTags.length > 0 ? 'yes' : 'no',
           style: data.style || 'cute',
           tension: data.tension || '3',
           emoji: data.emoji || '4',
           custom_text: data.customText || '',
           businessType: data.businessType || '',
           industryPrompt: data.industryPrompt || '',
-          mode: data.mode || 'text'
+          mode: data.mode || 'text',
+          grounding_priority: 'episodeText > factTags > moodTags > pastMemo',
+          past_memo_usage_rule: 'Use pastMemo as tone/context only. Do not treat it as evidence of today.'
         },
         response_mode: 'blocking',
         user: userId

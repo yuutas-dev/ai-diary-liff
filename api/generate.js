@@ -97,15 +97,30 @@ export default async function handler(req, res) {
       if (custData) customerId = custData.id;
     }
 
-    // Difyリクエスト (既存維持)
+    const episodeText = typeof data.episodeText === 'string'
+      ? data.episodeText
+      : (data.episode || '');
+    const factTags = normalizeTags(data.factTags || data.episodeTags);
+    const moodTags = normalizeTags(data.moodTags);
+    const customerTags = normalizeTags(data.customerTags);
+    const visitStatus = data.visitStatus || ((data.combinedMemoToSave && data.name) ? 'visit' : 'sales');
+
+    // Difyリクエスト
     const difyPayload = {
       inputs: {
         name: data.name || '',
-        episode: data.episode || '',
+        episode_text: episodeText,
+        episode: episodeText,
         pastMemo: data.pastMemo || '',
-        customerTags: data.customerTags || '',
+        customerTags: customerTags.join(', '),
         customerRank: data.customerRank || '新規',
-        episodeTags: data.episodeTags || '',
+        customer_tags: customerTags.join(', '),
+        fact_tags: factTags.join(', '),
+        mood_tags: moodTags.join(', '),
+        visit_status: visitStatus,
+        episodeTags: [...factTags, ...moodTags].join(', '),
+        has_episode_text: episodeText.trim() ? 'yes' : 'no',
+        has_fact_tags: factTags.length > 0 ? 'yes' : 'no',
         style: data.style || 'cute',
         tension: data.tension || '3',
         emoji: data.emoji || '4',
@@ -113,7 +128,9 @@ export default async function handler(req, res) {
         businessType: data.businessType || '',
         industryPrompt: data.industryPrompt || '',
         mode: data.mode || 'text' ,
-        entry_type: (data.combinedMemoToSave && data.name) ? 'visit' : 'sales'
+        entry_type: visitStatus,
+        grounding_priority: 'episodeText > factTags > moodTags > pastMemo',
+        past_memo_usage_rule: 'Use pastMemo as tone/context only. Do not treat it as evidence of today.'
       },
       response_mode: 'blocking',
       user: userId
@@ -140,9 +157,9 @@ export default async function handler(req, res) {
     let entryId = null;
     if (data.mode !== 'photo' && customerId) {
       // combinedMemoToSave の有無で entry_type を自動判定
-      const isVisit = !!data.combinedMemoToSave;
+      const isVisit = visitStatus === 'visit';
       const entryType = isVisit ? 'visit' : 'sales';
-      const inputTags = normalizeTags(data.episodeTags);
+      const inputTags = [...factTags, ...moodTags];
 
       const { data: newEntry, error: entryError } = await supabase
         .from('customer_entries')
@@ -151,7 +168,7 @@ export default async function handler(req, res) {
           customer_id: customerId,
           entry_type: entryType,
           entry_date: getTodayFormatted(),
-          input_memo: data.episode || '',
+          input_memo: episodeText,
           input_tags: inputTags,
           photo_url: photoUrl,
           ai_generated_text: aiText,
