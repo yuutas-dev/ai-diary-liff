@@ -140,6 +140,7 @@
       border: 1px solid var(--border-color);
       box-shadow: var(--shadow-sm);
       border-radius: 999px;
+      transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
     }
 
     .visit-toggle .toggle-label {
@@ -147,7 +148,9 @@
       font-size: 12px;
       border-radius: 999px;
       color: var(--text-sub);
-      transition: background 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.28s ease, box-shadow 0.28s ease, transform 0.28s ease;
+      transition: background 0.34s cubic-bezier(0.22, 0.9, 0.2, 1), color 0.28s ease, box-shadow 0.34s cubic-bezier(0.22, 0.9, 0.2, 1), transform 0.34s cubic-bezier(0.22, 0.9, 0.2, 1);
+      transform: translateY(0) scale(1);
+      will-change: transform, background, box-shadow;
     }
 
     #visit-yes:checked ~ .app-container .visit-toggle .visit-label-yes,
@@ -155,6 +158,7 @@
       background: var(--primary-gradient);
       color: #FFF;
       box-shadow: var(--shadow-float);
+      transform: translateY(-0.5px) scale(1.01);
     }
 
     .mode-text-only { display: block; }
