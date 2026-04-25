@@ -56,9 +56,10 @@ export default async function handler(req, res) {
         .eq('user_id', userId)
         .in('source_entry_id', entryIds);
       if (favoritesError && favoritesError.code !== 'PGRST116') {
-        throw new Error('お気に入り状態取得エラー: ' + favoritesError.message);
+        console.error('favorites lookup fallback:', favoritesError.message);
+      } else {
+        favoriteEntryIdSet = new Set((favorites || []).map(f => f.source_entry_id));
       }
-      favoriteEntryIdSet = new Set((favorites || []).map(f => f.source_entry_id));
     }
 
     const items = filteredEntries.map(entry => ({
