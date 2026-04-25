@@ -2621,11 +2621,11 @@
       await updateCustomerTagsOnly(c.name, newTags);
     }
 
-    function selectCustomerByIndex(index) {
+    function selectCustomerByIndex(index, forceSelect = false) {
       const c = customerData[index];
       const nameInput = document.getElementById('nameInput');
 
-      if (nameInput.value === c.name) {
+      if (!forceSelect && nameInput.value === c.name) {
         nameInput.value = "";
         document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
         resetCreateInputState({ clearMood: true, clearEpisode: true });
@@ -2744,7 +2744,7 @@
         currentCustomerTags = [];
         renderAttributeTags();
       } else {
-        selectCustomerByIndex(matchedCustomer.index);
+        selectCustomerByIndex(matchedCustomer.index, true);
       }
 
       let matchCount = 0;
