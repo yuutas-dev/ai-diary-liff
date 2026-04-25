@@ -3381,6 +3381,24 @@
       }
     });
 
+    document.addEventListener('click', (event) => {
+      if (!isCreateDetailsOpen) return;
+      const modal = document.getElementById('createDetailsHalfModal');
+      const trigger = document.getElementById('createDetailsHeader');
+      const target = event.target;
+      if (modal && modal.contains(target)) return;
+      if (trigger && trigger.contains(target)) return;
+      closeCreateDetailsModal();
+    });
+
+    document.querySelectorAll('input[name="nav"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        if (isCreateDetailsOpen && radio.id !== 'nav-create' && radio.checked) {
+          closeCreateDetailsModal();
+        }
+      });
+    });
+
     function autoScrollTextarea() {
       const el = document.getElementById('todayEpisodeInput');
       el.scrollTop = el.scrollHeight;
