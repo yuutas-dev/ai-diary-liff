@@ -132,11 +132,29 @@
       filter: grayscale(40%);
     }
 
-    #visit-yes:checked ~ .app-container .visit-label-yes,
-    #visit-no:checked ~ .app-container .visit-label-no {
-      background: #FFF;
-      color: var(--primary);
+    .visit-toggle {
+      width: 100%;
+      max-width: 240px;
+      padding: 3px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
       box-shadow: var(--shadow-sm);
+      border-radius: 999px;
+    }
+
+    .visit-toggle .toggle-label {
+      padding: 7px 0;
+      font-size: 12px;
+      border-radius: 999px;
+      color: var(--text-sub);
+      transition: background 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.28s ease, box-shadow 0.28s ease, transform 0.28s ease;
+    }
+
+    #visit-yes:checked ~ .app-container .visit-toggle .visit-label-yes,
+    #visit-no:checked ~ .app-container .visit-toggle .visit-label-no {
+      background: var(--primary-gradient);
+      color: #FFF;
+      box-shadow: var(--shadow-float);
     }
 
     .mode-text-only { display: block; }
@@ -1360,9 +1378,9 @@
 
         <!-- 🚶‍♀️ 来店あり/なし トグル -->
         <div class="mode-text-only" style="margin-bottom: 16px; display:flex; justify-content:center;">
-          <div class="toggle-container" style="width: 100%; max-width: 240px; padding: 3px; background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
-            <label for="visit-yes" class="toggle-label visit-label-yes" style="padding: 6px 0; font-size:12px;">🚶‍♀️ 来店あり</label>
-            <label for="visit-no" class="toggle-label visit-label-no" style="padding: 6px 0; font-size:12px;">📱 来店なし(営業)</label>
+          <div class="toggle-container visit-toggle">
+            <label for="visit-yes" class="toggle-label visit-label-yes">🚶‍♀️ 来店あり</label>
+            <label for="visit-no" class="toggle-label visit-label-no">📱 来店なし(営業)</label>
           </div>
         </div>
 
