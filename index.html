@@ -412,6 +412,7 @@
       position: relative;
       width: 100%;
       margin-bottom: 12px;
+      flex-shrink: 0;
     }
 
     .fade-scroll-wrapper::after {
@@ -1407,7 +1408,7 @@
               </div>
             </div>
           </div>
-          <div style="position: relative;">
+          <div style="position: relative; flex-shrink: 0;">
             <input type="text" id="nameInput" class="input-field" placeholder="名前を入力..." oninput="suggestCustomer()">
             <div id="resultArea" class="result-box"></div>
           </div>
@@ -2296,8 +2297,7 @@
         if (item.c.tagsArray.includes('ダミー') && !item.c.tagsArray.includes(targetDummyTag)) return false;
         if (normalizedFilterText) {
           const matchName = String(item.c.name || '').toLowerCase().includes(normalizedFilterText);
-          const matchTags = item.c.tagsArray.some(t => String(t || '').toLowerCase().includes(normalizedFilterText));
-          if (!matchName && !matchTags) return false;
+          if (!matchName) return false;
         }
         return true;
       });
@@ -2738,11 +2738,8 @@
           if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
 
           const name = String(c.name || '').toLowerCase();
-          const memos = parseMemoToJSON(c.memo || "");
           const matchName = name.includes(normalizedText);
-          const matchMemo = memos.some(m => String(m.text || '').toLowerCase().includes(normalizedText) || (m.tags && m.tags.some(t => String(t || '').toLowerCase().includes(normalizedText))));
-          const matchTags = c.tagsArray.some(t => String(t || '').toLowerCase().includes(normalizedText));
-          return matchName || matchMemo || matchTags;
+          return matchName;
         });
 
       const matchedCustomer = searchableCustomers.find(({ c }) => String(c.name || '').toLowerCase() === normalizedText);
