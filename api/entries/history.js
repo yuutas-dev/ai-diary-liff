@@ -11,6 +11,7 @@ export default async function handler(req, res) {
     let data = req.body;
     if (typeof req.body === 'string') data = JSON.parse(req.body);
     const userId = data?.userId || 'test-user';
+    const customerId = data?.customerId || null;
 
     const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
     const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
@@ -18,13 +19,16 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: entries, error: entriesError } = await supabase
+    let entriesQuery = supabase
       .from('customer_entries')
       .select('id, customer_id, entry_type, entry_date, delivery_status, ai_generated_text, final_sent_text, created_at')
       .eq('user_id', userId)
       .in('delivery_status', ['draft', 'copied', 'line_sent'])
       .order('entry_date', { ascending: false })
       .order('created_at', { ascending: false });
+    if (customerId) entriesQuery = entriesQuery.eq('customer_id', customerId);
+
+    const { data: entries, error: entriesError } = await entriesQuery;
 
     if (entriesError) throw new Error('履歴取得エラー: ' + entriesError.message);
 

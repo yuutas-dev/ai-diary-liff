@@ -849,6 +849,57 @@
       transition: 0.2s;
     }
 
+    .profile-summary-box {
+      background: #FFF;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    .karte-section-title {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
+    .karte-static-box {
+      background: #FFF;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.5;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .history-filter-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 10px 0 2px;
+      padding: 8px 10px;
+      background: #FFF;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+    }
+
+    .history-filter-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .past-memo-box {
       background: #FFF;
       border-radius: 14px;
@@ -1605,8 +1656,10 @@
       <span class="label">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px; background:#FFF; border:1px solid var(--border-color);">
 
+      <div id="customerProfileSummary" class="profile-summary-box" style="display:none;"></div>
+
       <div class="accordion-header" onclick="toggleTagAccordion()">
-        <span>🏷️ 属性タグ</span><span id="tagAccordionIcon">▼</span>
+        <span>属性タグ</span><span id="tagAccordionIcon">▼</span>
       </div>
       <div class="accordion-content" id="tagAccordionContent">
         <div id="editAttributeTagsArea" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
@@ -1616,9 +1669,18 @@
         </div>
       </div>
 
-      <span class="label">📝 接客メモ</span>
+      <span class="karte-section-title">一言メモ</span>
+      <div id="customerOneLineMemo" class="karte-static-box">（未設定）</div>
+
+      <span class="karte-section-title">注意点・NG話題</span>
+      <div id="customerNgTopics" class="karte-static-box">（未設定）</div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px;">
+        <span class="karte-section-title" style="margin-bottom:0;">エピソード</span>
+        <button type="button" id="openHistoryFromKarteBtn" onclick="openCurrentCustomerHistory()" style="background:var(--primary-light); color:var(--primary); border:none; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:700;">この顧客の生成履歴を見る</button>
+      </div>
       <div class="memo-blocks-wrapper"><div id="editMemoBlocksArea"></div></div>
-      <div class="add-memo-btn" id="addMemoBtn" onclick="addNewMemoBlock()">＋ 日付とエピソードを追加</div>
+      <div class="add-memo-btn" id="addMemoBtn" onclick="addNewMemoBlock()">＋ エピソードを追加</div>
 
       <div id="editActionArea" style="display:flex; gap:10px;">
         <button onclick="closeEditModal()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:14px; border-radius:20px; font-weight:700; font-size:13px;" id="cancelBtn">閉じる</button>
@@ -1793,6 +1855,10 @@
         </div>
 
         <div id="karteListArea">
+          <div id="historyCustomerFilterBar" class="history-filter-bar">
+            <span id="historyCustomerFilterLabel" class="history-filter-label"></span>
+            <button type="button" onclick="clearHistoryCustomerFilter()" style="background:var(--input-bg); color:var(--text-main); border:none; border-radius:999px; padding:6px 10px; font-size:11px; font-weight:700;">解除</button>
+          </div>
           <div id="customerListArea" style="margin-top: 12px; position:relative; z-index:1;">
             <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
             <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
@@ -1890,6 +1956,8 @@
     let customerData = [];
     let generationHistoryData = [];
     let currentDataView = 'karte';
+    let selectedHistoryCustomerId = null;
+    let selectedHistoryCustomerName = '';
     
     // タグ管理の分離
     let masterMoodTags = ['💖 感謝', '🥺 会いたい', '🥺 寂しい', '💕 大好き', '🤫 秘密の話', '🤫 秘密', '🤐 誰にも内緒', '💤 おやすみ', '🧸 癒やし', '🌹 夢心地', '💕 愛してる', '📱 LINE嬉しい', '📱 LINE待ってる', '🖤 独占', '✨ 楽しい'];
@@ -2573,6 +2641,108 @@
       return diffTime < 0 ? 0 : Math.floor(diffTime / (1000 * 60 * 60 * 24));
     }
 
+    function sortEntriesByDateDesc(entries) {
+      return [...entries].sort((a, b) => {
+        const ta = Date.parse(String(a?.date || '').replace(/\//g, '-'));
+        const tb = Date.parse(String(b?.date || '').replace(/\//g, '-'));
+        if (Number.isNaN(tb) && Number.isNaN(ta)) return 0;
+        if (Number.isNaN(tb)) return -1;
+        if (Number.isNaN(ta)) return 1;
+        return tb - ta;
+      });
+    }
+
+    function getCustomerVisitEpisodes(customer) {
+      const memos = parseMemoToJSON(customer?.memo);
+      return memos.filter(m => {
+        const type = m?.type || 'visit';
+        const status = m?.status || 'legacy';
+        return type === 'visit' || status === 'legacy' || status === 'manual';
+      });
+    }
+
+    function extractOneLineMemo(episodes) {
+      const latestWithText = sortEntriesByDateDesc(episodes).find(e => (e?.text || '').trim());
+      if (!latestWithText) return '（未設定）';
+      const firstLine = latestWithText.text.split('\n').map(v => v.trim()).find(Boolean) || '';
+      return firstLine || '（未設定）';
+    }
+
+    function extractNgTopics(customer, episodes) {
+      const sourceTags = []
+        .concat(Array.isArray(customer?.tagsArray) ? customer.tagsArray : [])
+        .concat(...episodes.map(e => Array.isArray(e?.tags) ? e.tags : []));
+      const ngTagKeywords = ['ng', '注意', '地雷', '禁止', '苦手', '触れない'];
+      const fromTags = sourceTags.filter(tag => ngTagKeywords.some(k => String(tag).toLowerCase().includes(k)));
+
+      const fromText = sortEntriesByDateDesc(episodes)
+        .flatMap(e => String(e?.text || '').split('\n'))
+        .map(line => line.trim())
+        .filter(Boolean)
+        .filter(line => ngTagKeywords.some(k => line.toLowerCase().includes(k)))
+        .slice(0, 4);
+
+      const unique = Array.from(new Set([...fromTags, ...fromText].map(v => String(v).trim()).filter(Boolean)));
+      return unique.length > 0 ? unique : ['（未設定）'];
+    }
+
+    function renderCustomerKarteSummary(customer) {
+      const summaryEl = document.getElementById('customerProfileSummary');
+      const oneLineEl = document.getElementById('customerOneLineMemo');
+      const ngEl = document.getElementById('customerNgTopics');
+      if (!summaryEl || !oneLineEl || !ngEl || !customer) return;
+
+      const stats = getCustomerStats(customer);
+      const days = getDaysSinceLastVisit(customer.memo);
+      const isAlert = isAlertCustomer(customer);
+      const profileBadge = stats.count <= 1 ? '🔰 新規' : (stats.count === 2 ? '✌️ 2回目' : '👑 常連');
+      const vipBadge = stats.isVip ? `<span style="background:var(--vip-bg); color:var(--vip-text); border:1px solid var(--vip-border); font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700;">💎 VIP</span>` : '';
+      const alertBadge = isAlert && days !== null
+        ? `<span style="background:var(--alert-bg); color:var(--alert-text); border:1px solid rgba(217,83,79,0.2); font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700;">🚨 ${days}日放置</span>`
+        : '';
+      summaryEl.innerHTML = `
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span style="background:var(--input-bg); color:var(--text-main); font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700;">${profileBadge}</span>
+          ${vipBadge}
+          ${alertBadge}
+        </div>
+      `;
+      summaryEl.style.display = 'block';
+
+      const episodes = getCustomerVisitEpisodes(customer);
+      oneLineEl.innerText = extractOneLineMemo(episodes);
+      ngEl.innerText = extractNgTopics(customer, episodes).join('\n');
+    }
+
+    function updateHistoryFilterBar() {
+      const bar = document.getElementById('historyCustomerFilterBar');
+      const label = document.getElementById('historyCustomerFilterLabel');
+      if (!bar || !label) return;
+      if (selectedHistoryCustomerId) {
+        label.innerText = `顧客: ${selectedHistoryCustomerName || '選択中'}`;
+        bar.style.display = 'flex';
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    function clearHistoryCustomerFilter(options = {}) {
+      selectedHistoryCustomerId = null;
+      selectedHistoryCustomerName = '';
+      updateHistoryFilterBar();
+      if (!options.silent && currentDataView === 'history') fetchGenerationHistory();
+    }
+
+    function openCurrentCustomerHistory() {
+      const index = Number(document.getElementById('editCustomerIndex').value);
+      const customer = customerData[index];
+      if (!customer || !customer.id) return;
+      selectedHistoryCustomerId = customer.id;
+      selectedHistoryCustomerName = customer.name || '';
+      closeEditModal();
+      switchDataView('history');
+    }
+
     function getDaysSinceRecentSalesContact(c) {
       const salesContacts = (Array.isArray(c.entries) ? c.entries : []).filter(e => {
         const type = e?.type || e?.entry_type;
@@ -2637,12 +2807,16 @@
       const area = document.getElementById('historyListArea');
       if (!area) return;
 
-      if (!Array.isArray(generationHistoryData) || generationHistoryData.length === 0) {
+      const visibleItems = selectedHistoryCustomerId
+        ? generationHistoryData.filter(item => item.customerId === selectedHistoryCustomerId)
+        : generationHistoryData;
+
+      if (!Array.isArray(visibleItems) || visibleItems.length === 0) {
         area.innerHTML = `<div class="card" style="text-align:center; padding:28px 18px; color:var(--text-sub);"><div style="font-size:28px; margin-bottom:8px;">📝</div><div style="font-weight:700;">まだ作成履歴がありません</div></div>`;
         return;
       }
 
-      area.innerHTML = generationHistoryData.map(item => {
+      area.innerHTML = visibleItems.map(item => {
         const preview = (item.finalSentText || item.aiGeneratedText || '').trim();
         const favoriteClass = item.isFavorited ? 'favorite-sample-btn favorited' : 'favorite-sample-btn';
         const favoriteLabel = item.isFavorited ? '♥ お手本登録済み' : '♡ お手本にする';
@@ -2703,11 +2877,15 @@
     async function fetchGenerationHistory() {
       const area = document.getElementById('historyListArea');
       if (area) area.innerHTML = `<div class="card" style="text-align:center; padding:28px 18px; color:var(--text-sub);">読み込み中...</div>`;
+      updateHistoryFilterBar();
       try {
         const res = await fetch("/api/entries/history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId })
+          body: JSON.stringify({
+            userId,
+            customerId: selectedHistoryCustomerId || null
+          })
         });
         const data = await res.json();
         generationHistoryData = data.success ? (data.items || []) : [];
@@ -2742,7 +2920,13 @@
       if (historyListArea) historyListArea.style.display = isHistory ? 'flex' : 'none';
       if (karteFab) karteFab.style.display = isHistory ? 'none' : 'flex';
 
-      if (isHistory) fetchGenerationHistory();
+      if (!isHistory) {
+        clearHistoryCustomerFilter({ silent: true });
+        updateHistoryFilterBar();
+      } else {
+        updateHistoryFilterBar();
+        fetchGenerationHistory();
+      }
     }
 
     function filterCustomerList() {
@@ -3537,6 +3721,10 @@
       document.getElementById('addMemoBtn').style.display = 'block';
       document.getElementById('editActionArea').style.display = 'flex';
       document.getElementById('readOnlyActionArea').style.display = 'none';
+      document.getElementById('customerProfileSummary').style.display = 'none';
+      document.getElementById('customerOneLineMemo').innerText = '（未設定）';
+      document.getElementById('customerNgTopics').innerText = '（未設定）';
+      document.getElementById('openHistoryFromKarteBtn').style.display = 'none';
 
       document.getElementById('tagAccordionContent').classList.remove('open');
       document.getElementById('tagAccordionIcon').innerText = '▼';
@@ -3552,11 +3740,12 @@
       const c = customerData[index];
       isDemoMode = c.tagsArray.includes("ダミー") && !isDevMode;
 
-      document.getElementById('modalTitle').innerText = isReadOnly ? "🗂️ 顧客記録の確認" : (isDemoMode ? "【お試し】ダミー（保存されません）" : "顧客情報の編集");
+      document.getElementById('modalTitle').innerText = isReadOnly ? "顧客カルテ" : (isDemoMode ? "【お試し】顧客カルテ（保存されません）" : "顧客カルテ");
       document.getElementById('isCreateMode').value = "false";
       document.getElementById('editCustomerIndex').value = index;
       document.getElementById('editCustomerName').value = c.name;
       editingOriginalName = c.name;
+      document.getElementById('openHistoryFromKarteBtn').style.display = c.id ? 'inline-flex' : 'none';
 
       document.getElementById('editCustomerName').readOnly = isReadOnly;
       document.getElementById('customAttrInput').disabled = isReadOnly;
@@ -3572,16 +3761,17 @@
 
       tempSelectedAttributes = [...c.tagsArray];
       renderEditAttributeTags(isReadOnly);
+      renderCustomerKarteSummary(c);
 
       const area = document.getElementById('editMemoBlocksArea');
       area.innerHTML = '';
-      const memos = parseMemoToJSON(c.memo);
+      const memos = getCustomerVisitEpisodes(c);
       if (memos.length === 0 && !isReadOnly) addNewMemoBlock();
       else if (memos.length === 0 && isReadOnly) {
         area.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-weight:700; padding:20px;">過去の記録がありません</p>';
       }
       else memos.forEach(m => {
-        const blockReadOnly = isReadOnly || (m.type === 'sales');
+        const blockReadOnly = isReadOnly;
         addMemoBlock(m.date, m.text, m.tags || [], m.photoUrl || "", false, blockReadOnly, m.type || 'visit', m.status || 'legacy', m.id || null);
       });
 
