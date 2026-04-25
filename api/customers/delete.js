@@ -4,17 +4,39 @@ function sendJson(res, status, payload) {
   return res.status(status).json(payload);
 }
 
+function parseRequestBody(body) {
+  if (!body) return {};
+  if (typeof body === 'string') return JSON.parse(body);
+  return body;
+}
+
+function trimText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return sendJson(res, 405, { success: false, error: 'Method Not Allowed' });
+  if (req.method !== 'POST') {
+    return sendJson(res, 405, { success: false, error: 'Method Not Allowed' });
+  }
 
   try {
-    let data = req.body;
-    if (typeof req.body === 'string') data = JSON.parse(req.body);
-    const userId = data?.userId || 'test-user';
+    const data = parseRequestBody(req.body);
+    const userId = trimText(data?.userId) || 'test-user';
+    const targetName = trimText(data?.targetName);
 
-    const supabaseUrl = (process.env.SUPABASE_URL || 'https://fdlfwtlzphntfontwcfa.supabase.co').trim();
+    if (!targetName) {
+      return sendJson(res, 400, {
+        success: false,
+        error: 'targetName is required'
+      });
+    }
+
+    const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
     const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-    if (!supabaseUrl || !supabaseKey) throw new Error('Vercelの環境変数が読み込めていません');
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Vercelの環境変数が読み込めていません');
+    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -22,12 +44,18 @@ export default async function handler(req, res) {
       .from('customers')
       .delete()
       .eq('user_id', userId)
-      .eq('name', data.targetName);
+      .eq('name', targetName);
 
-    if (error) throw new Error('Supabase削除エラー: ' + error.message);
+    if (error) {
+      throw new Error('Supabase削除エラー: ' + error.message);
+    }
+
     return sendJson(res, 200, { success: true });
   } catch (err) {
     console.error('バックエンド処理エラー:', err);
-    return sendJson(res, 500, { success: false, error: err.message });
+    return sendJson(res, 500, {
+      success: false,
+      error: err.message || 'Internal Server Error'
+    });
   }
 }
