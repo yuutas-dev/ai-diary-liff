@@ -1623,6 +1623,7 @@
     let selectedFactTags = [];
 
     let currentCustomerTags = [];
+    let selectedCustomerId = null;
     let currentBase64Image = null;
     let isDemoMode = false;
     let isDevMode = false;
@@ -2026,6 +2027,7 @@
 
       if (isPhoto) {
         document.getElementById('nameInput').value = "";
+        selectedCustomerId = null;
         document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写メ日記モードでは顧客情報は使用しません)</div>");
         currentCustomerTags = [];
         renderAttributeTags();
@@ -2675,6 +2677,7 @@
 
       if (!forceSelect && nameInput.value === c.name) {
         nameInput.value = "";
+        selectedCustomerId = null;
         document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
         resetCreateInputState({ clearMood: true, clearEpisode: true });
         currentCustomerTags = [];
@@ -2690,6 +2693,7 @@
       document.getElementById('nav-create').checked = true;
       updateChips(); 
       nameInput.value = c.name;
+      selectedCustomerId = c.id || null;
 
       const memos = parseMemoToJSON(c.memo);
       let pastMemoHtml = '';
@@ -2729,6 +2733,7 @@
 
     function resetInputForm() {
       document.getElementById('nameInput').value = "";
+      selectedCustomerId = null;
       document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
       document.getElementById('pastMemoDisplay').scrollTop = 0;
       currentCustomerTags = [];
@@ -2764,6 +2769,7 @@
 
       if (!normalizedText) {
         area.style.display = "none";
+        selectedCustomerId = null;
         document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
         currentCustomerTags = [];
         renderAttributeTags();
@@ -2786,6 +2792,7 @@
 
       const matchedCustomer = searchableCustomers.find(({ c }) => String(c.name || '').toLowerCase() === normalizedText);
       if (!matchedCustomer) {
+        selectedCustomerId = null;
         document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
         currentCustomerTags = [];
         renderAttributeTags();
@@ -3443,6 +3450,7 @@
 
       const payload = {
         userId,
+        customerId: selectedCustomerId,
         name,
         episodeText: todayEpisode,
         factTags: selectedFactTags,

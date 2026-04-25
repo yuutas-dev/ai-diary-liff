@@ -91,7 +91,23 @@ async function uploadPhotoIfNeeded({ supabase, userId, image, mode }) {
   };
 }
 
-async function findCustomerIdByName({ supabase, userId, name }) {
+async function findCustomerIdByName({ supabase, userId, customerId, name }) {
+  const trimmedCustomerId = safeTrimText(customerId);
+  if (trimmedCustomerId) {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('id', trimmedCustomerId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`顧客取得エラー: ${error.message}`);
+    }
+
+    if (data?.id) return data.id;
+  }
+
   const trimmedName = safeTrimText(name);
   if (!trimmedName) return null;
 
@@ -100,13 +116,15 @@ async function findCustomerIdByName({ supabase, userId, name }) {
     .select('id')
     .eq('user_id', userId)
     .eq('name', trimmedName)
-    .maybeSingle();
+    .order('updated_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(1);
 
   if (error) {
     throw new Error(`顧客取得エラー: ${error.message}`);
   }
 
-  return data?.id || null;
+  return data?.[0]?.id || null;
 }
 
 async function fetchStyleSamples({ supabase, userId }) {
@@ -229,7 +247,7 @@ export default async function handler(req, res) {
 
     const [styleReferenceTexts, customerId, uploadResult] = await Promise.all([
       fetchStyleSamples({ supabase, userId }),
-      findCustomerIdByName({ supabase, userId, name: data?.name }),
+      findCustomerIdByName({ supabase, userId, customerId: data?.customerId, name: data?.name }),
       uploadPhotoIfNeeded({
         supabase,
         userId,
