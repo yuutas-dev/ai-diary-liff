@@ -609,13 +609,23 @@
       font-size: 13px;
       color: var(--text-main);
       margin-bottom: 12px;
-      max-height: 140px;
-      overflow-y: auto;
       line-height: 1.6;
       border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      min-height: 120px;
     }
 
-    #pastMemoDisplay { margin-top: 4px; }
+    #pastMemoDisplay {
+      margin-top: 4px;
+      max-height: 148px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      min-height: 0;
+      padding-right: 2px;
+    }
 
     .past-memo-label {
       font-size: 11px;
@@ -2596,6 +2606,7 @@
       }
 
       document.getElementById('pastMemoDisplay').innerHTML = pastMemoHtml;
+      document.getElementById('pastMemoDisplay').scrollTop = 0;
       currentCustomerTags = c.tagsArray.filter(t => t !== '非表示' && t !== '一軍固定');
       renderAttributeTags();
 
@@ -2606,6 +2617,7 @@
     function resetInputForm() {
       document.getElementById('nameInput').value = "";
       document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+      document.getElementById('pastMemoDisplay').scrollTop = 0;
       currentCustomerTags = [];
       renderAttributeTags();
       resetCreateInputState({ clearMood: true, clearEpisode: true });
