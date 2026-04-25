@@ -2315,6 +2315,8 @@
     function renderHistoryList() {
       const area = document.getElementById('historyListArea');
       if (!area) return;
+      const favoriteHistories = JSON.parse(localStorage.getItem('favoriteHistories') || '[]');
+      const favoriteSet = new Set(favoriteHistories);
 
       const escapeHtml = (value) => String(value || '')
         .replace(/&/g, '&amp;')
@@ -2334,6 +2336,9 @@
       });
 
       historyEntries.sort((a, b) => {
+        const aFav = favoriteSet.has(String(a.id || ''));
+        const bFav = favoriteSet.has(String(b.id || ''));
+        if (aFav !== bFav) return aFav ? -1 : 1;
         const aTime = new Date(a.entry_date || a.date || 0).getTime() || 0;
         const bTime = new Date(b.entry_date || b.date || 0).getTime() || 0;
         if (bTime !== aTime) return bTime - aTime;
@@ -2348,6 +2353,8 @@
       area.innerHTML = historyEntries.map((entry) => {
         const text = entry.final_sent_text || entry.ai_generated_text || '';
         const dateText = entry.entry_date || entry.date || '';
+        const entryId = String(entry.id || '');
+        const isFavorite = favoriteSet.has(entryId);
         return `
           <div class="history-card">
             <div class="history-header">
@@ -2355,14 +2362,36 @@
                 <div style="margin-bottom:4px;">${escapeHtml(entry.customerName)} 宛</div>
                 <div>${escapeHtml(dateText)}</div>
               </div>
-              <div class="favorite-btn" onclick="toggleFavoriteHistory('${escapeHtml(entry.id)}')">☆</div>
+              <div class="favorite-btn${isFavorite ? ' active' : ''}" onclick="toggleFavoriteHistory('${escapeHtml(entryId)}')">${isFavorite ? '♥' : '☆'}</div>
             </div>
             <div class="history-text collapsed" onclick="this.classList.toggle('collapsed')">${escapeHtml(text)}</div>
             <div style="margin-top:10px; display:flex; justify-content:flex-end;">
-              <button type="button" onclick="editHistory('${escapeHtml(entry.id)}')" style="background:var(--input-bg); color:var(--text-main); border:none; padding:8px 14px; border-radius:12px; font-weight:700; font-size:12px; cursor:pointer;">編集</button>
+              <button type="button" onclick="editHistory('${escapeHtml(entryId)}')" style="background:var(--input-bg); color:var(--text-main); border:none; padding:8px 14px; border-radius:12px; font-weight:700; font-size:12px; cursor:pointer;">編集</button>
             </div>
           </div>`;
       }).join('');
+    }
+
+    function toggleFavoriteHistory(entryId) {
+      const targetId = String(entryId || '');
+      if (!targetId) return;
+      const favorites = JSON.parse(localStorage.getItem('favoriteHistories') || '[]');
+      const exists = favorites.includes(targetId);
+
+      if (exists) {
+        const next = favorites.filter(id => id !== targetId);
+        localStorage.setItem('favoriteHistories', JSON.stringify(next));
+      } else {
+        if (favorites.length >= 5) {
+          showActionToast('お気に入りは最大5件までです。どれかを外してください。');
+          return;
+        }
+        const next = [...favorites, targetId];
+        localStorage.setItem('favoriteHistories', JSON.stringify(next));
+        showActionToast('💖 お気に入り登録しました！次回からAIが学習します');
+      }
+
+      renderHistoryList();
     }
 
     function setListFilter(filterType) {
