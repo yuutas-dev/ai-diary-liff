@@ -2315,61 +2315,68 @@
     function renderHistoryList() {
       const area = document.getElementById('historyListArea');
       if (!area) return;
-      const favoriteHistories = JSON.parse(localStorage.getItem('favoriteHistories') || '[]');
-      const favoriteSet = new Set(favoriteHistories);
+      area.innerHTML = '';
 
-      const escapeHtml = (value) => String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      let historyItems = [];
 
-      const historyEntries = customerData.flatMap((customer) => {
-        const entries = Array.isArray(customer.entries) ? customer.entries : [];
-        return entries
-          .filter((entry) => entry && (entry.ai_generated_text || entry.final_sent_text))
-          .map((entry) => ({
-            ...entry,
-            customerName: customer.name || '不明な顧客'
-          }));
+      // 1. 全顧客の entries から履歴を抽出
+      customerData.forEach(c => {
+        if (!Array.isArray(c.entries)) return;
+        c.entries.forEach(e => {
+          // キャメルケースで取得（list.jsで追加したプロパティ）
+          if (e.aiGeneratedText || e.finalSentText) {
+            historyItems.push({
+              ...e,
+              customerName: c.name,
+              customerTags: c.tagsArray || []
+            });
+          }
+        });
       });
 
-      historyEntries.sort((a, b) => {
-        const aFav = favoriteSet.has(String(a.id || ''));
-        const bFav = favoriteSet.has(String(b.id || ''));
-        if (aFav !== bFav) return aFav ? -1 : 1;
-        const aTime = new Date(a.entry_date || a.date || 0).getTime() || 0;
-        const bTime = new Date(b.entry_date || b.date || 0).getTime() || 0;
-        if (bTime !== aTime) return bTime - aTime;
-        return String(b.id || '').localeCompare(String(a.id || ''));
+      // 2. ソート (お気に入りが先、次に日付が新しい順)
+      const favorites = JSON.parse(localStorage.getItem('favoriteHistories') || '[]');
+      historyItems.sort((a, b) => {
+        const aFav = favorites.includes(a.id) ? 1 : 0;
+        const bFav = favorites.includes(b.id) ? 1 : 0;
+        if (aFav !== bFav) return bFav - aFav; // お気に入りを優先
+        
+        const dateA = new Date(a.date || 0).getTime();
+        const dateB = new Date(b.date || 0).getTime();
+        return dateB - dateA; // 降順
       });
 
-      if (historyEntries.length === 0) {
-        area.innerHTML = `<div class="card" style="text-align:center; padding:28px 18px; color:var(--text-sub);"><div style="font-size:28px; margin-bottom:8px;">📝</div><div style="font-weight:700; margin-bottom:6px;">生成履歴がありません</div></div>`;
+      // 3. 描画
+      if (historyItems.length === 0) {
+        area.innerHTML = '<div style="text-align:center; padding: 40px 20px; color: var(--text-muted); font-weight: 700; font-size: 13px;">生成履歴がありません<br><span style="font-size:11px; font-weight:normal; margin-top:8px; display:inline-block;">AIでメッセージを作成するとここに保存されます</span></div>';
         return;
       }
 
-      area.innerHTML = historyEntries.map((entry) => {
-        const text = entry.final_sent_text || entry.ai_generated_text || '';
-        const dateText = entry.entry_date || entry.date || '';
-        const entryId = String(entry.id || '');
-        const isFavorite = favoriteSet.has(entryId);
-        return `
+      historyItems.forEach(item => {
+        const isFav = favorites.includes(item.id);
+        const favClass = isFav ? 'favorite-btn active' : 'favorite-btn';
+        const favIcon = isFav ? '♥' : '☆';
+        
+        const displayText = item.finalSentText || item.aiGeneratedText || '';
+        const displayTags = item.customerTags.slice(0, 3).map(t => `<span style="background:var(--primary-light); color:var(--primary); font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; margin-right:4px;">#${t}</span>`).join('');
+
+        area.innerHTML += `
           <div class="history-card">
             <div class="history-header">
-              <div style="font-size:12px; color:var(--text-sub); font-weight:700;">
-                <div style="margin-bottom:4px;">${escapeHtml(entry.customerName)} 宛</div>
-                <div>${escapeHtml(dateText)}</div>
+              <div>
+                <div style="font-weight: 700; font-size: 14px; color: var(--text-main); margin-bottom: 4px;">${item.customerName} 様宛</div>
+                <div style="font-size: 11px; color: var(--text-sub);">${item.date || ''}</div>
+                <div style="margin-top: 4px;">${displayTags}</div>
               </div>
-              <div class="favorite-btn${isFavorite ? ' active' : ''}" onclick="toggleFavoriteHistory('${escapeHtml(entryId)}')">${isFavorite ? '♥' : '☆'}</div>
+              <div class="${favClass}" onclick="toggleFavoriteHistory('${item.id}')">${favIcon}</div>
             </div>
-            <div class="history-text collapsed" onclick="this.classList.toggle('collapsed')">${escapeHtml(text)}</div>
-            <div style="margin-top:10px; display:flex; justify-content:flex-end;">
-              <button type="button" onclick="editHistory('${escapeHtml(entryId)}')" style="background:var(--input-bg); color:var(--text-main); border:none; padding:8px 14px; border-radius:12px; font-weight:700; font-size:12px; cursor:pointer;">編集</button>
+            <div class="history-text collapsed" onclick="this.classList.toggle('collapsed')">${displayText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+            <div style="text-align: right; margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+              <button type="button" onclick="editHistory('${item.id}')" style="background: var(--input-bg); color: var(--text-main); border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">✏️ 編集して再利用</button>
             </div>
-          </div>`;
-      }).join('');
+          </div>
+        `;
+      });
     }
 
     function toggleFavoriteHistory(entryId) {
