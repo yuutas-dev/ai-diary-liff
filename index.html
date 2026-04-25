@@ -276,6 +276,79 @@
       border-color: transparent;
     }
 
+    .data-segmented {
+      display: inline-flex;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .data-segment-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .data-segment-btn.active {
+      background: #FFF;
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .history-card {
+      background: #FFF;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .history-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--text-sub);
+      font-weight: 700;
+    }
+
+    .history-badge {
+      background: var(--input-bg);
+      border-radius: 999px;
+      padding: 2px 8px;
+      border: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .history-preview {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.5;
+      line-clamp: 2;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+    }
+
     .view-toggle {
       background: #FFF;
       padding: 6px 12px;
@@ -1670,34 +1743,46 @@
         <div id="dataStickyHeader" style="position: sticky; top: -10px; z-index: 10; margin: -10px -16px 0; padding: 10px 16px 0;">
           <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(248, 247, 245, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index:-1; border-bottom: 1px solid var(--border-color);"></div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h2 style="margin:0; font-weight:700; font-size:18px;">顧客カルテ</h2>
-            <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
+          <div class="data-segmented">
+            <button type="button" id="dataViewKarteBtn" class="data-segment-btn active" onclick="switchDataView('karte')">顧客カルテ</button>
+            <button type="button" id="dataViewHistoryBtn" class="data-segment-btn" onclick="switchDataView('history')">生成履歴</button>
           </div>
 
-          <div id="searchContainer">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h2 id="dataViewTitle" style="margin:0; font-weight:700; font-size:18px;">顧客カルテ</h2>
+            <div id="karteViewToggle" class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
+          </div>
+
+          <div id="karteControls">
+            <div id="searchContainer">
             <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="padding-right: 36px; background: #FFF; border: 1px solid var(--border-color);">
             <div id="clearSearchBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.05); color: var(--text-sub); width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer;" onclick="clearSearch()">×</div>
-          </div>
-
-          <div class="filter-container" style="padding-bottom: 10px; margin-bottom: 0;">
-            <div class="filter-btn" id="filter-btn-alert" onclick="setListFilter('alert')">
-              ⚠️ 要連絡
-              <div id="alertBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--alert-text); color:#FFF; font-size:9px; font-weight:700; min-width:16px; height:16px; border-radius:8px; padding:0 4px; align-items:center; justify-content:center;"></div>
             </div>
-            <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
-            <div class="filter-btn" id="filter-btn-vip" onclick="setListFilter('vip')">💎 一軍</div>
-            <div class="filter-btn" id="filter-btn-new" onclick="setListFilter('new')">🔰 新規</div>
-            <div class="filter-btn" id="filter-btn-second" onclick="setListFilter('second')">✌️ 2回目</div>
-            <div class="filter-btn" id="filter-btn-regular" onclick="setListFilter('regular')">👑 常連</div>
+
+            <div class="filter-container" style="padding-bottom: 10px; margin-bottom: 0;">
+              <div class="filter-btn" id="filter-btn-alert" onclick="setListFilter('alert')">
+                ⚠️ 要連絡
+                <div id="alertBadge" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--alert-text); color:#FFF; font-size:9px; font-weight:700; min-width:16px; height:16px; border-radius:8px; padding:0 4px; align-items:center; justify-content:center;"></div>
+              </div>
+              <div class="filter-btn active-filter" id="filter-btn-all" onclick="setListFilter('all')">すべて</div>
+              <div class="filter-btn" id="filter-btn-vip" onclick="setListFilter('vip')">💎 一軍</div>
+              <div class="filter-btn" id="filter-btn-new" onclick="setListFilter('new')">🔰 新規</div>
+              <div class="filter-btn" id="filter-btn-second" onclick="setListFilter('second')">✌️ 2回目</div>
+              <div class="filter-btn" id="filter-btn-regular" onclick="setListFilter('regular')">👑 常連</div>
+            </div>
           </div>
         </div>
 
-        <div id="customerListArea" style="margin-top: 12px; position:relative; z-index:1;">
-          <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
-          <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
+        <div id="karteListArea">
+          <div id="customerListArea" style="margin-top: 12px; position:relative; z-index:1;">
+            <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
+            <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
+          </div>
+          <div id="historyListArea" class="history-list" style="display:none;">
+            <div class="card" style="text-align:center; padding:28px 18px; color:var(--text-sub);">読み込み中...</div>
+          </div>
         </div>
-        <div class="fab" role="button" tabindex="0" onclick="openCreateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){ event.preventDefault(); openCreateModal(); }">＋</div>
+        <div id="karteFab" class="fab" role="button" tabindex="0" onclick="openCreateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){ event.preventDefault(); openCreateModal(); }">＋</div>
       </div>
 
       <div class="page page-settings" style="position: relative;">
@@ -1784,6 +1869,8 @@
 
     let userId = "test-user";
     let customerData = [];
+    let generationHistoryData = [];
+    let currentDataView = 'karte';
     
     // タグ管理の分離
     let masterMoodTags = ['💖 感謝', '🥺 会いたい', '🥺 寂しい', '💕 大好き', '🤫 秘密の話', '🤫 秘密', '🤐 誰にも内緒', '💤 おやすみ', '🧸 癒やし', '🌹 夢心地', '💕 愛してる', '📱 LINE嬉しい', '📱 LINE待ってる', '🖤 独占', '✨ 楽しい'];
@@ -2017,6 +2104,7 @@
       if (visitYesEl) visitYesEl.addEventListener('change', updateCreateAssistText);
       if (visitNoEl) visitNoEl.addEventListener('change', updateCreateAssistText);
       updateCreateAssistText();
+      switchDataView('karte');
 
       document.getElementById('nav-data').addEventListener('change', (e) => {
         if (e.target.checked && !isFilterScrolled) {
@@ -2028,6 +2116,9 @@
               isFilterScrolled = true;
             }
           }, 50);
+        }
+        if (e.target.checked && currentDataView === 'history') {
+          fetchGenerationHistory();
         }
       });
 
@@ -2511,6 +2602,88 @@
       } else {
         badge.style.display = 'none';
       }
+    }
+
+    function getEntryTypeLabel(entryType) {
+      return entryType === 'visit' ? '来店' : '営業';
+    }
+
+    function getDeliveryStatusLabel(status) {
+      if (status === 'line_sent') return '送信済み';
+      if (status === 'copied') return 'コピー済み';
+      return '下書き';
+    }
+
+    function renderGenerationHistoryList() {
+      const area = document.getElementById('historyListArea');
+      if (!area) return;
+
+      if (!Array.isArray(generationHistoryData) || generationHistoryData.length === 0) {
+        area.innerHTML = `<div class="card" style="text-align:center; padding:28px 18px; color:var(--text-sub);"><div style="font-size:28px; margin-bottom:8px;">📝</div><div style="font-weight:700;">まだ作成履歴がありません</div></div>`;
+        return;
+      }
+
+      area.innerHTML = generationHistoryData.map(item => {
+        const preview = (item.finalSentText || item.aiGeneratedText || '').trim();
+        return `
+          <div class="history-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+              <b style="font-size:14px; color:var(--text-main);">${item.customerName || '顧客未設定'}</b>
+              <span style="font-size:11px; color:var(--text-sub); font-weight:700; white-space:nowrap;">${item.entryDate || ''}</span>
+            </div>
+            <div class="history-meta">
+              <span class="history-badge">${getEntryTypeLabel(item.entryType)}</span>
+              <span class="history-badge">${getDeliveryStatusLabel(item.deliveryStatus)}</span>
+            </div>
+            <div class="history-preview">${preview || '本文がありません'}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function fetchGenerationHistory() {
+      const area = document.getElementById('historyListArea');
+      if (area) area.innerHTML = `<div class="card" style="text-align:center; padding:28px 18px; color:var(--text-sub);">読み込み中...</div>`;
+      try {
+        const res = await fetch("/api/entries/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId })
+        });
+        const data = await res.json();
+        generationHistoryData = data.success ? (data.items || []) : [];
+      } catch (e) {
+        console.error("fetchGenerationHistory Error:", e);
+        generationHistoryData = [];
+      }
+      renderGenerationHistoryList();
+    }
+
+    function switchDataView(view) {
+      currentDataView = view === 'history' ? 'history' : 'karte';
+      const isHistory = currentDataView === 'history';
+
+      const karteBtn = document.getElementById('dataViewKarteBtn');
+      const historyBtn = document.getElementById('dataViewHistoryBtn');
+      if (karteBtn) karteBtn.classList.toggle('active', !isHistory);
+      if (historyBtn) historyBtn.classList.toggle('active', isHistory);
+
+      const title = document.getElementById('dataViewTitle');
+      if (title) title.innerText = isHistory ? '生成履歴' : '顧客カルテ';
+
+      const karteControls = document.getElementById('karteControls');
+      const karteViewToggle = document.getElementById('karteViewToggle');
+      const customerListArea = document.getElementById('customerListArea');
+      const historyListArea = document.getElementById('historyListArea');
+      const karteFab = document.getElementById('karteFab');
+
+      if (karteControls) karteControls.style.display = isHistory ? 'none' : 'block';
+      if (karteViewToggle) karteViewToggle.style.display = isHistory ? 'none' : 'inline-flex';
+      if (customerListArea) customerListArea.style.display = isHistory ? 'none' : 'block';
+      if (historyListArea) historyListArea.style.display = isHistory ? 'flex' : 'none';
+      if (karteFab) karteFab.style.display = isHistory ? 'none' : 'flex';
+
+      if (isHistory) fetchGenerationHistory();
     }
 
     function filterCustomerList() {
