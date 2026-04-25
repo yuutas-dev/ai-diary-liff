@@ -566,6 +566,25 @@
 
     .tags-scroll-container::-webkit-scrollbar { display: none; }
 
+    .create-details-tags-grid {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: max-content;
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+      align-content: start;
+      gap: 8px;
+      max-height: 116px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 40px 6px 0;
+    }
+
+    .create-details-tags-grid .chip {
+      align-self: start;
+      width: max-content;
+    }
+
     .accordion-header {
             background: var(--primary-light);
       color: var(--primary);
@@ -1260,11 +1279,11 @@
           <button type="button" onclick="saveMoodPreset()" style="background:var(--primary-light); border:none; color:var(--primary); font-size:10px; padding:4px 8px; border-radius:8px; font-weight:700; cursor:pointer;">保存</button>
         </div>
       </div>
-      <div class="tags-scroll-container" id="moodTagsArea" style="flex-wrap: wrap; overflow:visible; margin-bottom: 16px;"></div>
+      <div class="tags-scroll-container create-details-tags-grid" id="moodTagsArea" style="margin-bottom: 16px;"></div>
 
       <!-- 事実タグ -->
       <span class="label">📝 今日の出来事（トピック）</span>
-      <div class="tags-scroll-container" id="factTagsArea" style="flex-wrap: wrap; overflow:visible;"></div>
+      <div class="tags-scroll-container create-details-tags-grid" id="factTagsArea"></div>
       <div style="margin-top: 8px; display: flex; gap: 8px; margin-bottom: 16px;">
         <input type="text" id="customFactTagInput" placeholder="＋オリジナル出来事追加" class="input-field" style="padding:10px; font-size:12px; background:var(--input-bg); border:1px solid transparent; flex:1;">
         <button onclick="addCustomFactTag()" style="background:var(--text-sub); color:#fff; border:none; padding:0 14px; border-radius:10px; font-weight:700; font-size:12px; cursor:pointer;">追加</button>
