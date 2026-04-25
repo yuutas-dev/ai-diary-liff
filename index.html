@@ -2290,15 +2290,25 @@
     }
 
     function switchDataView(view) {
-      const customerListArea = document.getElementById('customerListArea');
-      const historyListArea = document.getElementById('historyListArea');
-      if (!customerListArea || !historyListArea) return;
-      if (view === 'history') {
-        customerListArea.style.display = 'none';
-        historyListArea.style.display = 'block';
+      const customerArea = document.getElementById('customerListArea');
+      const historyArea = document.getElementById('historyListArea');
+      const searchContainer = document.getElementById('searchContainer');
+      const filterContainer = document.querySelector('.page-data .filter-container');
+      const fab = document.querySelector('.page-data .fab');
+
+      if (view === 'customer') {
+        customerArea.style.display = 'block';
+        historyArea.style.display = 'none';
+        searchContainer.style.display = 'block';
+        filterContainer.style.display = 'flex';
+        if(fab) fab.style.display = 'flex';
       } else {
-        customerListArea.style.display = 'block';
-        historyListArea.style.display = 'none';
+        customerArea.style.display = 'none';
+        historyArea.style.display = 'block';
+        searchContainer.style.display = 'none';
+        filterContainer.style.display = 'none';
+        if(fab) fab.style.display = 'none';
+        if (typeof renderHistoryList === 'function') renderHistoryList();
       }
     }
 
