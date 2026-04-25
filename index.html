@@ -2284,15 +2284,21 @@
       }
     }
 
-    function renderQuickAccess() {
+    function renderQuickAccess(filterText = "") {
       const area = document.getElementById('quickAccessArea');
       area.innerHTML = "";
       const currentType = localStorage.getItem('businessType') || 'cabaret';
       const targetDummyTag = currentType === 'cabaret' ? 'キャバ客' : (currentType === 'fuzoku' ? '風俗客' : 'ホスト客');
+      const normalizedFilterText = String(filterText || '').toLowerCase();
 
       let filtered = customerData.map((c, i) => ({ c, index: i })).filter(item => {
         if (item.c.tagsArray.includes('非表示')) return false;
         if (item.c.tagsArray.includes('ダミー') && !item.c.tagsArray.includes(targetDummyTag)) return false;
+        if (normalizedFilterText) {
+          const matchName = String(item.c.name || '').toLowerCase().includes(normalizedFilterText);
+          const matchTags = item.c.tagsArray.some(t => String(t || '').toLowerCase().includes(normalizedFilterText));
+          if (!matchName && !matchTags) return false;
+        }
         return true;
       });
 
@@ -2710,6 +2716,7 @@
     function suggestCustomer() {
       const text = document.getElementById('nameInput').value;
       const normalizedText = text.trim().toLowerCase();
+      renderQuickAccess(normalizedText);
       const area = document.getElementById('resultArea');
       area.innerHTML = "";
 
