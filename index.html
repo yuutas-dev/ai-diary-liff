@@ -2394,6 +2394,42 @@
       renderHistoryList();
     }
 
+    function editHistory(entryId) {
+      const targetId = String(entryId || '');
+      if (!targetId) return;
+
+      let targetEntry = null;
+      let targetCustomerName = '';
+      customerData.some((customer) => {
+        const entries = Array.isArray(customer.entries) ? customer.entries : [];
+        const found = entries.find((entry) => String(entry?.id || '') === targetId);
+        if (found) {
+          targetEntry = found;
+          targetCustomerName = customer.name || '';
+          return true;
+        }
+        return false;
+      });
+
+      if (!targetEntry) {
+        showActionToast('対象の履歴が見つかりませんでした');
+        return;
+      }
+
+      const text = targetEntry.final_sent_text || targetEntry.ai_generated_text || '';
+      document.getElementById('inlineResultArea').style.display = 'block';
+      document.getElementById('inlineResultText').value = text;
+      document.getElementById('currentEntryId').value = targetId;
+      localStorage.setItem('diaryDraft', text);
+
+      if (targetCustomerName) {
+        document.getElementById('nameInput').value = targetCustomerName;
+      }
+
+      showActionToast('作成タブの執筆完了エリアに読み込みました');
+      document.getElementById('nav-create').checked = true;
+    }
+
     function setListFilter(filterType) {
       if (currentListFilter === filterType && filterType !== 'all') {
         currentListFilter = 'all';
