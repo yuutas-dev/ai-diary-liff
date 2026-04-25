@@ -30,6 +30,8 @@ function mapEntriesToLegacyMemo(entries) {
     id: entry.id,
     date: entry.entry_date,
     text: entry.input_memo || '',
+    aiGeneratedText: entry.ai_generated_text || '',
+    finalSentText: entry.final_sent_text || '',
     tags: entry.input_tags || [],
     photoUrl: entry.photo_url || undefined,
     type: entry.entry_type,
