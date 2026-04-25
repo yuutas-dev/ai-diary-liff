@@ -2667,7 +2667,7 @@
 
     async function favoriteHistorySample(entryId) {
       const target = generationHistoryData.find(item => item.entryId === entryId);
-      if (!target || target.isFavorited) return;
+      if (!target) return;
 
       const sampleText = (target.finalSentText || target.aiGeneratedText || '').trim();
       if (!sampleText) {
@@ -2676,22 +2676,22 @@
       }
 
       try {
-        const res = await fetch("/api/favorites/create", {
+        const res = await fetch("/api/favorites/toggle", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
             entryId: target.entryId,
             customerId: target.customerId,
-            customerName: target.customerName,
-            sampleText
+            customerName: target.customerName
           })
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data?.error || "登録に失敗しました");
 
+        if (data.limitReached) return;
         generationHistoryData = generationHistoryData.map(item =>
-          item.entryId === entryId ? { ...item, isFavorited: true } : item
+          item.entryId === entryId ? { ...item, isFavorited: !!data.isFavorited } : item
         );
         renderGenerationHistoryList();
       } catch (e) {

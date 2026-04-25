@@ -122,6 +122,25 @@ export default async function handler(req, res) {
     const styleProfileTension = data.style_profile_tension || data.tension || data?.style_profile?.tension || '3';
     const styleProfileEmoji = data.style_profile_emoji || data.emoji || data?.style_profile?.emoji || '4';
     const styleProfileCustomText = data.style_profile_custom_text || data.customText || data?.style_profile?.custom_text || '';
+    let styleReferenceTexts = '';
+    try {
+      const { data: favorites, error: favoritesError } = await supabase
+        .from('favorite_writing_samples')
+        .select('sample_text, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (favoritesError) {
+        console.error('[generate] favorites fetch failed:', favoritesError.message);
+      } else {
+        styleReferenceTexts = (favorites || [])
+          .map(f => (f.sample_text || '').trim())
+          .filter(Boolean)
+          .join('\n\n');
+      }
+    } catch (favoritesErr) {
+      console.error('[generate] favorites fetch exception:', favoritesErr);
+    }
 
     // Difyリクエスト
     const baseInputs = {
@@ -137,7 +156,8 @@ export default async function handler(req, res) {
       style_profile_style: styleProfileStyle,
       style_profile_tension: styleProfileTension,
       style_profile_emoji: styleProfileEmoji,
-      style_profile_custom_text: styleProfileCustomText
+      style_profile_custom_text: styleProfileCustomText,
+      style_reference_texts: styleReferenceTexts
     };
 
     const textModeInputs = {
