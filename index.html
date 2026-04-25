@@ -1631,6 +1631,7 @@
     let isFilterScrolled = false;
     let editingOriginalName = "";
     let actionTargetIndex = -1;
+    let tempSelectedAttributes = [];
     let pressTimer = null;
     let startX = 0;
     let startY = 0;
@@ -2991,7 +2992,7 @@
 
     function getEditorMemoTags() {
       const type = localStorage.getItem('businessType') || 'cabaret';
-      const masterTags = [...industryConfigs[type].tags];
+      const masterTags = [...(industryAttributeTags[type] || industryAttributeTags['cabaret'])];
       const savedTags = localStorage.getItem(`customTags_${type}`);
       if (savedTags) {
         try {
@@ -3438,7 +3439,7 @@
         emoji: document.getElementById('emojiSlider').value,
         customText: document.getElementById('customStyleText').value,
         businessType: type,
-        industryPrompt: industryConfigs[type].prompt,
+        industryPrompt: '',
         customerTags: cleanedCustomerTags,
         customerRank,
         image: currentBase64Image,
