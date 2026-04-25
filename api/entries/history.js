@@ -47,6 +47,20 @@ export default async function handler(req, res) {
       customerNameMap = new Map((customers || []).map(c => [c.id, c.name]));
     }
 
+    const entryIds = filteredEntries.map(e => e.id).filter(Boolean);
+    let favoriteEntryIdSet = new Set();
+    if (entryIds.length > 0) {
+      const { data: favorites, error: favoritesError } = await supabase
+        .from('favorite_writing_samples')
+        .select('source_entry_id')
+        .eq('user_id', userId)
+        .in('source_entry_id', entryIds);
+      if (favoritesError && favoritesError.code !== 'PGRST116') {
+        throw new Error('お気に入り状態取得エラー: ' + favoritesError.message);
+      }
+      favoriteEntryIdSet = new Set((favorites || []).map(f => f.source_entry_id));
+    }
+
     const items = filteredEntries.map(entry => ({
       entryId: entry.id,
       customerId: entry.customer_id,
@@ -55,7 +69,8 @@ export default async function handler(req, res) {
       entryDate: entry.entry_date,
       deliveryStatus: entry.delivery_status,
       aiGeneratedText: entry.ai_generated_text || '',
-      finalSentText: entry.final_sent_text || ''
+      finalSentText: entry.final_sent_text || '',
+      isFavorited: favoriteEntryIdSet.has(entry.id)
     }));
 
     return sendJson(res, 200, { success: true, items });

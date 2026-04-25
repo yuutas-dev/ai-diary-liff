@@ -349,6 +349,25 @@
       word-break: break-word;
     }
 
+    .favorite-sample-btn {
+      border: 1px solid var(--border-color);
+      background: #FFF;
+      color: var(--text-sub);
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 6px;
+      align-self: flex-end;
+    }
+
+    .favorite-sample-btn.favorited {
+      border-color: transparent;
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
     .view-toggle {
       background: #FFF;
       padding: 6px 12px;
@@ -2625,11 +2644,16 @@
 
       area.innerHTML = generationHistoryData.map(item => {
         const preview = (item.finalSentText || item.aiGeneratedText || '').trim();
+        const favoriteClass = item.isFavorited ? 'favorite-sample-btn favorited' : 'favorite-sample-btn';
+        const favoriteLabel = item.isFavorited ? '♥ お手本登録済み' : '♡ お手本にする';
         return `
           <div class="history-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
               <b style="font-size:14px; color:var(--text-main);">${item.customerName || '顧客未設定'}</b>
-              <span style="font-size:11px; color:var(--text-sub); font-weight:700; white-space:nowrap;">${item.entryDate || ''}</span>
+              <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                <span style="font-size:11px; color:var(--text-sub); font-weight:700; white-space:nowrap;">${item.entryDate || ''}</span>
+                <button type="button" class="${favoriteClass}" onclick="favoriteHistorySample('${item.entryId}')">${favoriteLabel}</button>
+              </div>
             </div>
             <div class="history-meta">
               <span class="history-badge">${getEntryTypeLabel(item.entryType)}</span>
@@ -2639,6 +2663,41 @@
           </div>
         `;
       }).join('');
+    }
+
+    async function favoriteHistorySample(entryId) {
+      const target = generationHistoryData.find(item => item.entryId === entryId);
+      if (!target || target.isFavorited) return;
+
+      const sampleText = (target.finalSentText || target.aiGeneratedText || '').trim();
+      if (!sampleText) {
+        alert("登録できる本文がありません");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/favorites/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            entryId: target.entryId,
+            customerId: target.customerId,
+            customerName: target.customerName,
+            sampleText
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data?.error || "登録に失敗しました");
+
+        generationHistoryData = generationHistoryData.map(item =>
+          item.entryId === entryId ? { ...item, isFavorited: true } : item
+        );
+        renderGenerationHistoryList();
+      } catch (e) {
+        console.error("favoriteHistorySample Error:", e);
+        alert(e?.message || "登録に失敗しました");
+      }
     }
 
     async function fetchGenerationHistory() {
