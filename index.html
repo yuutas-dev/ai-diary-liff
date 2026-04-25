@@ -900,6 +900,19 @@
       white-space: nowrap;
     }
 
+    .episode-suggestion-box {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: #FFF;
+    }
+
+    .episode-suggestion-box.show {
+      display: block;
+    }
+
     .past-memo-box {
       background: #FFF;
       border-radius: 14px;
@@ -1764,6 +1777,13 @@
             <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 仕上げ文をコピー</button>
             <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);">💬 このままLINEで送る</button>
           </div>
+          <div id="episodeSuggestionBox" class="episode-suggestion-box">
+            <div id="episodeSuggestionText" style="font-size:12px; color:var(--text-main); font-weight:700; margin-bottom:8px;"></div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" id="saveEpisodeSuggestionBtn" onclick="saveSuggestedEpisode()" style="flex:1; background:var(--primary-light); color:var(--primary); border:none; border-radius:12px; padding:10px 12px; font-size:12px; font-weight:700;">この内容を顧客エピソードに追加</button>
+              <button type="button" onclick="dismissEpisodeSuggestion()" style="background:var(--input-bg); color:var(--text-main); border:none; border-radius:12px; padding:10px 12px; font-size:12px; font-weight:700;">閉じる</button>
+            </div>
+          </div>
           <p class="edit-stage-tiny-note">コピー/送信でAIがあなたをさらに学習します！</p>
         </div>
 
@@ -1958,6 +1978,7 @@
     let currentDataView = 'karte';
     let selectedHistoryCustomerId = null;
     let selectedHistoryCustomerName = '';
+    let pendingEpisodeSuggestion = null;
     
     // タグ管理の分離
     let masterMoodTags = ['💖 感謝', '🥺 会いたい', '🥺 寂しい', '💕 大好き', '🤫 秘密の話', '🤫 秘密', '🤐 誰にも内緒', '💤 おやすみ', '🧸 癒やし', '🌹 夢心地', '💕 愛してる', '📱 LINE嬉しい', '📱 LINE待ってる', '🖤 独占', '✨ 楽しい'];
@@ -2601,7 +2622,7 @@
 
     function getCustomerStats(c) {
       const allMemos = parseMemoToJSON(c.memo);
-      const visitMemos = allMemos.filter(m => !m.type || m.type === 'visit' || m.status === 'legacy');
+      const visitMemos = allMemos.filter(shouldIncludeAsKarteEpisode);
       const count = visitMemos.length === 0 ? 1 : visitMemos.length;
       
       const vipKeywords = ['太客', 'エース', '一軍', 'VIP', '金持ち', '良客', '常連', '一軍固定'];
@@ -2611,7 +2632,7 @@
 
     function getDaysSinceLastVisit(memoStr) {
       const allMemos = parseMemoToJSON(memoStr);
-      const visitMemos = allMemos.filter(m => !m.type || m.type === 'visit' || m.status === 'legacy');
+      const visitMemos = allMemos.filter(shouldIncludeAsKarteEpisode);
       if (visitMemos.length === 0) return null;
       
       let latestTime = 0;
@@ -2652,13 +2673,17 @@
       });
     }
 
+    function shouldIncludeAsKarteEpisode(entry) {
+      const type = String(entry?.type || '').trim();
+      const status = String(entry?.status || '').trim();
+      if (type && type !== 'visit') return false;
+      if (!status) return true;
+      return status === 'manual' || status === 'legacy';
+    }
+
     function getCustomerVisitEpisodes(customer) {
       const memos = parseMemoToJSON(customer?.memo);
-      return memos.filter(m => {
-        const type = m?.type || 'visit';
-        const status = m?.status || 'legacy';
-        return type === 'visit' || status === 'legacy' || status === 'manual';
-      });
+      return memos.filter(shouldIncludeAsKarteEpisode);
     }
 
     function extractOneLineMemo(episodes) {
@@ -2731,6 +2756,77 @@
       selectedHistoryCustomerName = '';
       updateHistoryFilterBar();
       if (!options.silent && currentDataView === 'history') fetchGenerationHistory();
+    }
+
+    function clearEpisodeSuggestion() {
+      pendingEpisodeSuggestion = null;
+      const box = document.getElementById('episodeSuggestionBox');
+      const text = document.getElementById('episodeSuggestionText');
+      const btn = document.getElementById('saveEpisodeSuggestionBtn');
+      if (box) box.classList.remove('show');
+      if (text) text.innerText = '';
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'この内容を顧客エピソードに追加';
+      }
+    }
+
+    function dismissEpisodeSuggestion() {
+      clearEpisodeSuggestion();
+    }
+
+    function canSuggestEpisodeSave({ messageMode, visitStatus, episodeText, factTags, customerId, entryId }) {
+      if (messageMode === 'photo') return false;
+      if (visitStatus !== 'visit') return false;
+      if (!customerId || !entryId) return false;
+      const normalizedText = String(episodeText || '').trim();
+      const tags = Array.isArray(factTags) ? factTags.filter(Boolean) : [];
+      return normalizedText.length >= 12 || tags.length >= 1;
+    }
+
+    function showEpisodeSuggestion(payload) {
+      const box = document.getElementById('episodeSuggestionBox');
+      const text = document.getElementById('episodeSuggestionText');
+      if (!box || !text || !payload) return;
+      text.innerText = `${payload.customerName} の接客エピソードとして残しますか？`;
+      box.classList.add('show');
+    }
+
+    async function saveSuggestedEpisode() {
+      if (!pendingEpisodeSuggestion) return;
+      const btn = document.getElementById('saveEpisodeSuggestionBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = '保存中...';
+      }
+      try {
+        const res = await fetch('/api/entries/save-episode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            sourceEntryId: pendingEpisodeSuggestion.entryId,
+            customerId: pendingEpisodeSuggestion.customerId,
+            entryDate: pendingEpisodeSuggestion.entryDate,
+            episodeText: pendingEpisodeSuggestion.episodeText,
+            factTags: pendingEpisodeSuggestion.factTags
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || 'エピソード保存に失敗しました');
+        }
+        showActionToast('📘 顧客エピソードに追加しました');
+        clearEpisodeSuggestion();
+        await fetchCustomers();
+      } catch (e) {
+        console.error('saveSuggestedEpisode error:', e);
+        alert(e?.message || 'エピソード保存に失敗しました');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'この内容を顧客エピソードに追加';
+        }
+      }
     }
 
     function openCurrentCustomerHistory() {
@@ -3365,6 +3461,7 @@
     function selectCustomerByIndex(index) {
       const c = customerData[index];
       const nameInput = document.getElementById('nameInput');
+      clearEpisodeSuggestion();
 
       if (nameInput.value === c.name) {
         nameInput.value = "";
@@ -3416,6 +3513,7 @@
       
       const entryIdInput = document.getElementById('currentEntryId');
       if (entryIdInput) entryIdInput.value = '';
+      clearEpisodeSuggestion();
     }
 
     function renderAttributeTags() {
@@ -3429,6 +3527,7 @@
       const text = document.getElementById('nameInput').value;
       const area = document.getElementById('resultArea');
       area.innerHTML = "";
+      if (!text) clearEpisodeSuggestion();
 
       const matchedCustomer = customerData.find(c => c.name === text);
       if (!matchedCustomer) {
@@ -4061,6 +4160,7 @@
       showCuteToast(false);
       document.getElementById('inlineResultArea').style.display = 'none';
       document.getElementById('inlineResultText').value = "";
+      clearEpisodeSuggestion();
       const entryIdInput = document.getElementById('currentEntryId');
       if (entryIdInput) entryIdInput.value = '';
 
@@ -4170,6 +4270,26 @@
 
         if (entryIdInput && data.entry_id) {
           entryIdInput.value = data.entry_id;
+        }
+
+        const suggestionPayload = {
+          messageMode,
+          visitStatus: effectiveVisitStatus,
+          episodeText: todayEpisode,
+          factTags: selectedFactTags,
+          customerId: targetCustomer?.id || data.customer_id || null,
+          customerName: name,
+          entryId: data.entry_id || null,
+          entryDate: data.entry_date || getTodayString()
+        };
+        if (canSuggestEpisodeSave(suggestionPayload)) {
+          pendingEpisodeSuggestion = {
+            ...suggestionPayload,
+            factTags: [...selectedFactTags]
+          };
+          showEpisodeSuggestion(pendingEpisodeSuggestion);
+        } else {
+          clearEpisodeSuggestion();
         }
 
         setTimeout(() => {

@@ -255,9 +255,15 @@ export default async function handler(req, res) {
       console.log('[generate] skip entry save: customerId not found');
     }
 
-    // 生成テキストと共に entry_id をフロントへ返す
+    // 生成テキストと共に entry_id / customer_id / entry_date を返す
     console.log('[generate] success', { userId, messageMode, hasEntryId: !!entryId });
-    return sendJson(res, 200, { success: true, generatedText: aiText, entry_id: entryId });
+    return sendJson(res, 200, {
+      success: true,
+      generatedText: aiText,
+      entry_id: entryId,
+      customer_id: customerId,
+      entry_date: getTodayFormatted()
+    });
   } catch (err) {
     console.error('[generate] backend error:', err);
     return sendJson(res, 500, { success: false, error: err.message });
