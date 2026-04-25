@@ -193,6 +193,36 @@
     #visit-yes:checked ~ .app-container .visit-toggle-hint .hint-yes { display: inline; }
     #visit-no:checked ~ .app-container .visit-toggle-hint .hint-no { display: inline; }
 
+    .data-view-toggle::before { display: none; }
+
+    .data-view-toggle .toggle-container {
+      position: relative;
+      padding: 0;
+    }
+
+    .data-view-toggle .toggle-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50%;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--primary-gradient);
+      box-shadow: var(--shadow-float);
+      transition: transform 0.34s cubic-bezier(0.22, 0.9, 0.2, 1);
+      z-index: 1;
+    }
+
+    #view-history:checked ~ .toggle-container::before {
+      transform: translateX(100%);
+    }
+
+    #view-customer:checked ~ .toggle-container label[for="view-customer"],
+    #view-history:checked ~ .toggle-container label[for="view-history"] {
+      color: #FFF;
+    }
+
     .mode-text-only { display: block; }
     #mode-photo:checked ~ .app-container .mode-text-only { display: none !important; }
 
@@ -1495,6 +1525,17 @@
             <div class="view-toggle" onclick="toggleCompactMode()"><span id="viewIcon">🗂️ 詳細表示</span></div>
           </div>
 
+          <div style="display:flex; justify-content:center; margin-bottom: 12px;">
+            <div class="visit-toggle data-view-toggle" style="max-width: 280px; padding: 4px;">
+              <input type="radio" name="data-view" id="view-customer" class="ui-state" checked onchange="switchDataView('customer')">
+              <input type="radio" name="data-view" id="view-history" class="ui-state" onchange="switchDataView('history')">
+              <div class="toggle-container" style="background: transparent; box-shadow: none;">
+                <label for="view-customer" class="toggle-label" style="font-size: 13px; z-index: 2;">👥 顧客カルテ</label>
+                <label for="view-history" class="toggle-label" style="font-size: 13px; z-index: 2;">📝 生成履歴</label>
+              </div>
+            </div>
+          </div>
+
           <div id="searchContainer">
             <input type="text" id="customerSearch" class="input-field" placeholder="名前、タグ、メモで検索..." oninput="filterCustomerList()" style="padding-right: 36px; background: #FFF; border: 1px solid var(--border-color);">
             <div id="clearSearchBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.05); color: var(--text-sub); width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer;" onclick="clearSearch()">×</div>
@@ -1517,6 +1558,7 @@
           <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
           <div class="card skeleton" style="height:80px; margin-bottom:12px;"></div>
         </div>
+        <div id="historyListArea" style="display: none; margin-top: 12px; position:relative; z-index:1;"></div>
         <div class="fab" role="button" tabindex="0" onclick="openCreateModal()" onkeydown="if(event.key==='Enter'||event.key===' '){ event.preventDefault(); openCreateModal(); }">＋</div>
       </div>
 
@@ -2237,6 +2279,19 @@
       const searchInput = document.getElementById('customerSearch');
       searchInput.value = '';
       filterCustomerList();
+    }
+
+    function switchDataView(view) {
+      const customerListArea = document.getElementById('customerListArea');
+      const historyListArea = document.getElementById('historyListArea');
+      if (!customerListArea || !historyListArea) return;
+      if (view === 'history') {
+        customerListArea.style.display = 'none';
+        historyListArea.style.display = 'block';
+      } else {
+        customerListArea.style.display = 'block';
+        historyListArea.style.display = 'none';
+      }
     }
 
     function setListFilter(filterType) {
