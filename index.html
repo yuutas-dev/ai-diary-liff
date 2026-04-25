@@ -2198,6 +2198,7 @@
         renderCustomerList();
         renderQuickAccess();
         updateAlertBadge();
+        if (typeof renderHistoryList === 'function') renderHistoryList();
       } catch (e) {
         console.error("fetchCustomers Error:", e);
       }
