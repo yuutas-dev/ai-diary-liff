@@ -239,29 +239,39 @@ export default async function handler(req, res) {
     ]);
 
     const difyInputs = {
+      // 👤 基本情報と文体
       name: data?.name || '',
-      episode_text: episodeText,
-      episode: episodeText,
-      pastMemo: data?.pastMemo || '',
-      customerTags: customerTags.join(', '),
-      customerRank: data?.customerRank || '新規',
-      customer_tags: customerTags.join(', '),
-      fact_tags: factTags.join(', '),
-      mood_tags: moodTags.join(', '),
-      visit_status: visitStatus,
-      episodeTags: [...factTags, ...moodTags].join(', '),
-      has_episode_text: episodeText.trim() ? 'yes' : 'no',
-      has_fact_tags: factTags.length > 0 ? 'yes' : 'no',
       style: data?.style || 'cute',
       tension: data?.tension || '3',
       emoji: data?.emoji || '4',
       custom_text: customText,
-      businessType: data?.businessType || '',
-      industryPrompt: data?.industryPrompt || '',
-      mode,
-      entry_type: visitStatus,
+      // ※ image_file は下部の処理で追加されるためここには不要です
+
+      // 🏢 業態・モード・ルーティング系（Difyの分岐で必須）
+      business_type: data?.businessType || 'cabaret',
+      visit_status: visitStatus,
+      message_mode: mode,
+      is_photo_diary: mode === 'photo' ? 'yes' : 'no',
+
+      // 📝 今日の情報
+      episode_text: episodeText,
+      fact_tags: factTags.join(', '),
+      mood_tags: moodTags.join(', '),
+      has_episode_text: episodeText.trim() ? 'yes' : 'no',
+      has_fact_tags: factTags.length > 0 ? 'yes' : 'no',
+      
+      // 🗂️ 顧客情報（以前は customerRank などになっていたのを修正）
+      customer_rank: data?.customerRank || '新規',
+      customer_tags: customerTags.join(', '),
+      past_memo: data?.pastMemo || '',
+      
+      // 🤖 AIへの指示ルール
       grounding_priority: 'episodeText > factTags > moodTags > pastMemo',
       past_memo_usage_rule: 'Use pastMemo as tone/context only. Do not treat it as evidence of today.',
+      photo_caption_hint: '', // 拡張用
+      photo_tags: '',         // 拡張用
+      
+      // ✨ Supabaseから取得した過去の文章サンプル（Dify側に追加推奨）
       style_reference_texts: styleReferenceTexts.join('\n\n---\n\n')
     };
 
