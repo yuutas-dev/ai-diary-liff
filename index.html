@@ -179,6 +179,20 @@
       transform: translateX(100%);
     }
 
+    .visit-toggle-hint {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-sub);
+      line-height: 1.2;
+      margin-bottom: 6px;
+      min-height: 12px;
+    }
+
+    .visit-toggle-hint .hint-text { display: none; }
+    #visit-yes:checked ~ .app-container .visit-toggle-hint .hint-yes { display: inline; }
+    #visit-no:checked ~ .app-container .visit-toggle-hint .hint-no { display: inline; }
+
     .mode-text-only { display: block; }
     #mode-photo:checked ~ .app-container .mode-text-only { display: none !important; }
 
@@ -240,7 +254,7 @@
     }
 
     .card-customer-select {
-      height: 380px;
+      height: 360px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1399,9 +1413,15 @@
 
         <!-- 🚶‍♀️ 来店あり/なし トグル -->
         <div class="mode-text-only" style="margin-bottom: 16px; display:flex; justify-content:center;">
-          <div class="toggle-container visit-toggle">
-            <label for="visit-yes" class="toggle-label visit-label-yes">🚶‍♀️ 来店あり</label>
-            <label for="visit-no" class="toggle-label visit-label-no">📱 来店なし(営業)</label>
+          <div style="width:100%; max-width:240px;">
+            <div class="visit-toggle-hint">
+              <span class="hint-text hint-yes">ありがとうをつたえる</span>
+              <span class="hint-text hint-no">きてほしいをつたえる</span>
+            </div>
+            <div class="toggle-container visit-toggle">
+              <label for="visit-yes" class="toggle-label visit-label-yes">🚶‍♀️ 来店あり</label>
+              <label for="visit-no" class="toggle-label visit-label-no">📱 来店なし(営業)</label>
+            </div>
           </div>
         </div>
 
