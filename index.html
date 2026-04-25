@@ -141,6 +141,23 @@
       box-shadow: var(--shadow-sm);
       border-radius: 999px;
       transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .visit-toggle::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: calc(50% - 3px);
+      height: calc(100% - 6px);
+      border-radius: 999px;
+      background: var(--primary-gradient);
+      box-shadow: var(--shadow-float);
+      transform: translateX(0);
+      transition: transform 0.34s cubic-bezier(0.22, 0.9, 0.2, 1);
+      z-index: 1;
     }
 
     .visit-toggle .toggle-label {
@@ -148,17 +165,18 @@
       font-size: 12px;
       border-radius: 999px;
       color: var(--text-sub);
-      transition: background 0.34s cubic-bezier(0.22, 0.9, 0.2, 1), color 0.28s ease, box-shadow 0.34s cubic-bezier(0.22, 0.9, 0.2, 1), transform 0.34s cubic-bezier(0.22, 0.9, 0.2, 1);
-      transform: translateY(0) scale(1);
-      will-change: transform, background, box-shadow;
+      transition: color 0.22s ease;
+      position: relative;
+      z-index: 2;
     }
 
     #visit-yes:checked ~ .app-container .visit-toggle .visit-label-yes,
     #visit-no:checked ~ .app-container .visit-toggle .visit-label-no {
-      background: var(--primary-gradient);
       color: #FFF;
-      box-shadow: var(--shadow-float);
-      transform: translateY(-0.5px) scale(1.01);
+    }
+
+    #visit-no:checked ~ .app-container .visit-toggle::before {
+      transform: translateX(100%);
     }
 
     .mode-text-only { display: block; }
