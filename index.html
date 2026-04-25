@@ -658,7 +658,7 @@
     .past-memo-box {
       background: #FFF;
       border-radius: 14px;
-      padding: 14px;
+      padding: 0;
       font-size: 13px;
       color: var(--text-main);
       margin-bottom: 12px;
@@ -670,7 +670,7 @@
     }
 
     #pastMemoDisplay {
-      margin-top: 4px;
+      margin-top: 0;
       max-height: none;
       height: 100%;
       overflow-y: auto;
@@ -678,14 +678,14 @@
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
       min-height: 0;
-      padding-right: 2px;
+      padding: 14px;
     }
 
     .past-memo-label {
       font-size: 11px;
       font-weight: 700;
       color: var(--text-sub);
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       display: block;
     }
 
@@ -1384,8 +1384,7 @@
             <div id="resultArea" class="result-box"></div>
           </div>
           <div class="past-memo-box" style="margin-top: 12px; margin-bottom: 0;">
-            <span class="past-memo-label">📖 過去のメモ</span>
-            <div id="pastMemoDisplay" style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(顧客を選択するか、過去の記録がありません)</div>
+            <div id="pastMemoDisplay"><span class="past-memo-label">📖 過去のメモ</span><div style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(顧客を選択するか、過去の記録がありません)</div></div>
           </div>
         </div>
 
@@ -1601,6 +1600,10 @@
 
     function getTodayFormatted() {
       return getTodayString().replace(/-/g, '/');
+    }
+
+    function withPastMemoLabel(contentHtml) {
+      return `<span class="past-memo-label">📖 過去のメモ</span>${contentHtml}`;
     }
 
     function getFactTagContextKey() {
@@ -1986,11 +1989,11 @@
 
       if (isPhoto) {
         document.getElementById('nameInput').value = "";
-        document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写メ日記モードでは顧客情報は使用しません)</div>";
+        document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(写メ日記モードでは顧客情報は使用しません)</div>");
         currentCustomerTags = [];
         renderAttributeTags();
       } else {
-        document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+        document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
       }
     }
 
@@ -2616,7 +2619,7 @@
 
       if (nameInput.value === c.name) {
         nameInput.value = "";
-        document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+        document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
         resetCreateInputState({ clearMood: true, clearEpisode: true });
         currentCustomerTags = [];
         renderAttributeTags();
@@ -2659,7 +2662,7 @@
         });
       }
 
-      document.getElementById('pastMemoDisplay').innerHTML = pastMemoHtml;
+      document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel(pastMemoHtml);
       document.getElementById('pastMemoDisplay').scrollTop = 0;
       currentCustomerTags = c.tagsArray.filter(t => t !== '非表示' && t !== '一軍固定');
       renderAttributeTags();
@@ -2670,7 +2673,7 @@
 
     function resetInputForm() {
       document.getElementById('nameInput').value = "";
-      document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+      document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
       document.getElementById('pastMemoDisplay').scrollTop = 0;
       currentCustomerTags = [];
       renderAttributeTags();
@@ -2703,7 +2706,7 @@
 
       const matchedCustomer = customerData.find(c => c.name === text);
       if (!matchedCustomer) {
-        document.getElementById('pastMemoDisplay').innerHTML = "<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>";
+        document.getElementById('pastMemoDisplay').innerHTML = withPastMemoLabel("<div style='color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;'>(顧客を選択するか、過去の記録がありません)</div>");
         currentCustomerTags = [];
         renderAttributeTags();
       } else {
