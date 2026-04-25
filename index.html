@@ -223,6 +223,14 @@
       color: #FFF;
     }
 
+    .history-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
+    .history-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; }
+    .history-text { font-size: 13px; color: var(--text-main); line-height: 1.6; white-space: pre-wrap; margin-top: 8px; }
+    .history-text.collapsed { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .favorite-btn { font-size: 20px; color: var(--text-muted); cursor: pointer; transition: 0.2s transform; user-select: none; padding: 4px; }
+    .favorite-btn.active { color: var(--primary); }
+    .favorite-btn:active { transform: scale(0.7); }
+
     .mode-text-only { display: block; }
     #mode-photo:checked ~ .app-container .mode-text-only { display: none !important; }
 
