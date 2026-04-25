@@ -1,8 +1,8 @@
 create table if not exists public.favorite_writing_samples (
   id bigserial primary key,
   user_id text not null,
-  source_entry_id bigint not null,
-  source_customer_id bigint null,
+  source_entry_id text not null,
+  source_customer_id text null,
   source_customer_name text null,
   sample_text text not null,
   created_at timestamptz not null default now(),

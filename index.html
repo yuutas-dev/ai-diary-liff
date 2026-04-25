@@ -2938,10 +2938,11 @@
     async function favoriteHistorySample(entryId) {
       const target = generationHistoryData.find(item => item.entryId === entryId);
       if (!target) return;
+      const safeErrorMessage = "お気に入り登録に失敗しました";
 
       const sampleText = (target.finalSentText || target.aiGeneratedText || '').trim();
       if (!sampleText) {
-        alert("登録できる本文がありません");
+        showActionToast(safeErrorMessage);
         return;
       }
 
@@ -2957,16 +2958,20 @@
           })
         });
         const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data?.error || "登録に失敗しました");
+        if (!res.ok || !data.success) throw new Error(data?.error || safeErrorMessage);
 
-        if (data.limitReached) return;
+        if (data.limitReached) {
+          showActionToast("お気に入りは5件までです");
+          return;
+        }
         generationHistoryData = generationHistoryData.map(item =>
           item.entryId === entryId ? { ...item, isFavorited: !!data.isFavorited } : item
         );
         renderGenerationHistoryList();
+        showActionToast(data.isFavorited ? "♥ お手本に追加しました" : "♡ お手本を解除しました");
       } catch (e) {
         console.error("favoriteHistorySample Error:", e);
-        alert(e?.message || "登録に失敗しました");
+        showActionToast(safeErrorMessage);
       }
     }
 

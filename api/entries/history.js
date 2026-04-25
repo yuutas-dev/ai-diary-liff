@@ -58,11 +58,11 @@ export default async function handler(req, res) {
         .from('favorite_writing_samples')
         .select('source_entry_id')
         .eq('user_id', userId)
-        .in('source_entry_id', entryIds);
+        .in('source_entry_id', entryIds.map(id => String(id)));
       if (favoritesError && favoritesError.code !== 'PGRST116') {
         console.error('favorites lookup fallback:', favoritesError.message);
       } else {
-        favoriteEntryIdSet = new Set((favorites || []).map(f => f.source_entry_id));
+        favoriteEntryIdSet = new Set((favorites || []).map(f => String(f.source_entry_id)));
       }
     }
 
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       deliveryStatus: entry.delivery_status,
       aiGeneratedText: entry.ai_generated_text || '',
       finalSentText: entry.final_sent_text || '',
-      isFavorited: favoriteEntryIdSet.has(entry.id)
+      isFavorited: favoriteEntryIdSet.has(String(entry.id))
     }));
 
     return sendJson(res, 200, { success: true, items });
