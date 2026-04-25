@@ -199,6 +199,19 @@
       border: 1px solid var(--vip-border);
     }
 
+    .card-customer-select {
+      height: 380px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .card-customer-select .past-memo-box {
+      flex: 1;
+      min-height: 0;
+      margin-bottom: 0;
+    }
+
     .label {
       font-weight: 700;
       font-size: 14px;
@@ -618,7 +631,8 @@
 
     #pastMemoDisplay {
       margin-top: 4px;
-      max-height: 148px;
+      max-height: none;
+      height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
