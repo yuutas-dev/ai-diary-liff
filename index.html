@@ -1988,15 +1988,12 @@
       const icon = document.getElementById('createDetailsIcon');
       const modal = document.getElementById('createDetailsHalfModal');
       const content = document.getElementById('createDetailsContent');
-      const header = document.getElementById('createDetailsHeader');
       const customerCard = document.querySelector('.card-customer-select');
-      const headerRect = header.getBoundingClientRect();
       const customerHeight = customerCard ? customerCard.getBoundingClientRect().height : 320;
       const modalHeight = Math.max(260, Math.min(customerHeight + 8, window.innerHeight * 0.68));
-      const modalBottom = Math.max(96, window.innerHeight - headerRect.top + 8);
       icon.innerText = '▲';
       modal.style.height = `${modalHeight}px`;
-      modal.style.bottom = `${modalBottom}px`;
+      modal.style.bottom = 'calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-height) + 22px)';
       content.scrollTop = 0;
       modal.classList.add('open');
     }
