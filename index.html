@@ -2312,6 +2312,59 @@
       }
     }
 
+    function renderHistoryList() {
+      const area = document.getElementById('historyListArea');
+      if (!area) return;
+
+      const escapeHtml = (value) => String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+      const historyEntries = customerData.flatMap((customer) => {
+        const entries = Array.isArray(customer.entries) ? customer.entries : [];
+        return entries
+          .filter((entry) => entry && (entry.ai_generated_text || entry.final_sent_text))
+          .map((entry) => ({
+            ...entry,
+            customerName: customer.name || '不明な顧客'
+          }));
+      });
+
+      historyEntries.sort((a, b) => {
+        const aTime = new Date(a.entry_date || a.date || 0).getTime() || 0;
+        const bTime = new Date(b.entry_date || b.date || 0).getTime() || 0;
+        if (bTime !== aTime) return bTime - aTime;
+        return String(b.id || '').localeCompare(String(a.id || ''));
+      });
+
+      if (historyEntries.length === 0) {
+        area.innerHTML = `<div class="card" style="text-align:center; padding:28px 18px; color:var(--text-sub);"><div style="font-size:28px; margin-bottom:8px;">📝</div><div style="font-weight:700; margin-bottom:6px;">生成履歴がありません</div></div>`;
+        return;
+      }
+
+      area.innerHTML = historyEntries.map((entry) => {
+        const text = entry.final_sent_text || entry.ai_generated_text || '';
+        const dateText = entry.entry_date || entry.date || '';
+        return `
+          <div class="history-card">
+            <div class="history-header">
+              <div style="font-size:12px; color:var(--text-sub); font-weight:700;">
+                <div style="margin-bottom:4px;">${escapeHtml(entry.customerName)} 宛</div>
+                <div>${escapeHtml(dateText)}</div>
+              </div>
+              <div class="favorite-btn" onclick="toggleFavoriteHistory('${escapeHtml(entry.id)}')">☆</div>
+            </div>
+            <div class="history-text collapsed" onclick="this.classList.toggle('collapsed')">${escapeHtml(text)}</div>
+            <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+              <button type="button" onclick="editHistory('${escapeHtml(entry.id)}')" style="background:var(--input-bg); color:var(--text-main); border:none; padding:8px 14px; border-radius:12px; font-weight:700; font-size:12px; cursor:pointer;">編集</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
     function setListFilter(filterType) {
       if (currentListFilter === filterType && filterType !== 'all') {
         currentListFilter = 'all';
