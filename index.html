@@ -905,15 +905,29 @@
     }
 
     .create-details-half-modal {
-      max-height: 68vh;
-      padding: 12px 16px calc(env(safe-area-inset-bottom, 20px) + 16px);
-      box-shadow: 0 -12px 36px rgba(67, 62, 60, 0.14);
+      width: min(calc(100vw - 32px), 520px);
+      left: 50%;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-height) + 22px);
+      border-radius: 20px;
+      padding: 12px 16px 16px;
+      box-shadow: var(--shadow-md);
       overflow: hidden;
+      transform: translateX(-50%) translateY(10px) scale(0.985);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.22s ease;
+      z-index: 900;
     }
 
     .create-details-half-modal .half-modal-handle {
       margin: 0 auto 10px auto;
       cursor: pointer;
+    }
+
+    .create-details-half-modal.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0) scale(1);
     }
 
     .create-details-modal-header {
@@ -1935,59 +1949,33 @@
     }
 
     let isCreateDetailsOpen = false;
-    let createDetailsScrollY = 0;
-
-    function setCreateDetailsBodyScrollLock(shouldLock) {
-      const body = document.body;
-      if (shouldLock) {
-        createDetailsScrollY = window.scrollY || window.pageYOffset || 0;
-        body.style.position = 'fixed';
-        body.style.top = `-${createDetailsScrollY}px`;
-        body.style.left = '0';
-        body.style.right = '0';
-        body.style.width = '100%';
-        body.style.overflow = 'hidden';
-      } else {
-        body.style.position = '';
-        body.style.top = '';
-        body.style.left = '';
-        body.style.right = '';
-        body.style.width = '';
-        body.style.overflow = '';
-        window.scrollTo(0, createDetailsScrollY);
-      }
-    }
 
     function openCreateDetailsModal() {
       if (isCreateDetailsOpen) return;
       isCreateDetailsOpen = true;
       const icon = document.getElementById('createDetailsIcon');
-      const backdrop = document.getElementById('createDetailsBackdrop');
       const modal = document.getElementById('createDetailsHalfModal');
       const content = document.getElementById('createDetailsContent');
+      const header = document.getElementById('createDetailsHeader');
+      const customerCard = document.querySelector('.card-customer-select');
+      const headerRect = header.getBoundingClientRect();
+      const customerHeight = customerCard ? customerCard.getBoundingClientRect().height : 320;
+      const modalHeight = Math.max(260, Math.min(customerHeight + 8, window.innerHeight * 0.68));
+      const modalBottom = Math.max(96, window.innerHeight - headerRect.top + 8);
       icon.innerText = '▲';
-      backdrop.classList.add('show');
-      setCreateDetailsBodyScrollLock(true);
+      modal.style.height = `${modalHeight}px`;
+      modal.style.bottom = `${modalBottom}px`;
       content.scrollTop = 0;
-      setTimeout(() => {
-        modal.classList.add('open');
-      }, 10);
+      modal.classList.add('open');
     }
 
     function closeCreateDetailsModal() {
       if (!isCreateDetailsOpen) return;
       isCreateDetailsOpen = false;
       const icon = document.getElementById('createDetailsIcon');
-      const backdrop = document.getElementById('createDetailsBackdrop');
       const modal = document.getElementById('createDetailsHalfModal');
       icon.innerText = '▼';
       modal.classList.remove('open');
-      setTimeout(() => {
-        backdrop.classList.remove('show');
-        if (!isCreateDetailsOpen) {
-          setCreateDetailsBodyScrollLock(false);
-        }
-      }, 300);
     }
 
     function toggleCreateDetails() {
@@ -3328,6 +3316,7 @@
     }
 
     function generateDiary() {
+      if (isCreateDetailsOpen) closeCreateDetailsModal();
       const name = document.getElementById('nameInput').value;
       const todayEpisode = document.getElementById('todayEpisodeInput').value;
       const isPhoto = document.getElementById('mode-photo').checked;
