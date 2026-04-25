@@ -3389,9 +3389,11 @@
       if (!isCreateDetailsOpen) return;
       const modal = document.getElementById('createDetailsHalfModal');
       const trigger = document.getElementById('createDetailsHeader');
-      const target = event.target;
-      if (modal && modal.contains(target)) return;
-      if (trigger && trigger.contains(target)) return;
+
+      // クリックされた要素の軌跡（パス）を取得して判定する
+      const path = event.composedPath();
+      if (modal && path.includes(modal)) return;
+      if (trigger && path.includes(trigger)) return;
       closeCreateDetailsModal();
     });
 
