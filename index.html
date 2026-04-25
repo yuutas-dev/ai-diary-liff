@@ -1586,7 +1586,17 @@
     let customerData = [];
     
     // タグ管理の分離
-    let masterMoodTags = ['💖 感謝', '🥺 会いたい', '🥺 寂しい', '💕 大好き', '🤫 秘密の話', '🤫 秘密', '🤐 誰にも内緒', '💤 おやすみ', '🧸 癒やし', '🌹 夢心地', '💕 愛してる', '📱 LINE嬉しい', '📱 LINE待ってる', '🖤 独占', '✨ 楽しい'];
+    const industryMoodConfigs = {
+      cabaret: [
+        '💖 ほんとに大好き', '✨ 特別な存在', '🥂 一緒に飲みたい', '🥺 早く会いたい', '🤫 ナイショの話', '💕 ずっと一緒にいたい', '🧸 すごく癒やされる', '🍼 頼りにしてるよ', '💋 ドキドキする', '👗 もっと可愛くなりたい', '🥺 寂しいな', '📱 連絡きて嬉しい', '🖤 独占してほしい', '🎉 楽しすぎた！', '💖 いつもありがとう'
+      ],
+      fuzoku: [
+        '💖 あなただけ特別', '🧸 すごく癒やされた', '🤤 余韻が抜けない', '💕 相性良すぎた', '🥺 もっと一緒にいたかった', '🤫 2人だけの秘密', '💋 ドキドキしちゃった', '🍼 たくさん甘えちゃった', '🖤 独占したい', '🥺 早くまた会いたい', '✨ ほんとに楽しかった', '📱 連絡ずっと待ってる', '🥺 依存しちゃいそう', '💖 いつも感謝してるよ', '💤 夢の中でも会いたい'
+      ],
+      host: [
+        '👑 お前が一番', '🖤 誰にも渡さない', '🐶 もっと甘やかして', '🥺 会いたくて狂いそう', '✨ 特別なお姫様', '🥂 一緒に酔いたい', '🍼 お前しか無理', '🤫 2人だけの内緒', '💕 愛してる', '🥺 今すぐ会いに来て', '📱 返事待ってる', '💪 絶対ナンバーワン', '🧸 一緒にいると安心', '🎉 最高に楽しかった', '💖 いつも感謝'
+      ]
+    };
     let activeFactTags = [];
     const dailyCustomFactTags = {};
     let selectedMoodTags = [];
@@ -2010,7 +2020,11 @@
     function renderMoodChips() {
       const container = document.getElementById('moodTagsArea');
       container.innerHTML = '';
-      masterMoodTags.forEach(text => {
+
+      const type = localStorage.getItem('businessType') || 'cabaret';
+      const currentMoodTags = industryMoodConfigs[type] || industryMoodConfigs['cabaret'];
+
+      currentMoodTags.forEach(text => {
         const isSelected = selectedMoodTags.includes(text);
         const chip = document.createElement('div');
         chip.className = 'chip' + (isSelected ? ' selected-mood-chip' : '');
