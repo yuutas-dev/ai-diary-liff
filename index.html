@@ -790,6 +790,11 @@
       display: block;
     }
 
+    @keyframes waitForLiff {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
     /* 💎 CTA 下部浮遊 */
     .sticky-submit {
       position: fixed; /* sticky から fixed に変更して画面に固定 */
@@ -800,6 +805,7 @@
       z-index: 850;
       padding: 0;
       pointer-events: none; /* ラッパーのクリック判定を消し、スクロールの邪魔をしないようにする */
+      animation: waitForLiff 0.4s step-end forwards;
     }
 
     .sticky-submit button {
@@ -846,6 +852,7 @@
       left: 0;
       width: 100%;
       z-index: 1000;
+      animation: waitForLiff 0.4s step-end forwards;
     }
 
     .fixed-footer {
