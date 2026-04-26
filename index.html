@@ -2621,10 +2621,10 @@
     function copyInlineResult() {
       const text = document.getElementById('inlineResultText').value;
       navigator.clipboard.writeText(text).then(() => {
-        alert("コピーしました！");
+        showActionToast("📋 コピーしました！");
         sendCompletionStatus('copied');
       }).catch(err => {
-        alert("コピーに失敗しました: " + err);
+        showActionToast("コピーに失敗しました: " + err);
       });
     }
 
@@ -2634,8 +2634,8 @@
       
       if (liff.isLoggedIn() && liff.isInClient()) {
         liff.sendMessages([{ type: 'text', text }]).then(() => {
-          liff.closeWindow();
-        }).catch(err => alert("LINE送信エラー: " + err));
+          showActionToast("💬 LINEに送信しました！");
+        }).catch(err => showActionToast("LINE送信エラー: " + err));
       } else {
         const url = "https://line.me/R/msg/text/?" + encodeURIComponent(text);
         window.open(url, '_blank');
