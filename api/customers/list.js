@@ -93,9 +93,26 @@ export default async function handler(req, res) {
 
     const customers = Array.from(combinedCustomerMap.values());
     const customerIds = customers.map(customer => customer.id);
+    const { data: favorites, error: favError } = await supabase
+      .from('favorite_writing_samples')
+      .select('source_entry_id, sample_text')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
+
+    if (favError) {
+      console.error('Favorites fetch error:', favError);
+    }
+
+    const favoriteIds = favorites ? favorites.map(f => f.source_entry_id) : [];
+    const favoriteTexts = favorites ? favorites.map(f => f.sample_text) : [];
 
     if (customerIds.length === 0) {
-      return sendJson(res, 200, { success: true, customers: [] });
+      return sendJson(res, 200, {
+        success: true,
+        customers: [],
+        favoriteIds,
+        favoriteTexts
+      });
     }
 
     const { data: entriesData, error: entriesError } = await supabase
@@ -132,7 +149,9 @@ export default async function handler(req, res) {
 
     return sendJson(res, 200, {
       success: true,
-      customers: responseCustomers
+      customers: responseCustomers,
+      favoriteIds,
+      favoriteTexts
     });
   } catch (err) {
     console.error('バックエンド処理エラー:', err);
