@@ -633,22 +633,19 @@
     .tags-scroll-container::-webkit-scrollbar { display: none; }
 
     .create-details-tags-grid {
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: max-content;
-      grid-template-rows: repeat(3, minmax(0, 1fr));
-      align-content: start;
+      display: flex;
+      flex-wrap: wrap;
       gap: 8px;
-      max-height: 116px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      padding: 0 40px 6px 0;
+      align-content: flex-start;
+      max-height: none;
+      overflow: visible;
+      padding: 0 0 16px 0;
     }
 
     .create-details-tags-grid .chip {
-      align-self: start;
-      width: max-content;
+      width: auto;
+      margin: 0;
+      flex-shrink: 0;
     }
 
     .accordion-header {
