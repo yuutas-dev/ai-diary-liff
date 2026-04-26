@@ -1654,6 +1654,8 @@
 
     let userId = "test-user";
     let customerData = [];
+    let currentFavoriteIds = [];
+    let currentFavoriteTexts = [];
     
     // タグ管理の分離
     const industryMoodConfigs = {
@@ -2189,6 +2191,10 @@
           body: JSON.stringify({ userId })
         });
         const data = await res.json();
+        if (data.success) {
+          currentFavoriteIds = data.favoriteIds || [];
+          currentFavoriteTexts = data.favoriteTexts || [];
+        }
         customerData = data.success ? data.customers.map(c => ({
           ...c,
           id: c.id || null,
