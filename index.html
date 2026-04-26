@@ -2371,9 +2371,12 @@
               </div>
               <div class="${favClass}" onclick="toggleFavoriteHistory('${item.id}')">${favIcon}</div>
             </div>
-            <div class="history-text collapsed" onclick="this.classList.toggle('collapsed')">${displayText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-            <div style="text-align: right; margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
-              <button type="button" onclick="editHistory('${item.id}')" style="background: var(--input-bg); color: var(--text-main); border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">✏️ 編集して再利用</button>
+            <div id="history-view-${item.id}" class="history-text collapsed" onclick="this.classList.toggle('collapsed')">${displayText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+            <textarea id="history-edit-${item.id}" class="input-field" style="display: none; height: 120px; margin-top: 8px; font-size: 13px; line-height: 1.6; background: #FFF; border: 1px solid var(--primary); padding: 12px;">${displayText}</textarea>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+              <button type="button" id="history-save-btn-${item.id}" onclick="saveAndCopyHistory('${item.id}')" style="display: none; background: var(--primary); color: #FFF; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">📋 コピーして保存</button>
+              <button type="button" id="history-edit-btn-${item.id}" onclick="enableEditHistory('${item.id}')" style="background: var(--input-bg); color: var(--text-main); border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">✏️ 編集</button>
             </div>
           </div>
         `;
@@ -2402,40 +2405,80 @@
       renderHistoryList();
     }
 
-    function editHistory(entryId) {
+    function enableEditHistory(entryId) {
       const targetId = String(entryId || '');
       if (!targetId) return;
+      const viewEl = document.getElementById(`history-view-${targetId}`);
+      const editEl = document.getElementById(`history-edit-${targetId}`);
+      const saveBtn = document.getElementById(`history-save-btn-${targetId}`);
+      const editBtn = document.getElementById(`history-edit-btn-${targetId}`);
+      if (!viewEl || !editEl || !saveBtn || !editBtn) return;
+
+      editEl.value = viewEl.innerText || editEl.value || '';
+      viewEl.style.display = 'none';
+      editEl.style.display = 'block';
+      saveBtn.style.display = 'inline-block';
+      editBtn.style.display = 'none';
+      editEl.focus();
+      editEl.setSelectionRange(editEl.value.length, editEl.value.length);
+    }
+
+    async function saveAndCopyHistory(entryId) {
+      const targetId = String(entryId || '');
+      if (!targetId) return;
+      const viewEl = document.getElementById(`history-view-${targetId}`);
+      const editEl = document.getElementById(`history-edit-${targetId}`);
+      const saveBtn = document.getElementById(`history-save-btn-${targetId}`);
+      const editBtn = document.getElementById(`history-edit-btn-${targetId}`);
+      if (!viewEl || !editEl || !saveBtn || !editBtn) return;
+
+      const newText = (editEl.value || '').trim();
+      if (!newText) {
+        showActionToast('本文が空のため保存できません');
+        return;
+      }
 
       let targetEntry = null;
-      let targetCustomerName = '';
       customerData.some((customer) => {
-        const entries = Array.isArray(customer.entries) ? customer.entries : [];
+        const entries = Array.isArray(customer?.entries) ? customer.entries : [];
         const found = entries.find((entry) => String(entry?.id || '') === targetId);
         if (found) {
           targetEntry = found;
-          targetCustomerName = customer.name || '';
           return true;
         }
         return false;
       });
 
-      if (!targetEntry) {
-        showActionToast('対象の履歴が見つかりませんでした');
-        return;
+      if (targetEntry) {
+        targetEntry.finalSentText = newText;
+        targetEntry.final_sent_text = newText;
       }
 
-      const text = targetEntry.final_sent_text || targetEntry.ai_generated_text || '';
-      document.getElementById('inlineResultArea').style.display = 'block';
-      document.getElementById('inlineResultText').value = text;
-      document.getElementById('currentEntryId').value = targetId;
-      localStorage.setItem('diaryDraft', text);
+      viewEl.textContent = newText;
+      viewEl.classList.add('collapsed');
+      viewEl.style.display = 'block';
+      editEl.style.display = 'none';
+      saveBtn.style.display = 'none';
+      editBtn.style.display = 'inline-block';
 
-      if (targetCustomerName) {
-        document.getElementById('nameInput').value = targetCustomerName;
+      try {
+        await navigator.clipboard.writeText(newText);
+      } catch (err) {
+        console.error('Clipboard copy failed:', err);
       }
 
-      showActionToast('作成タブの執筆完了エリアに読み込みました');
-      document.getElementById('nav-create').checked = true;
+      fetch("/api/entries/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          entryId: targetId,
+          finalSentText: newText,
+          deliveryStatus: 'copied'
+        })
+      }).catch((err) => console.error('History save API Error:', err));
+
+      showActionToast('📋 コピーして保存しました');
     }
 
     function setListFilter(filterType) {
@@ -3649,6 +3692,25 @@
         return `${m.date}: ${m.text} ${tagsStr}`.trim();
       }).join('\n---\n');
 
+      const favoriteHistoryIds = JSON.parse(localStorage.getItem('favoriteHistories') || '[]')
+        .map(id => String(id || ''))
+        .filter(Boolean)
+        .slice(0, 5);
+      const favoriteTextMap = new Map();
+      customerData.forEach((customer) => {
+        const entries = Array.isArray(customer?.entries) ? customer.entries : [];
+        entries.forEach((entry) => {
+          const entryId = String(entry?.id || '');
+          if (!entryId || !favoriteHistoryIds.includes(entryId)) return;
+          const text = (entry?.finalSentText || entry?.final_sent_text || entry?.aiGeneratedText || entry?.ai_generated_text || '').trim();
+          if (text) favoriteTextMap.set(entryId, text);
+        });
+      });
+      const favoriteTexts = favoriteHistoryIds
+        .map((id) => favoriteTextMap.get(id))
+        .filter(Boolean)
+        .slice(0, 5);
+
       const payload = {
         userId,
         customerId: selectedCustomerId,
@@ -3666,6 +3728,7 @@
         industryPrompt: '',
         customerTags: cleanedCustomerTags,
         customerRank,
+        favoriteTexts,
         image: currentBase64Image,
         mode: isPhoto ? "photo" : "text"
       };
