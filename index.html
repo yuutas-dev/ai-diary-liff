@@ -3791,9 +3791,6 @@
         isDevMode
       };
 
-      // ★デバッグ：送信するデータをコンソールに出力
-      console.log("🚀 [DEBUG: 送信データ]", JSON.parse(JSON.stringify(payload)));
-
       try {
         const endpoint = isCreate ? "/api/customers/create" : "/api/customers/update";
         const customerRes = await fetch(endpoint, {
@@ -3802,9 +3799,6 @@
           body: JSON.stringify(payload)
         });
         const customerJson = await customerRes.json();
-
-        // ★デバッグ：サーバーからの返答をコンソールに出力
-        console.log("📥 [DEBUG: 受信レスポンス]", customerJson);
 
         if (customerJson.success) {
           const customerId = customerJson.customer?.id || customerData.find(c => c.name === newName)?.id;
