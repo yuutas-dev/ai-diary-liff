@@ -635,14 +635,14 @@
     .create-details-tags-grid {
       display: flex;
       flex-direction: column;
-      flex-wrap: wrap;
-      height: 116px;
       gap: 8px;
       overflow-x: auto;
       overflow-y: hidden;
-      align-content: flex-start;
-      padding: 0 40px 6px 0;
+      padding: 0 40px 12px 0;
+      margin-bottom: 12px;
       -webkit-overflow-scrolling: touch;
+      height: auto !important;
+      max-height: none !important;
     }
 
     .create-details-tags-grid .chip {
@@ -653,8 +653,9 @@
 
     .create-details-tags-grid .tag-row {
       display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap !important;
       gap: 8px;
-      align-items: center;
       width: max-content;
     }
 
@@ -2201,12 +2202,10 @@
       const container = document.getElementById('moodTagsArea');
       container.innerHTML = '';
 
-      const rows = [
-        document.createElement('div'),
-        document.createElement('div'),
-        document.createElement('div')
-      ];
-      rows.forEach(r => r.className = 'tag-row');
+      const row1 = document.createElement('div');
+      const row2 = document.createElement('div');
+      row1.className = 'tag-row';
+      row2.className = 'tag-row';
 
       const type = localStorage.getItem('businessType') || 'cabaret';
       const currentMoodTags = industryMoodConfigs[type] || industryMoodConfigs['cabaret'];
@@ -2224,22 +2223,25 @@
           }
           renderMoodChips();
         };
-        rows[index % 3].appendChild(chip);
+        if (index % 2 === 0) {
+          row1.appendChild(chip);
+        } else {
+          row2.appendChild(chip);
+        }
       });
 
-      rows.forEach(r => container.appendChild(r));
+      container.appendChild(row1);
+      container.appendChild(row2);
     }
 
     function renderFactChips() {
       const container = document.getElementById('factTagsArea');
       container.innerHTML = '';
 
-      const rows = [
-        document.createElement('div'),
-        document.createElement('div'),
-        document.createElement('div')
-      ];
-      rows.forEach(r => r.className = 'tag-row');
+      const row1 = document.createElement('div');
+      const row2 = document.createElement('div');
+      row1.className = 'tag-row';
+      row2.className = 'tag-row';
 
       activeFactTags.forEach((text, index) => {
         const isSelected = selectedFactTags.includes(text);
@@ -2254,10 +2256,15 @@
           }
           renderFactChips();
         };
-        rows[index % 3].appendChild(chip);
+        if (index % 2 === 0) {
+          row1.appendChild(chip);
+        } else {
+          row2.appendChild(chip);
+        }
       });
 
-      rows.forEach(r => container.appendChild(r));
+      container.appendChild(row1);
+      container.appendChild(row2);
     }
 
     function addCustomFactTag() {
