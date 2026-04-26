@@ -245,8 +245,7 @@ export default async function handler(req, res) {
     const customerTags = normalizeTags(data?.customerTags);
     const customText = safeTrimText(data?.customText);
 
-    const [styleReferenceTexts, customerId, uploadResult] = await Promise.all([
-      fetchStyleSamples({ supabase, userId }),
+    const [customerId, uploadResult] = await Promise.all([
       findCustomerIdByName({ supabase, userId, customerId: data?.customerId, name: data?.name }),
       uploadPhotoIfNeeded({
         supabase,
@@ -255,6 +254,12 @@ export default async function handler(req, res) {
         mode
       })
     ]);
+    const favoriteTexts = Array.isArray(data?.favoriteTexts)
+      ? data.favoriteTexts
+          .map((text) => (typeof text === 'string' ? text.trim() : ''))
+          .filter(Boolean)
+          .slice(0, 5)
+      : [];
 
     const difyInputs = {
       // 👤 基本情報と文体
@@ -289,8 +294,8 @@ export default async function handler(req, res) {
       photo_caption_hint: '', // 拡張用
       photo_tags: '',         // 拡張用
       
-      // ✨ Supabaseから取得した過去の文章サンプル（Dify側に追加推奨）
-      style_reference_texts: styleReferenceTexts.join('\n\n---\n\n')
+      // ✨ 生成履歴のお気に入り文章を文体参照サンプルとして渡す
+      style_reference_texts: favoriteTexts.join('\n\n---\n\n')
     };
 
     const difyPayload = {
@@ -348,7 +353,7 @@ export default async function handler(req, res) {
       success: true,
       generatedText: aiText,
       entry_id: entryId,
-      learned_style_count: styleReferenceTexts.length
+      learned_style_count: favoriteTexts.length
     });
   } catch (err) {
     console.error('バックエンド処理エラー:', err);
