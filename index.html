@@ -41,6 +41,34 @@
       --cta-gap-from-nav: 10px;
     }
 
+    /* =========================================
+       Base Reset & App-like Behavior
+       ========================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      overscroll-behavior-y: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input, textarea {
+      -webkit-user-select: auto;
+      user-select: auto;
+    }
+
+    button, a, input, textarea, .accordion-header {
+      touch-action: manipulation;
+    }
+    /* ========================================= */
+
     * { box-sizing: border-box; }
 
     body {
