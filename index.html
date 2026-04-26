@@ -764,14 +764,18 @@
 
     /* 💎 CTA 下部浮遊 */
     .sticky-submit {
-      position: fixed;
+      position: fixed; /* sticky から fixed に変更して画面に固定 */
       left: 50%;
-      width: min(calc(100vw - 32px), 520px);
       transform: translateX(-50%);
-      bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-height) + var(--cta-gap-from-nav));
+      width: min(calc(100vw - 32px), 520px);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 82px);
       z-index: 850;
       padding: 0;
-      pointer-events: none;
+      pointer-events: none; /* ラッパーのクリック判定を消し、スクロールの邪魔をしないようにする */
+    }
+
+    .sticky-submit button {
+      pointer-events: auto;
     }
 
     .submit-btn {
