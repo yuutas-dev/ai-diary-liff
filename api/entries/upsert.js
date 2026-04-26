@@ -62,6 +62,7 @@ export default async function handler(req, res) {
     const userId = trimText(data?.userId) || 'test-user';
     const customerId = trimText(data?.customerId);
     const entries = sanitizeEntries(data?.entries);
+    const isDevMode = data?.isDevMode === true;
 
     if (!customerId) {
       return sendJson(res, 400, {
@@ -79,17 +80,31 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: customer, error: customerError } = await supabase
+    let customerQuery = supabase
       .from('customers')
-      .select('id')
-      .eq('id', customerId)
-      .eq('user_id', userId)
-      .single();
+      .select('id, user_id, tags')
+      .eq('id', customerId);
+
+    if (!isDevMode) {
+      customerQuery = customerQuery.eq('user_id', userId);
+    }
+
+    const { data: customer, error: customerError } = await customerQuery.maybeSingle();
 
     if (customerError || !customer) {
       return sendJson(res, 404, {
         success: false,
         error: '対象顧客が見つかりません'
+      });
+    }
+
+    const isDummyCustomer = normalizeTags(customer.tags).includes('ダミー');
+    const isOwnCustomer = customer.user_id === userId;
+
+    if (!isOwnCustomer && !(isDevMode && isDummyCustomer)) {
+      return sendJson(res, 403, {
+        success: false,
+        error: 'この顧客データは更新できません'
       });
     }
 

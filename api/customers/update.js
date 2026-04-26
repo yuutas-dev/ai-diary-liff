@@ -40,6 +40,7 @@ export default async function handler(req, res) {
     const oldName = trimText(data?.oldName);
     const newName = trimText(data?.newName);
     const tagsArray = normalizeTags(data?.newTags);
+    const isDevMode = data?.isDevMode === true;
 
     if (!oldName) {
       return sendJson(res, 400, {
@@ -64,7 +65,7 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: updated, error } = await supabase
+    const { data: updatedRows, error } = await supabase
       .from('customers')
       .update({
         name: newName,
@@ -73,11 +74,53 @@ export default async function handler(req, res) {
       })
       .eq('user_id', userId)
       .eq('name', oldName)
-      .select('id, name, tags')
-      .single();
+      .select('id, name, tags');
 
     if (error) {
       throw new Error('Supabase更新エラー: ' + error.message);
+    }
+
+    let updated = Array.isArray(updatedRows) ? updatedRows[0] : null;
+
+    if (!updated && isDevMode) {
+      const { data: dummyTarget, error: dummyTargetError } = await supabase
+        .from('customers')
+        .select('id, tags')
+        .eq('name', oldName)
+        .contains('tags', ['ダミー'])
+        .limit(1)
+        .maybeSingle();
+
+      if (dummyTargetError) {
+        throw new Error('ダミー顧客取得エラー: ' + dummyTargetError.message);
+      }
+
+      if (dummyTarget?.id) {
+        const mergedTags = Array.from(new Set([...normalizeTags(dummyTarget.tags), ...tagsArray]));
+        const { data: dummyUpdated, error: dummyUpdateError } = await supabase
+          .from('customers')
+          .update({
+            name: newName,
+            tags: mergedTags,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', dummyTarget.id)
+          .select('id, name, tags')
+          .single();
+
+        if (dummyUpdateError) {
+          throw new Error('ダミー顧客更新エラー: ' + dummyUpdateError.message);
+        }
+
+        updated = dummyUpdated;
+      }
+    }
+
+    if (!updated) {
+      return sendJson(res, 404, {
+        success: false,
+        error: '対象顧客が見つかりません'
+      });
     }
 
     return sendJson(res, 200, {
