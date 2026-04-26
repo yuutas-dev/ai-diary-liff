@@ -1243,18 +1243,26 @@
 
     #actionToast {
       position: fixed;
-      top: -100px;
+      top: -150px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(67, 62, 60, 0.9);
-      color: #FFF;
-      padding: 10px 20px;
-      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--primary);
+      /* ノッチ領域を考慮して上部の余白を広めにとる */
+      padding: calc(env(safe-area-inset-top, 20px) + 12px) 24px 16px;
+      border-radius: 0 0 32px 32px;
+      border: 1px solid rgba(223, 138, 155, 0.2);
+      border-top: none;
+      box-shadow: 0 10px 30px rgba(223, 138, 155, 0.2);
       font-weight: 700;
       font-size: 13px;
+      text-align: center;
+      white-space: nowrap;
       z-index: 11000;
-      transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 4px 12px rgba(67, 62, 60, 0.15);
+      /* ぽよんと弾むようなイージング */
+      transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
       pointer-events: none;
     }
 
@@ -1773,8 +1781,8 @@
     function showActionToast(msg) {
       const toast = document.getElementById('actionToast');
       toast.innerText = msg;
-      toast.style.top = 'env(safe-area-inset-top, 20px)';
-      setTimeout(() => { toast.style.top = '-100px'; }, 2500);
+      toast.style.top = '0';
+      setTimeout(() => { toast.style.top = '-150px'; }, 2500);
     }
 
     function showCuteToast(isComplete) {
