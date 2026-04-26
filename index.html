@@ -2342,7 +2342,7 @@
       });
 
       // 2. ソート (お気に入りが先、次に日付が新しい順)
-      const favorites = JSON.parse(localStorage.getItem('favoriteHistories') || '[]');
+      const favorites = currentFavoriteIds;
       historyItems.sort((a, b) => {
         const aFav = favorites.includes(a.id) ? 1 : 0;
         const bFav = favorites.includes(b.id) ? 1 : 0;
@@ -2446,7 +2446,7 @@
             renderHistoryList();
             showActionToast('お気に入りは最大5件までです。');
           } else {
-            showActionToast(data.isFavorited ? '💖 お気に入り登録しました！' : 'お気に入りを解除しました');
+            showActionToast(data.isFavorited ? '💖 お気に入り登録しました！\nAIがこの文章を学習します！' : 'お気に入りを解除しました');
           }
         } else {
           throw new Error(data.error);
@@ -3766,25 +3766,6 @@
         return `${m.date}: ${m.text} ${tagsStr}`.trim();
       }).join('\n---\n');
 
-      const favoriteHistoryIds = JSON.parse(localStorage.getItem('favoriteHistories') || '[]')
-        .map(id => String(id || ''))
-        .filter(Boolean)
-        .slice(0, 5);
-      const favoriteTextMap = new Map();
-      customerData.forEach((customer) => {
-        const entries = Array.isArray(customer?.entries) ? customer.entries : [];
-        entries.forEach((entry) => {
-          const entryId = String(entry?.id || '');
-          if (!entryId || !favoriteHistoryIds.includes(entryId)) return;
-          const text = (entry?.finalSentText || entry?.final_sent_text || entry?.aiGeneratedText || entry?.ai_generated_text || '').trim();
-          if (text) favoriteTextMap.set(entryId, text);
-        });
-      });
-      const favoriteTexts = favoriteHistoryIds
-        .map((id) => favoriteTextMap.get(id))
-        .filter(Boolean)
-        .slice(0, 5);
-
       const payload = {
         userId,
         customerId: selectedCustomerId,
@@ -3802,7 +3783,7 @@
         industryPrompt: '',
         customerTags: cleanedCustomerTags,
         customerRank,
-        favoriteTexts,
+        favoriteTexts: currentFavoriteTexts.slice(0, 5),
         image: currentBase64Image,
         mode: isPhoto ? "photo" : "text"
       };
