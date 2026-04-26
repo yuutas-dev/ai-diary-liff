@@ -3520,7 +3520,7 @@
 
     function getEditorMemoTags() {
       const type = localStorage.getItem('businessType') || 'cabaret';
-      const masterTags = [...(industryAttributeTags[type] || industryAttributeTags['cabaret'])];
+      const masterTags = [...(industryFactConfigs[type] || industryFactConfigs['cabaret'])];
       const savedTags = localStorage.getItem(`customTags_${type}`);
       if (savedTags) {
         try {
