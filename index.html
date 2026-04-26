@@ -3525,15 +3525,6 @@
     function getEditorMemoTags() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const masterTags = [...(industryFactConfigs[type] || industryFactConfigs['cabaret'])];
-      const savedTags = localStorage.getItem(`customTags_${type}`);
-      if (savedTags) {
-        try {
-          const parsed = JSON.parse(savedTags);
-          if (parsed && Array.isArray(parsed)) {
-            return masterTags.concat(parsed);
-          }
-        } catch(e) {}
-      }
       return masterTags;
     }
 
