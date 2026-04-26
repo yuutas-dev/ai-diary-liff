@@ -114,7 +114,8 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 10px 16px calc(env(safe-area-inset-bottom, 20px) + var(--bottom-nav-height) + 120px);
+      padding: 10px 16px 120px;
+      min-height: 100dvh;
     }
 
     .mode-photo-ui { display: none; }
@@ -763,27 +764,15 @@
     }
 
     /* 💎 CTA 下部浮遊 */
-    @keyframes smoothAppear {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, 15px);
-      }
-      100% {
-        opacity: 1;
-        transform: translate(-50%, 0);
-      }
-    }
-
     .sticky-submit {
       position: fixed; /* sticky から fixed に変更して画面に固定 */
       left: 50%;
       transform: translateX(-50%);
       width: min(calc(100vw - 32px), 520px);
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 82px);
+      bottom: calc(34px + 82px);
       z-index: 850;
       padding: 0;
       pointer-events: none; /* ラッパーのクリック判定を消し、スクロールの邪魔をしないようにする */
-      animation: smoothAppear 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     .sticky-submit button {
@@ -821,10 +810,10 @@
       display: flex;
       justify-content: space-around;
       box-sizing: border-box;
-      padding: 8px 0 calc(env(safe-area-inset-bottom, 0px) + 8px);
-      height: calc(56px + env(safe-area-inset-bottom, 0px));
+      padding: 8px 0 calc(34px + 8px);
+      height: calc(56px + 34px);
       flex-shrink: 0;
-      max-height: calc(56px + env(safe-area-inset-bottom, 0px));
+      max-height: calc(56px + 34px);
       border-top: 1px solid var(--border-color);
       pointer-events: auto;
       z-index: 500;
