@@ -2995,7 +2995,7 @@
           ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">${visibleTags.map(t => `<span style="background:var(--primary-light); color:var(--primary); font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700;">#${t}</span>`).join('')}</div>`
           : '';
 
-        const isDummy = c.tagsArray.includes("ダミー");
+        const isDummy = c.tagsArray.includes("ダミー") && !isDevMode;
         const actionIcon1 = '✏️';
         const actionText1 = '日記作成';
         const actionIcon2 = isDummy ? '🔍' : '⚙️';
@@ -3525,6 +3525,15 @@
     function getEditorMemoTags() {
       const type = localStorage.getItem('businessType') || 'cabaret';
       const masterTags = [...(industryFactConfigs[type] || industryFactConfigs['cabaret'])];
+      const savedTags = localStorage.getItem(`customTags_${type}`);
+      if (savedTags) {
+        try {
+          const parsed = JSON.parse(savedTags);
+          if (parsed && Array.isArray(parsed)) {
+            return masterTags.concat(parsed);
+          }
+        } catch(e) {}
+      }
       return masterTags;
     }
 
@@ -3759,7 +3768,8 @@
         userId,
         oldName: editingOriginalName,
         newName,
-        newTags: newTagsStr
+        newTags: newTagsStr,
+        isDevMode
       };
 
       try {
@@ -3772,15 +3782,19 @@
         const customerJson = await customerRes.json();
         if (customerJson.success) {
           const customerId = customerJson.customer?.id || customerData.find(c => c.name === newName)?.id;
-          if (!customerId) {
+          if (!customerId && !isDevMode) {
             alert("顧客IDの取得に失敗しました。");
             return;
           }
-          const entriesJson = await saveManualVisitEntries(customerId, memoBlocks);
-          if (!entriesJson.success) {
-            alert("接客履歴の保存に失敗しました。");
-            return;
+
+          if (customerId) {
+            const entriesJson = await saveManualVisitEntries(customerId, memoBlocks);
+            if (!entriesJson.success) {
+              alert("接客履歴の保存に失敗しました。");
+              return;
+            }
           }
+
           await fetchCustomers();
           closeEditModal();
         } else {
