@@ -1519,6 +1519,9 @@
           <h3 style="margin: 0 0 12px; font-weight: 700; text-align: center; color: var(--primary); font-size:14px;">✨ 執筆完了！</h3>
           <textarea id="inlineResultText" class="input-field" style="height: 160px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; background:var(--input-bg); border:none;" placeholder="ここに生成された文章が表示されます。自由に修正できます。"></textarea>
           <input type="hidden" id="currentEntryId" value="">
+          <div style="text-align: center; font-size: 11px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px;">
+            💡 自由に手直しOK！送信・コピー時に履歴に上書き保存されるよ✨
+          </div>
           <div style="display:flex; gap:10px;">
             <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 コピー</button>
             <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);">💬 LINE送信</button>
@@ -1823,16 +1826,6 @@
 
     async function init() {
       renderTexts();
-
-      const savedDraft = localStorage.getItem('diaryDraft');
-      if (savedDraft) {
-        document.getElementById('inlineResultText').value = savedDraft;
-        document.getElementById('inlineResultArea').style.display = 'block';
-      }
-
-      document.getElementById('inlineResultText').addEventListener('input', (e) => {
-        localStorage.setItem('diaryDraft', e.target.value);
-      });
 
       const params = new URLSearchParams(window.location.search);
       if (params.get('page')) {
@@ -2365,6 +2358,18 @@
       if (historyItems.length === 0) {
         area.innerHTML = '<div style="text-align:center; padding: 40px 20px; color: var(--text-muted); font-weight: 700; font-size: 13px;">生成履歴がありません<br><span style="font-size:11px; font-weight:normal; margin-top:8px; display:inline-block;">AIでメッセージを作成するとここに保存されます</span></div>';
         return;
+      }
+
+      if (favorites.length === 0) {
+        area.innerHTML += `
+          <div style="background: var(--primary-light); border: 1px dashed var(--primary); border-radius: 16px; padding: 12px; margin-bottom: 16px; text-align: center; box-shadow: var(--shadow-sm);">
+            <div style="font-size: 16px; margin-bottom: 4px;">🎀</div>
+            <div style="font-size: 12px; font-weight: 700; color: var(--primary); line-height: 1.5;">
+              ヒント：うまく書けた文章は「☆」をタップしてね！<br>
+              お気に入りに登録すると、AIがあなたの口調を学習するよ✨
+            </div>
+          </div>
+        `;
       }
 
       historyItems.forEach(item => {
@@ -3812,7 +3817,6 @@
             }
             const resultText = data.generatedText || "（テキストがありません）";
             document.getElementById('inlineResultText').value = resultText;
-            localStorage.setItem('diaryDraft', resultText);
             document.getElementById('inlineResultArea').style.display = 'block';
             resetCreateInputState({ clearMood: false, clearEpisode: false });
             
