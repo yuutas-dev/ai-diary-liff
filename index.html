@@ -651,6 +651,13 @@
       flex-shrink: 0;
     }
 
+    .create-details-tags-grid .tag-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: max-content;
+    }
+
     .accordion-header {
             background: var(--primary-light);
       color: var(--primary);
@@ -2194,10 +2201,17 @@
       const container = document.getElementById('moodTagsArea');
       container.innerHTML = '';
 
+      const rows = [
+        document.createElement('div'),
+        document.createElement('div'),
+        document.createElement('div')
+      ];
+      rows.forEach(r => r.className = 'tag-row');
+
       const type = localStorage.getItem('businessType') || 'cabaret';
       const currentMoodTags = industryMoodConfigs[type] || industryMoodConfigs['cabaret'];
 
-      currentMoodTags.forEach(text => {
+      currentMoodTags.forEach((text, index) => {
         const isSelected = selectedMoodTags.includes(text);
         const chip = document.createElement('div');
         chip.className = 'chip' + (isSelected ? ' selected-mood-chip' : '');
@@ -2210,14 +2224,24 @@
           }
           renderMoodChips();
         };
-        container.appendChild(chip);
+        rows[index % 3].appendChild(chip);
       });
+
+      rows.forEach(r => container.appendChild(r));
     }
 
     function renderFactChips() {
       const container = document.getElementById('factTagsArea');
       container.innerHTML = '';
-      activeFactTags.forEach(text => {
+
+      const rows = [
+        document.createElement('div'),
+        document.createElement('div'),
+        document.createElement('div')
+      ];
+      rows.forEach(r => r.className = 'tag-row');
+
+      activeFactTags.forEach((text, index) => {
         const isSelected = selectedFactTags.includes(text);
         const chip = document.createElement('div');
         chip.className = 'chip' + (isSelected ? ' selected-fact-chip' : '');
@@ -2230,8 +2254,10 @@
           }
           renderFactChips();
         };
-        container.appendChild(chip);
+        rows[index % 3].appendChild(chip);
       });
+
+      rows.forEach(r => container.appendChild(r));
     }
 
     function addCustomFactTag() {
