@@ -1798,6 +1798,7 @@
     let editingOriginalName = "";
     let actionTargetIndex = -1;
     let tempSelectedAttributes = [];
+    let pendingDeleteEntryIds = []; // 編集モーダル内で削除対象になったエピソードのIDを保持
     let pressTimer = null;
     let startX = 0;
     let startY = 0;
@@ -3483,7 +3484,14 @@
     function deleteMemoBlock(blockId) {
       if (confirm("このエピソードを削除しますか？\n（「全体を保存する」を押すまで確定しません）")) {
         const block = document.getElementById(blockId);
-        if (block) block.remove();
+        if (block) {
+          // データベースに存在するリアルなIDがあればデスノートに追加
+          const entryId = block.dataset.entryId;
+          if (entryId && entryId !== 'null' && entryId !== 'undefined') {
+            pendingDeleteEntryIds.push(entryId);
+          }
+          block.remove();
+        }
       }
     }
 
@@ -3632,6 +3640,7 @@
 
     function openCreateModal() {
       isDemoMode = false;
+      pendingDeleteEntryIds = [];
       document.getElementById('modalTitle').innerText = "新規顧客の登録";
       document.getElementById('isCreateMode').value = "true";
       document.getElementById('editCustomerName').value = "";
@@ -3657,6 +3666,7 @@
     function openEditModal(index, isReadOnly = false) {
       const c = customerData[index];
       isDemoMode = c.tagsArray.includes("ダミー") && !isDevMode;
+      pendingDeleteEntryIds = [];
 
       document.getElementById('modalTitle').innerText = isReadOnly ? "🗂️ 顧客記録の確認" : (isDemoMode ? "【お試し】ダミー（保存されません）" : "顧客情報の編集");
       document.getElementById('isCreateMode').value = "false";
@@ -3749,7 +3759,8 @@
         body: JSON.stringify({
           userId,
           customerId,
-          entries: visitEntries
+          entries: visitEntries,
+          deletedEntryIds: pendingDeleteEntryIds // ★バックエンドに削除命令を送信
         })
       });
       return res.json();

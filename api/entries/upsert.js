@@ -39,6 +39,14 @@ function trimText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function sanitizeDeletedEntryIds(entryIds) {
+  return Array.from(new Set(
+    (Array.isArray(entryIds) ? entryIds : [])
+      .map(id => trimText(id))
+      .filter(Boolean)
+  ));
+}
+
 function sanitizeEntries(entries) {
   return (Array.isArray(entries) ? entries : [])
     .map(entry => ({
@@ -62,6 +70,7 @@ export default async function handler(req, res) {
     const userId = trimText(data?.userId) || 'test-user';
     const customerId = trimText(data?.customerId);
     const entries = sanitizeEntries(data?.entries);
+    const deletedEntryIds = sanitizeDeletedEntryIds(data?.deletedEntryIds);
     const isDevMode = data?.isDevMode === true;
 
     if (!customerId) {
@@ -106,6 +115,23 @@ export default async function handler(req, res) {
         success: false,
         error: 'この顧客データは更新できません'
       });
+    }
+
+    if (deletedEntryIds.length > 0) {
+      let deleteQuery = supabase
+        .from('customer_entries')
+        .delete()
+        .eq('customer_id', customerId)
+        .in('id', deletedEntryIds);
+
+      if (!isDevMode) {
+        deleteQuery = deleteQuery.eq('user_id', userId);
+      }
+
+      const { error: explicitDeleteError } = await deleteQuery;
+      if (explicitDeleteError) {
+        throw new Error('削除対象エントリの削除エラー: ' + explicitDeleteError.message);
+      }
     }
 
     const { data: existingEntries, error: existingError } = await supabase
