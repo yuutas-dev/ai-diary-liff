@@ -1515,16 +1515,20 @@
           </div>
         </div>
 
-        <div id="inlineResultArea" class="card" style="display: none; border: 1px solid var(--primary-light); background: #FFF; margin-top: 0;">
-          <h3 style="margin: 0 0 12px; font-weight: 700; text-align: center; color: var(--primary); font-size:14px;">✨ 執筆完了！</h3>
-          <textarea id="inlineResultText" class="input-field" style="height: 160px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; background:var(--input-bg); border:none;" placeholder="ここに生成された文章が表示されます。自由に修正できます。"></textarea>
+        <div id="inlineResultArea" class="card" style="display: none; border: 1px solid var(--primary-light); background: #FFF; margin-top: 24px; position: relative;">
+          <textarea id="inlineResultText" class="input-field" style="height: 200px; line-height: 1.6; font-size: 14px; margin-bottom: 12px; resize: vertical;" placeholder="ここに生成された文章が表示されます。自由に修正できます。"></textarea>
           <input type="hidden" id="currentEntryId" value="">
-          <div style="text-align: center; font-size: 11px; font-weight: 700; color: var(--text-sub); margin-bottom: 8px;">
+          <h3 style="text-align: center; margin-bottom: 6px; color: var(--primary); font-size: 16px;">✨ 執筆完了！</h3>
+          <div style="text-align: center; font-size: 11px; font-weight: 700; color: var(--text-sub); margin-bottom: 16px;">
             💡 自由に手直しOK！送信・コピー時に履歴に上書き保存されるよ✨
           </div>
           <div style="display:flex; gap:10px;">
-            <button onclick="copyInlineResult()" style="flex:1; background:var(--input-bg); color:var(--text-main); border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;">📋 コピー</button>
-            <button onclick="sendInlineToLine()" style="flex:1; background:#06C755; color:#FFF; border:none; padding:12px; border-radius:16px; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);">💬 LINE送信</button>
+            <button onclick="copyInlineResult()" style="flex:1; background:#FFF; color:var(--primary); border:2px solid var(--primary); padding:12px; border-radius:24px; font-weight:700;">
+              📋 コピー
+            </button>
+            <button onclick="sendInlineToLine()" style="flex:1; background:var(--primary); color:#FFF; border:none; padding:12px; border-radius:24px; font-weight:700;">
+              💬 LINE送信
+            </button>
           </div>
         </div>
 
