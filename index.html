@@ -768,7 +768,7 @@
       left: 50%;
       transform: translateX(-50%);
       width: min(calc(100vw - 32px), 520px);
-      bottom: calc(34px + 82px);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 82px);
       z-index: 850;
       padding: 0;
       pointer-events: none; /* ラッパーのクリック判定を消し、スクロールの邪魔をしないようにする */
@@ -809,14 +809,15 @@
       display: flex;
       justify-content: space-around;
       box-sizing: border-box;
-      padding: 8px 0 calc(34px + 8px);
-      height: calc(56px + 34px);
-      flex-shrink: 0;
-      max-height: calc(56px + 34px);
+      padding: 8px 0 calc(env(safe-area-inset-bottom, 0px) + 8px);
+      height: calc(56px + env(safe-area-inset-bottom, 0px));
       border-top: 1px solid var(--border-color);
       pointer-events: auto;
-      z-index: 500;
-      position: relative;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
     }
 
     .fixed-footer {
