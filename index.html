@@ -1313,6 +1313,31 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-4px); }
     }
+
+    /* =========================================
+       レスポンシブ調整（縦幅が短いスマホ向け）
+       ========================================= */
+    @media screen and (max-height: 740px) {
+      .card {
+        padding: 16px !important;
+        margin-bottom: 12px !important;
+      }
+
+      .input-field {
+        margin-bottom: 8px !important;
+      }
+      textarea.input-field {
+        height: 60px !important;
+      }
+
+      h3, .section-title {
+        margin-bottom: 8px !important;
+      }
+
+      div[style*="margin: 12px 0;"] {
+        margin: 4px 0 !important;
+      }
+    }
   </style>
 </head>
 <body>
