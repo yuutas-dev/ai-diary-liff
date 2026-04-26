@@ -2389,26 +2389,81 @@
       });
     }
 
-    function toggleFavoriteHistory(entryId) {
+    async function toggleFavoriteHistory(entryId) {
       const targetId = String(entryId || '');
       if (!targetId) return;
-      const favorites = JSON.parse(localStorage.getItem('favoriteHistories') || '[]');
-      const exists = favorites.includes(targetId);
 
-      if (exists) {
-        const next = favorites.filter(id => id !== targetId);
-        localStorage.setItem('favoriteHistories', JSON.stringify(next));
+      const isCurrentlyFavorited = currentFavoriteIds.includes(targetId);
+      let targetCustomerName = null;
+      let targetText = '';
+
+      // 対象のテキストと顧客名を取得
+      customerData.some(c => {
+        const entry = (Array.isArray(c.entries) ? c.entries : []).find(e => String(e.id) === targetId);
+        if (entry) {
+          targetCustomerName = c.name;
+          targetText = (entry.finalSentText || entry.final_sent_text || entry.aiGeneratedText || entry.ai_generated_text || '').trim();
+          return true;
+        }
+        return false;
+      });
+
+      // 1. 楽観的UI更新（先に画面とローカル変数を書き換える）
+      if (isCurrentlyFavorited) {
+        currentFavoriteIds = currentFavoriteIds.filter(id => id !== targetId);
+        currentFavoriteTexts = currentFavoriteTexts.filter(text => text !== targetText);
       } else {
-        if (favorites.length >= 5) {
+        if (currentFavoriteIds.length >= 5) {
           showActionToast('お気に入りは最大5件までです。どれかを外してください。');
           return;
         }
-        const next = [...favorites, targetId];
-        localStorage.setItem('favoriteHistories', JSON.stringify(next));
-        showActionToast('💖 お気に入り登録しました！次回からAIが学習します');
+        currentFavoriteIds.unshift(targetId);
+        if (targetText) currentFavoriteTexts.unshift(targetText);
       }
 
+      // 画面の再描画（ハートの見た目とソートを即時反映）
       renderHistoryList();
+
+      // 2. バックエンドへリクエスト
+      try {
+        const res = await fetch("/api/favorites/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: userId,
+            entryId: targetId,
+            customerId: null,
+            customerName: targetCustomerName
+          })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          if (data.limitReached) {
+            // サーバー側で上限に弾かれた場合はロールバック
+            currentFavoriteIds = currentFavoriteIds.filter(id => id !== targetId);
+            currentFavoriteTexts = currentFavoriteTexts.filter(text => text !== targetText);
+            renderHistoryList();
+            showActionToast('お気に入りは最大5件までです。');
+          } else {
+            showActionToast(data.isFavorited ? '💖 お気に入り登録しました！' : 'お気に入りを解除しました');
+          }
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        console.error("Toggle Error:", error);
+        // エラー時はロールバック
+        if (isCurrentlyFavorited) {
+          currentFavoriteIds.unshift(targetId);
+          if (targetText) currentFavoriteTexts.unshift(targetText);
+        } else {
+          currentFavoriteIds = currentFavoriteIds.filter(id => id !== targetId);
+          currentFavoriteTexts = currentFavoriteTexts.filter(text => text !== targetText);
+        }
+        renderHistoryList();
+        showActionToast('通信エラーが発生しました。元に戻します。');
+      }
     }
 
     function enableEditHistory(entryId) {
