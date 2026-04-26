@@ -2417,10 +2417,27 @@
       editEl.value = viewEl.innerText || editEl.value || '';
       viewEl.style.display = 'none';
       editEl.style.display = 'block';
-      saveBtn.style.display = 'inline-block';
-      editBtn.style.display = 'none';
+      saveBtn.style.display = 'block';
+      editBtn.innerHTML = '✖ キャンセル';
+      editBtn.onclick = function () { cancelEditHistory(targetId); };
       editEl.focus();
       editEl.setSelectionRange(editEl.value.length, editEl.value.length);
+    }
+
+    function cancelEditHistory(entryId) {
+      const targetId = String(entryId || '');
+      if (!targetId) return;
+      const viewArea = document.getElementById(`history-view-${targetId}`);
+      const editArea = document.getElementById(`history-edit-${targetId}`);
+      const saveBtn = document.getElementById(`history-save-btn-${targetId}`);
+      const editBtn = document.getElementById(`history-edit-btn-${targetId}`);
+      if (!viewArea || !editArea || !saveBtn || !editBtn) return;
+
+      viewArea.style.display = '-webkit-box';
+      editArea.style.display = 'none';
+      saveBtn.style.display = 'none';
+      editBtn.innerHTML = '✏️ 編集';
+      editBtn.onclick = function () { enableEditHistory(targetId); };
     }
 
     async function saveAndCopyHistory(entryId) {
@@ -2454,17 +2471,12 @@
         targetEntry.final_sent_text = newText;
       }
 
-      viewEl.textContent = newText;
-      viewEl.classList.add('collapsed');
-      viewEl.style.display = 'block';
-      editEl.style.display = 'none';
-      saveBtn.style.display = 'none';
-      editBtn.style.display = 'inline-block';
-
       try {
         await navigator.clipboard.writeText(newText);
+        showActionToast('📋 コピー＆上書き保存しました');
       } catch (err) {
         console.error('Clipboard copy failed:', err);
+        showActionToast('保存しました（コピーに失敗しました）');
       }
 
       fetch("/api/entries/complete", {
@@ -2478,7 +2490,8 @@
         })
       }).catch((err) => console.error('History save API Error:', err));
 
-      showActionToast('📋 コピーして保存しました');
+      viewEl.innerHTML = newText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      cancelEditHistory(targetId);
     }
 
     function setListFilter(filterType) {
