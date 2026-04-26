@@ -2664,7 +2664,7 @@
         if (c.tagsArray.includes('ダミー') && !c.tagsArray.includes(targetDummyTag)) return false;
 
         const matchName = c.name.toLowerCase().includes(filterText.toLowerCase());
-        const memos = parseMemoToJSON(c.memo);
+        const memos = parseMemoToJSON(c.memo).filter(m => m.type !== 'sales');
         const matchMemo = memos.some(m => m.text.toLowerCase().includes(filterText.toLowerCase()) || (m.tags && m.tags.some(t => t.toLowerCase().includes(filterText.toLowerCase()))));
         const matchTags = c.tagsArray.some(t => t.toLowerCase().includes(filterText.toLowerCase()));
         const isHidden = c.tagsArray.includes('非表示');
@@ -2733,7 +2733,7 @@
         const actionText2 = isDummy ? '閲覧' : '編集';
         const cardClass = stats.isVip ? "card card-vip" : "card";
 
-        const memos = parseMemoToJSON(c.memo);
+        const memos = parseMemoToJSON(c.memo).filter(m => m.type !== 'sales');
         let previewMemo = "メモなし";
         if (memos.length > 0) {
           const lastM = memos[memos.length - 1];
@@ -2861,7 +2861,7 @@
       } else {
         hidden.forEach((c) => {
           const index = customerData.indexOf(c);
-          const memos = parseMemoToJSON(c.memo);
+          const memos = parseMemoToJSON(c.memo).filter(m => m.type !== 'sales');
           let previewMemo = "メモなし";
           if (memos.length > 0) {
             const lastM = memos[memos.length - 1];
@@ -2950,7 +2950,7 @@
       nameInput.value = c.name;
       selectedCustomerId = c.id || null;
 
-      const memos = parseMemoToJSON(c.memo);
+      const memos = parseMemoToJSON(c.memo).filter(m => m.type !== 'sales');
       let pastMemoHtml = '';
       if (memos.length === 0) {
         pastMemoHtml = '<div style="color:var(--text-muted); text-align:center; padding:10px 0; font-size:12px;">(過去の記録はありません)</div>';
@@ -3370,7 +3370,7 @@
 
       const area = document.getElementById('editMemoBlocksArea');
       area.innerHTML = '';
-      const memos = parseMemoToJSON(c.memo);
+      const memos = parseMemoToJSON(c.memo).filter(m => m.type !== 'sales');
       if (memos.length === 0 && !isReadOnly) addNewMemoBlock();
       else if (memos.length === 0 && isReadOnly) {
         area.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-weight:700; padding:20px;">過去の記録がありません</p>';
@@ -3698,7 +3698,7 @@
       const forbiddenTags = ['新規', '初回', '初回来店', '初めて', '一見', '常連', 'リピーター', '2回目', '二回目', '3回目', '三回目', '1回目', '一回目'];
       const cleanedCustomerTags = currentCustomerTags.filter(tag => !forbiddenTags.some(forbidden => tag.includes(forbidden)));
 
-      const memos = parseMemoToJSON(targetCustomer ? targetCustomer.memo : "");
+      const memos = parseMemoToJSON(targetCustomer ? targetCustomer.memo : "").filter(m => m.type !== 'sales');
       const filteredMemosStr = memos.map(m => {
         const filteredTags = (m.tags || []).filter(tag => !isEmotionTag(tag));
         const tagsStr = filteredTags.length > 0 ? `(タグ: ${filteredTags.join(', ')})` : '';
