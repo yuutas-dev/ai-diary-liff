@@ -763,6 +763,17 @@
     }
 
     /* 💎 CTA 下部浮遊 */
+    @keyframes smoothAppear {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, 15px);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
     .sticky-submit {
       position: fixed; /* sticky から fixed に変更して画面に固定 */
       left: 50%;
@@ -772,6 +783,7 @@
       z-index: 850;
       padding: 0;
       pointer-events: none; /* ラッパーのクリック判定を消し、スクロールの邪魔をしないようにする */
+      animation: smoothAppear 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     .sticky-submit button {
