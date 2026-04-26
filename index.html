@@ -634,16 +634,19 @@
 
     .create-details-tags-grid {
       display: flex;
+      flex-direction: column;
       flex-wrap: wrap;
+      height: 116px;
       gap: 8px;
+      overflow-x: auto;
+      overflow-y: hidden;
       align-content: flex-start;
-      max-height: none;
-      overflow: visible;
-      padding: 0 0 16px 0;
+      padding: 0 40px 6px 0;
+      -webkit-overflow-scrolling: touch;
     }
 
     .create-details-tags-grid .chip {
-      width: auto;
+      width: max-content;
       margin: 0;
       flex-shrink: 0;
     }
