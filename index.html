@@ -1655,9 +1655,12 @@
       <div class="page page-settings" style="position: relative;">
         <h2 style="margin:0 0 16px; font-weight:700; font-size:18px;">設定・情報</h2>
 
-        <div class="settings-list">
-          <div class="settings-item" onclick="openStyleModal()"><span>🎨 AIスタイル・口調設定</span><span class="settings-val" id="styleOverviewText">かわいい・清楚・カスタム</span></div>
-          <div class="settings-item">
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="setting-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 16px;" onclick="openStyleModal()">
+            <span>🎨 AIスタイル・口調設定</span>
+            <span class="settings-val" id="styleOverviewText">かわいい・清楚・カスタム</span>
+          </div>
+          <div class="setting-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 16px;">
             <span>🏢 業態設定</span>
             <select class="input-field" id="businessType" onchange="updateChipsAndSave()" style="width:140px; padding:6px; font-weight:700; text-align:right; border:none; background:transparent;">
               <option value="cabaret">キャバクラ</option>
@@ -1665,15 +1668,20 @@
               <option value="host">ホスト</option>
             </select>
           </div>
-        </div>
-
-        <div class="setting-item" style="margin-bottom: 24px;">
-          <h3 class="section-title" style="margin-bottom: 8px;">アイコンテーマ</h3>
-          <p style="font-size: 12px; color: #666; margin-bottom: 8px;">顧客アイコンの自動生成モチーフを選択します。</p>
-          <select id="icon-theme-select" class="input-field" style="width: 100%;">
-            <option value="glass">グラス（キャバ・ラウンジ向け）</option>
-            <option value="coming_soon" disabled>その他テーマ（準備中...）</option>
-          </select>
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 class="section-title" style="margin: 0;">🎨 アイコンテーマ</h3>
+            </div>
+            <select id="icon-theme-select" class="input-field" style="width: 100%;">
+              <option value="glass">🥂 グラス（キャバ・ラウンジ）</option>
+              <option value="jewel">💎 ジュエル（宝石・VIP）</option>
+              <option value="perfume">🧴 パフューム（風俗・メンエス）</option>
+              <option value="moon_star">🌙 ムーン＆スター（コンカフェ等）</option>
+              <option value="flower">🌹 フラワー（お花）</option>
+              <option value="teacup">☕ ティーカップ（昼職・カフェ）</option>
+              <option value="symbol">♠️ カラーサークル（記号）</option>
+            </select>
+          </div>
         </div>
 
         <div class="card" style="padding: 16px 20px;">
@@ -1990,6 +1998,19 @@
         document.getElementById('setupModal').style.display = 'flex';
       } else {
         document.getElementById('businessType').value = savedType;
+      }
+
+      const iconThemeSelect = document.getElementById('icon-theme-select');
+      if (iconThemeSelect) {
+        const savedIconTheme = localStorage.getItem('iconTheme') || 'glass';
+        if (iconThemeSelect.querySelector(`option[value="${savedIconTheme}"]`)) {
+          iconThemeSelect.value = savedIconTheme;
+        }
+        iconThemeSelect.addEventListener('change', () => {
+          localStorage.setItem('iconTheme', iconThemeSelect.value);
+          const currentNameFilter = String(document.getElementById('nameInput')?.value || '').trim().toLowerCase();
+          renderQuickAccess(currentNameFilter);
+        });
       }
 
       if (localStorage.getItem('isCompactMode') === 'true') toggleCompactMode(true);
@@ -2740,18 +2761,48 @@
 
     function generateAvatarHTML(name) {
       const hash = getStringHash(name || 'ゲスト');
+      const themeSelect = document.getElementById('icon-theme-select');
+      const currentTheme = themeSelect ? themeSelect.value : 'glass';
       const hue = hash % 360;
       const liquidColor = `hsla(${hue}, 75%, 65%, 0.85)`;
       const strokeColor = "#C6A682";
 
-      const svgs = [
-        `<svg viewBox="0 0 24 24" fill="none" style="width: 55%; height: 55%;"><path d="M10.5 7h3l-.6 8c0 .5-.4 1-.9 1s-.9-.5-.9-1z" fill="${liquidColor}"/><path d="M10 2h4l-1 13c0 1-1 2-1 2v4h3v1H9v-1h3v-4c0 0-1-1-1-2Z" stroke="${strokeColor}" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
-        `<svg viewBox="0 0 24 24" fill="none" style="width: 55%; height: 55%;"><path d="M6.5 12h11l-.6 8h-9.8z" fill="${liquidColor}"/><path d="M6 4h12l-1 17H7z" stroke="${strokeColor}" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
-        `<svg viewBox="0 0 24 24" fill="none" style="width: 55%; height: 55%;"><path d="M6 7h12L12 11.5z" fill="${liquidColor}"/><path d="M3 4h18L12 13v7h3v1H9v-1h3v-7z" stroke="${strokeColor}" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
-        `<svg viewBox="0 0 24 24" fill="none" style="width: 55%; height: 55%;"><path d="M7.5 7h9l.3 2c0 2.5-1.5 4.5-4.8 4.5s-4.8-2-4.8-4.5z" fill="${liquidColor}"/><path d="M7 3h10l.5 3c0 3.5-2 6-5.5 6s-5.5-2.5-5.5-6z M12 12v9 M9 21h6" stroke="${strokeColor}" stroke-width="1.2" stroke-linejoin="round"/></svg>`
-      ];
-      const selectedSvg = svgs[hash % svgs.length];
-      return `<div style="width: 100%; height: 100%; border-radius: 50%; background-color: #ffffff; border: 1px solid #f0e6e6; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center;">${selectedSvg}</div>`;
+      const themePaths = {
+        glass: [
+          `<path d="M10.5 7h3l-.6 8c0 .5-.4 1-.9 1s-.9-.5-.9-1z" fill="${liquidColor}"/><path d="M10 2h4l-1 13c0 1-1 2-1 2v4h3v1H9v-1h3v-4c0 0-1-1-1-2Z" stroke="${strokeColor}" stroke-width="1.2" stroke-linejoin="round"/>`,
+          `<path d="M6.5 12h11l-.6 8h-9.8z" fill="${liquidColor}"/><path d="M6 4h12l-1 17H7z" stroke="${strokeColor}" stroke-width="1.2" stroke-linejoin="round"/>`,
+          `<path d="M6 7h12L12 11.5z" fill="${liquidColor}"/><path d="M3 4h18L12 13v7h3v1H9v-1h3v-7z" stroke="${strokeColor}" stroke-width="1.2" stroke-linejoin="round"/>`
+        ],
+        jewel: [
+          `<path d="M12 21L2 9h20L12 21z" fill="${liquidColor}" stroke="${strokeColor}" stroke-width="1.2"/><path d="M2 9l5-6h10l5 6" stroke="${strokeColor}" stroke-width="1.2"/>`,
+          `<path d="M12 22c5.5 0 10-4.5 10-10S12 2 12 2 2 6.5 2 12s4.5 10 10 10z" fill="${liquidColor}" stroke="${strokeColor}" stroke-width="1.2"/>`,
+          `<path d="M7 2h10l5 5v10l-5 5H7l-5-5V7l5-5z" fill="${liquidColor}" stroke="${strokeColor}" stroke-width="1.2"/>`
+        ],
+        perfume: [
+          `<path d="M7 12c0-2.8 2.2-5 5-5s5 2.2 5 5v8H7v-8z" fill="${liquidColor}"/><path d="M10 2h4v5h-4zM7 12c0-2.8 2.2-5 5-5s5 2.2 5 5v8H7v-8z" stroke="${strokeColor}" stroke-width="1.2"/>`,
+          `<path d="M6 10h12v11H6z" fill="${liquidColor}"/><path d="M10 3h4v4h-4zM6 10h12v11H6z" stroke="${strokeColor}" stroke-width="1.2"/>`
+        ],
+        moon_star: [
+          `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="${liquidColor}" stroke="${strokeColor}" stroke-width="1.2"/>`,
+          `<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="${liquidColor}" stroke="${strokeColor}" stroke-width="1.2"/>`
+        ],
+        flower: [
+          `<path d="M12 22V12M12 12c-4 0-6-4-6-8 4 0 6 4 6 8zm0 0c4 0 6-4 6-8-4 0-6 4-6 8z" fill="${liquidColor}" stroke="${strokeColor}" stroke-width="1.2"/>`,
+          `<path d="M12 22s-8-4.5-8-12c0-4 4-6 8-8 4 2 8 4 8 8 0 7.5-8 12-8 12z" fill="${liquidColor}" stroke="${strokeColor}" stroke-width="1.2"/>`
+        ],
+        teacup: [
+          `<path d="M4 8h12v6c0 3.3-2.7 6-6 6s-6-2.7-6-6V8z" fill="${liquidColor}"/><path d="M4 8h12v6c0 3.3-2.7 6-6 6s-6-2.7-6-6V8zM16 10h2c1.1 0 2 .9 2 2s-.9 2-2 2h-2M2 21h16" stroke="${strokeColor}" stroke-width="1.2"/>`
+        ],
+        symbol: [
+          `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="${liquidColor}" stroke="${strokeColor}" stroke-width="1.2"/>`
+        ]
+      };
+
+      const currentPaths = themePaths[currentTheme] || themePaths['glass'];
+      const selectedPath = currentPaths[hash % currentPaths.length];
+      const svgHTML = `<svg viewBox="0 0 24 24" fill="none" style="width: 55%; height: 55%;">${selectedPath}</svg>`;
+
+      return `<div style="width: 100%; height: 100%; border-radius: 50%; background-color: #ffffff; border: 1px solid #f0e6e6; box-shadow: 0 2px 6px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center;">${svgHTML}</div>`;
     }
 
     function renderQuickAccess(filterText = "") {
