@@ -2431,6 +2431,7 @@
 
       // 画面の再描画（ハートの見た目とソートを即時反映）
       renderHistoryList();
+      showActionToast(isCurrentlyFavorited ? 'お気に入りを解除しました' : '💖 お気に入り登録しました！\nAIがこの文章を学習します！');
 
       // 2. バックエンドへリクエスト
       try {
@@ -2453,8 +2454,6 @@
             currentFavoriteTexts = currentFavoriteTexts.filter(text => text !== targetText);
             renderHistoryList();
             showActionToast('お気に入りは最大5件までです。');
-          } else {
-            showActionToast(data.isFavorited ? '💖 お気に入り登録しました！\nAIがこの文章を学習します！' : 'お気に入りを解除しました');
           }
         } else {
           throw new Error(data.error);
