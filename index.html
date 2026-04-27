@@ -1501,6 +1501,7 @@
       <h2 style="margin: 0 0 20px; font-weight: 700; text-align: center;" id="modalTitle">顧客情報の編集</h2>
       <input type="hidden" id="editCustomerIndex">
       <input type="hidden" id="isCreateMode" value="false">
+      <input type="hidden" id="editCustomerId">
 
       <span class="label">名前</span>
       <input type="text" id="editCustomerName" class="input-field" style="margin-bottom: 16px; background:#FFF; border:1px solid var(--border-color);">
@@ -3078,7 +3079,7 @@
       c.tagsArray = newTags;
       renderCustomerList(document.getElementById('customerSearch').value);
       
-      await updateCustomerTagsOnly(c.name, newTags);
+      await updateCustomerTagsOnly(c.id, newTags);
     }
 
     async function setHidden() {
@@ -3092,11 +3093,11 @@
       c.tagsArray = newTags;
       renderCustomerList(document.getElementById('customerSearch').value);
 
-      await updateCustomerTagsOnly(c.name, newTags);
+      await updateCustomerTagsOnly(c.id, newTags);
     }
 
-    async function updateCustomerTagsOnly(name, tagsArray) {
-      const c = customerData.find(cust => cust.name === name);
+    async function updateCustomerTagsOnly(targetId, tagsArray) {
+      const c = customerData.find(cust => String(cust.id) === String(targetId));
 
       if (c && c.tagsArray.includes("ダミー") && !isDevMode) {
         c.tagsArray = tagsArray;
@@ -3106,8 +3107,7 @@
 
       const payload = {
         userId,
-        oldName: name,
-        newName: name,
+        customerId: targetId,
         newTags: tagsArray.join(', ')
       };
 
@@ -3187,7 +3187,8 @@
     }
 
     async function restoreHiddenFromModal() {
-      const c = customerData.find(item => item.name === editingOriginalName);
+      const targetId = document.getElementById('editCustomerId').value;
+      const c = customerData.find(item => String(item.id) === String(targetId));
       if (!c) return;
       const newTags = c.tagsArray.filter(t => t !== '非表示');
       
@@ -3200,7 +3201,7 @@
       }
       renderCustomerList(document.getElementById('customerSearch').value);
       
-      await updateCustomerTagsOnly(c.name, newTags);
+      await updateCustomerTagsOnly(c.id, newTags);
     }
 
     function selectCustomerByIndex(index, forceSelect = false) {
@@ -3644,6 +3645,7 @@
       document.getElementById('modalTitle').innerText = "新規顧客の登録";
       document.getElementById('isCreateMode').value = "true";
       document.getElementById('editCustomerName').value = "";
+      document.getElementById('editCustomerId').value = "";
       
       document.getElementById('editCustomerName').readOnly = false;
       document.getElementById('customAttrInput').disabled = false;
@@ -3671,6 +3673,7 @@
       document.getElementById('modalTitle').innerText = isReadOnly ? "🗂️ 顧客記録の確認" : (isDemoMode ? "【お試し】ダミー（保存されません）" : "顧客情報の編集");
       document.getElementById('isCreateMode').value = "false";
       document.getElementById('editCustomerIndex').value = index;
+      document.getElementById('editCustomerId').value = c.id || "";
       document.getElementById('editCustomerName').value = c.name;
       editingOriginalName = c.name;
 
@@ -3782,9 +3785,11 @@
       btn.innerText = "保存中...";
       btn.disabled = true;
 
+      // ▼ 修正：oldNameを削除し、customerIdを追加
+      const editCustomerId = document.getElementById('editCustomerId').value;
       const payload = {
         userId,
-        oldName: editingOriginalName,
+        customerId: editCustomerId || null,
         newName,
         newTags: newTagsStr,
         newMemo: JSON.stringify(memoBlocks),
@@ -3801,7 +3806,8 @@
         const customerJson = await customerRes.json();
 
         if (customerJson.success) {
-          const customerId = customerJson.customer?.id || customerData.find(c => c.name === newName)?.id;
+          // ▼ 修正：バックエンドから返ったIDを優先し、なければフォームのIDを使う
+          const customerId = customerJson.customer?.id || editCustomerId;
           if (!customerId && !isDevMode) {
             alert("顧客IDの取得に失敗しました。");
             return;
@@ -3849,7 +3855,8 @@
       btn.disabled = true;
 
       try {
-        const payload = { userId, targetName: editingOriginalName };
+        const targetId = document.getElementById('editCustomerId').value;
+        const payload = { userId, customerId: targetId };
         const res = await fetch("/api/customers/delete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -3857,7 +3864,7 @@
         });
         const json = await res.json();
         if (json.success) {
-          customerData = customerData.filter(cust => cust.name !== editingOriginalName);
+          customerData = customerData.filter(cust => String(cust.id) !== String(targetId));
           closeDeleteConfirmModal();
           closeEditModal();
           
