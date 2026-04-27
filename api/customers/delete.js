@@ -22,12 +22,12 @@ export default async function handler(req, res) {
   try {
     const data = parseRequestBody(req.body);
     const userId = trimText(data?.userId) || 'test-user';
-    const targetName = trimText(data?.targetName);
+    const customerId = trimText(data?.customerId);
 
-    if (!targetName) {
+    if (!customerId) {
       return sendJson(res, 400, {
         success: false,
-        error: 'targetName is required'
+        error: 'customerId is required'
       });
     }
 
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       .from('customers')
       .delete()
       .eq('user_id', userId)
-      .eq('name', targetName);
+      .eq('id', customerId);
 
     if (error) {
       throw new Error('Supabase削除エラー: ' + error.message);

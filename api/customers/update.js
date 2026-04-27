@@ -37,15 +37,15 @@ export default async function handler(req, res) {
   try {
     const data = parseRequestBody(req.body);
     const userId = trimText(data?.userId) || 'test-user';
-    const oldName = trimText(data?.oldName);
+    const customerId = trimText(data?.customerId);
     const newName = trimText(data?.newName);
     const tagsArray = normalizeTags(data?.newTags);
     const isDevMode = data?.isDevMode === true;
 
-    if (!oldName) {
+    if (!customerId) {
       return sendJson(res, 400, {
         success: false,
-        error: 'oldName is required'
+        error: 'customerId is required'
       });
     }
 
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
         updated_at: new Date().toISOString()
       })
       .eq('user_id', userId)
-      .eq('name', oldName)
+      .eq('id', customerId)
       .select('id, name, tags');
 
     if (error) {
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
       const { data: dummyTarget, error: dummyTargetError } = await supabase
         .from('customers')
         .select('id, tags')
-        .eq('name', oldName)
+        .eq('id', customerId)
         .contains('tags', ['ダミー'])
         .limit(1)
         .maybeSingle();
